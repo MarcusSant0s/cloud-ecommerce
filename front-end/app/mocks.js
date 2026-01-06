@@ -37,7 +37,7 @@ export const featuredProductsHomepage = [
     category: "Camisetas",
     id: "1",
     image:
-      "https://images.unsplash.com/photo-1520975922284-7b958f0b0f9b?w=800&auto=format&fit=crop&q=60",
+      "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8Y2FtaXNldGF8ZW58MHx8MHx8fDA%3D",
     inStock: true,
     name: "Camiseta Oversized Algodão Premium",
     originalPrice: 119.90,
@@ -57,7 +57,7 @@ export const featuredProductsHomepage = [
     category: "Jaquetas",
     id: "3",
     image:
-      "https://images.unsplash.com/photo-1520975869019-7b2d3b7f2e55?w=800&auto=format&fit=crop&q=60",
+      "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8SmFxdWV0YXxlbnwwfHwwfHx8MA%3D%3D",
     inStock: true,
     name: "Jaqueta Corta-Vento Urbana",
     originalPrice: 329.90,

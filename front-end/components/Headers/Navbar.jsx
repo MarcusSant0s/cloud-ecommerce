@@ -1,6 +1,9 @@
 'use client'
 import { useState } from "react"
-
+import Link from "next/link";
+import { usePathname } from "next/navigation"; 
+import {Cart} from "@/components/cart"
+import { Skeleton } from "@/primitives/skeleton";
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
@@ -41,30 +44,7 @@ export default function Navbar() {
         <div className="flex items-center gap-4">
           {/* Cart */}
           <div className="relative">
-            <button
-              type="button"
-              aria-label="Open cart"
-              className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border bg-background shadow-xs transition-all hover:bg-accent hover:text-accent-foreground hover:shadow-md focus-visible:ring-2 focus-visible:ring-accent/40"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-4 w-4"
-              >
-                <circle cx="8" cy="21" r="1" />
-                <circle cx="19" cy="21" r="1" />
-                <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
-              </svg>
-
-              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] text-primary-foreground">
-                3
-              </span>
-            </button>
+           <Cart/>
           </div>
 
           {/* Auth buttons (desktop) */}
