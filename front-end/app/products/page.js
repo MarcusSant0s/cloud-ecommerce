@@ -1,3 +1,9 @@
+"use client"
+
+import { Button } from "@/primitives/button";
+import ProductCard from "@/components/ProductCard"; 
+import { useCart } from "@/lib/use-cart";
+import React from "react";
 
 const products = [
   {
@@ -69,12 +75,159 @@ const products = [
 ];
 
 
+const slugify = (str) =>
+  str
+    .toString()
+    .normalize("NFD")                
+    .replace(/[\u0300-\u036f]/g, "") 
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")     
+    .replace(/\s+/g, "-")           
+    .replace(/-+/g, "-");    
+
 const page = () => {
 
-    
+  const {addItem} = useCart();
+   
+const categories = React.useMemo(() => {
+  const dynamic = Array.from(
+    new Set(products.map((p) => p.category))
+  ).sort();
+
+  return ["All", ...dynamic];
+}, [products]);
+
+/* ----------------------------- State ---------------------------------- */
+const [selectedCategory, setSelectedCategory] = React.useState("All");
+
+/* --------------------- Filtered products (memo) ----------------------- */
+const filteredProducts = React.useMemo(() => {
+  return selectedCategory === "All"
+    ? products
+    : products.filter((p) => p.category === selectedCategory);
+}, [selectedCategory, products]);
+
+/* --------------------------- Handlers --------------------------------- */
+const handleAddToCart = React.useCallback(
+  (productId) => {
+    const product = products.find((p) => p.id === productId);
+
+    if (!product) return;
+
+    addItem(
+      {
+        category: product.category,
+        id: product.id,
+        image: product.image,
+        name: product.name,
+        price: product.price,
+      },
+      1
+    );
+  },
+  [addItem, products]
+);
+
+const handleAddToWishlist = React.useCallback((productId) => {
+  // TODO: integrate with Wishlist feature
+  console.log(`Added ${productId} to wishlist`);
+}, []);
+ 
+
+return (
+    <div className="flex min-h-screen flex-col">
+      <main className="flex-1 py-10">
+        <div
+          className={`
+            container px-4
+            md:px-6
+          `}
+        >
+          {/* Heading & filters */}
+          <div
+            className={`
+              mb-8 flex flex-col gap-4
+              md:flex-row md:items-center md:justify-between
+            `}
+          >
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Products</h1>
+              <p className="mt-1 text-lg text-muted-foreground">
+                Browse our latest products and find something you&apos;ll love.
+              </p>
+            </div>
+
+            {/* Category pills */}
+            <div className="flex flex-wrap gap-2">
+              {categories.map((category) => (
+                <Button
+                  aria-pressed={category === selectedCategory}
+                  className="rounded-full"
+                  key={slugify(category)}
+                  onClick={() => setSelectedCategory(category)}
+                  size="sm"
+                  title={`Filter by ${category}`}
+                  variant={
+                    category === selectedCategory ? "default" : "outline"
+                  }
+                >
+                  {category}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Product grid */}
+          <div
+            className={`
+              grid grid-cols-1 gap-6
+              sm:grid-cols-2
+              md:grid-cols-3
+              lg:grid-cols-4
+            `}
+          >
+            {filteredProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                onAddToCart={handleAddToCart}
+                onAddToWishlist={handleAddToWishlist}
+                product={product}
+              />
+            ))}
+          </div>
+
+          {/* Empty state */}
+          {filteredProducts.length === 0 && (
+            <div className="mt-8 text-center">
+              <p className="text-muted-foreground">
+                No products found in this category.
+              </p>
+            </div>
+          )}
+
+          {/* Pagination */}
+          <nav
+            aria-label="Pagination"
+            className="mt-12 flex items-center justify-center gap-2"
+          >
+            <Button disabled variant="outline">
+              Previous
+            </Button>
+            <Button aria-current="page" variant="default">
+              1
+            </Button>
+            <Button disabled variant="outline">
+              Next
+            </Button>
+          </nav>
+        </div>
+      </main>
+    </div>
+  );
 
 
-    
+
 }
 
 export default page
