@@ -1,278 +1,225 @@
-"use client"
+"use client";
 
-import { Minus, Plus, ShoppingCart, Star } from "lucide-react";
+import { Minus, Plus, ShoppingCart, Star, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
 
- import { useCart } from "@/lib/use-cart";
- import { Separator } from "@/primitives/separator";
+import { useCart } from "@/lib/use-cart";
+import { Separator } from "@/primitives/separator";
 import { Button } from "@/primitives/button";
+import api from "@/services/api";
+import { useEffect, useState, useMemo } from "react";
 
- 
 /* -------------------------------------------------------------------------- */
-/*                                   Helpers                                  */
+/* Helpers                                  */
 /* -------------------------------------------------------------------------- */
 
-const CURRENCY_FORMATTER = new Intl.NumberFormat("en-US", {
-  currency: "USD",
+const CURRENCY_FORMATTER = new Intl.NumberFormat("pt-BR", {
+  currency: "BRL",
   style: "currency",
 });
-
-const slugify = (str) =>
-  str
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, "-")
-    .replace(/[^\w-]/g, "");
-
-const range = (length) => Array.from({ length }, (_, i) => i);
-
-/* -------------------------------------------------------------------------- */
-/*                                Mock products                               */
-/* -------------------------------------------------------------------------- */
-
-const products = [
-  {
-    category: "Audio",
-    description:
-      "Experience crystal-clear sound with our premium wireless headphones.",
-    features: [
-      "Active noise cancellation",
-      "30-hour battery life",
-      "Bluetooth 5.2 connectivity",
-    ],
-    id: "1",
-    image:
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800",
-    inStock: true,
-    name: "Premium Wireless Headphones",
-    originalPrice: 249.99,
-    price: 199.99,
-    rating: 4.5,
-    specs: {
-      batteryLife: "30 hours",
-      brand: "AudioMax",
-      model: "WH-1000XM5",
-      warranty: "2 years",
-    },
-  },
-  {
-    category: "Wearables",
-    description:
-      "Advanced smartwatch with health tracking and GPS.",
-    features: [
-      "Health monitoring",
-      "GPS tracking",
-      "7-day battery life",
-    ],
-    id: "2",
-    image:
-      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800",
-    inStock: true,
-    name: "Smart Watch Series 5",
-    originalPrice: 349.99,
-    price: 299.99,
-    rating: 4.2,
-    specs: {
-      brand: "TechFit",
-      batteryLife: "7 days",
-      waterResistance: "5 ATM",
-    },
-  },
-];
-
-/* -------------------------------------------------------------------------- */
-/*                                 Component                                  */
-/* -------------------------------------------------------------------------- */
 
 export default function ProductDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const { addItem } = useCart();
 
-  const [quantity, setQuantity] = React.useState(1);
-  const [isAdding, setIsAdding] = React.useState(false);
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [quantity, setQuantity] = useState(1);
+  const [isAdding, setIsAdding] = useState(false);
 
-  const product = React.useMemo(
-    () => products.find((p) => p.id === id),
-    [id]
-  );
+  /* -------------------------------------------------------------------------- */
+  /* Data Fetching                               */
+  /* -------------------------------------------------------------------------- */
 
-  const discountPercentage = React.useMemo(() => {
-    if (!product?.originalPrice) return 0;
-    return Math.round(
-      ((product.originalPrice - product.price) /
-        product.originalPrice) *
-        100
-    );
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        setLoading(true);
+        const res = await api.get(`/product/${id}`);
+        setProduct(res.data);
+      } catch (error) {
+        console.error("Erro ao buscar produto:", error);
+        toast.error("Erro ao carregar produto.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) fetchProduct();
+  }, [id]);
+
+  /* -------------------------------------------------------------------------- */
+  /* Calculations                              */
+  /* -------------------------------------------------------------------------- */
+
+  // Mapeando a imagem principal do array de imagens da sua API
+  const mainImage = useMemo(() => {
+    if (!product?.images) return null;
+    const main = product.images.find((img) => img.main) || product.images[0];
+    return main?.url;
   }, [product]);
 
-  const handleQuantityChange = React.useCallback((newQty) => {
-    setQuantity((prev) => (newQty >= 1 ? newQty : prev));
-  }, []);
+  const price = product?.priceDiscount || product?.priceOriginal || 0;
+  const originalPrice = product?.priceDiscount ? product?.priceOriginal : null;
 
-  const handleAddToCart = React.useCallback(async () => {
+  const discountPercentage = useMemo(() => {
+    if (!originalPrice || !price) return 0;
+    return Math.round(((originalPrice - price) / originalPrice) * 100);
+  }, [price, originalPrice]);
+
+  const handleQuantityChange = (newQty) => {
+    setQuantity(newQty >= 1 ? newQty : 1);
+  };
+
+  const handleAddToCart = async () => {
     if (!product) return;
-
     setIsAdding(true);
 
     addItem(
       {
-        category: product.category,
         id: product.id,
-        image: product.image,
         name: product.name,
-        price: product.price,
+        price: price,
+        image: mainImage,
+        category: product.categories?.[0]?.name || "Geral",
       },
       quantity
     );
 
-    setQuantity(1);
-    toast.success(`${product.name} added to cart`);
-
+    toast.success(`${product.name} adicionado ao carrinho!`);
     await new Promise((r) => setTimeout(r, 400));
     setIsAdding(false);
-  }, [addItem, product, quantity]);
+  };
+
+  /* -------------------------------------------------------------------------- */
+  /* States                                   */
+  /* -------------------------------------------------------------------------- */
+
+  if (loading) {
+    return (
+      <div className="container flex h-[60vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (!product) {
     return (
-      <div className="container py-20">
-        <h1 className="text-3xl font-bold">Product not found</h1>
+      <div className="container py-20 text-center">
+        <h1 className="text-3xl font-bold">Produto não encontrado</h1>
         <Button className="mt-6" onClick={() => router.push("/products")}>
-          Back to products
+          Voltar para produtos
         </Button>
       </div>
     );
   }
 
- return (
+  return (
     <div className="container py-10">
-      <Button variant="ghost" onClick={() => router.push("/products")}>
-        ← Back to products
+      <Button variant="ghost" onClick={() => router.back()}>
+        ← Voltar
       </Button>
 
       <div className="mt-6 grid grid-cols-1 gap-8 md:grid-cols-2">
-        {/* Image */}
-        <div className="relative aspect-square overflow-hidden rounded-lg bg-muted">
-          <Image
-            src={product.image}
-            alt={product.name}
-            fill
-            className="object-cover"
-            priority
-          />
+        {/* Image Section */}
+        <div className="relative aspect-square overflow-hidden rounded-lg border bg-muted">
+          {mainImage ? (
+            <Image
+              src={mainImage}
+              alt={product.name}
+              fill
+              className="object-cover"
+              priority
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center">Sem imagem</div>
+          )}
 
           {discountPercentage > 0 && (
-            <span className="absolute top-2 left-2 rounded-full bg-red-500 px-2 py-1 text-xs font-bold text-white">
+            <span className="absolute left-4 top-4 rounded-full bg-red-600 px-3 py-1 text-sm font-bold text-white shadow-lg">
               -{discountPercentage}%
             </span>
           )}
         </div>
 
-        {/* Info */}
+        {/* Info Section */}
         <div className="flex flex-col">
-          <h1 className="text-3xl font-bold">{product.name}</h1>
-
-          <div className="mt-2 flex items-center gap-2">
-            {range(5).map((i) => (
-              <Star
-                key={i}
-                className={`h-5 w-5 ${
-                  i < Math.floor(product.rating)
-                    ? "fill-primary text-primary"
-                    : "text-muted-foreground"
-                }`}
-              />
+          <div className="mb-2 flex gap-2">
+            {product.categories?.map((cat) => (
+              <span key={cat.id} className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                {cat.name}
+              </span>
             ))}
-            <span className="text-sm text-muted-foreground">
-              ({product.rating.toFixed(1)})
-            </span>
           </div>
+          
+          <h1 className="text-4xl font-bold">{product.name}</h1>
 
-          <div className="mt-4">
-            <span className="text-3xl font-bold">
-              {CURRENCY_FORMATTER.format(product.price)}
+          <div className="mt-4 flex items-baseline gap-3">
+            <span className="text-3xl font-bold text-primary">
+              {CURRENCY_FORMATTER.format(price)}
             </span>
-            {product.originalPrice && (
-              <span className="ml-2 text-muted-foreground line-through">
-                {CURRENCY_FORMATTER.format(product.originalPrice)}
+            {originalPrice && (
+              <span className="text-xl text-muted-foreground line-through">
+                {CURRENCY_FORMATTER.format(originalPrice)}
               </span>
             )}
           </div>
 
-          <p className="mt-4 text-muted-foreground">
+          <p className="mt-6 text-lg leading-relaxed text-muted-foreground">
             {product.description}
           </p>
 
-          <div className="mt-6 flex items-center gap-4">
-            <Button
-              size="icon"
-              variant="outline"
-              disabled={quantity <= 1}
-              onClick={() => handleQuantityChange(quantity - 1)}
-            >
-              <Minus className="h-4 w-4" />
-            </Button>
-
-            <span className="w-10 text-center">{quantity}</span>
-
-            <Button
-              size="icon"
-              variant="outline"
-              onClick={() => handleQuantityChange(quantity + 1)}
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
+          <div className="mt-8 flex items-center gap-6">
+            <div className="flex items-center border rounded-md">
+              <Button
+                size="icon"
+                variant="ghost"
+                className="rounded-none border-r"
+                disabled={quantity <= 1}
+                onClick={() => handleQuantityChange(quantity - 1)}
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              <span className="w-12 text-center font-medium">{quantity}</span>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="rounded-none border-l"
+                disabled={quantity >= product.quantity}
+                onClick={() => handleQuantityChange(quantity + 1)}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <span className="text-sm text-muted-foreground">
+              {product.quantity} unidades disponíveis
+            </span>
           </div>
 
           <Button
-            className="mt-6"
-            disabled={!product.inStock || isAdding}
+            size="lg"
+            className="mt-8 h-14 text-lg"
+            disabled={product.quantity <= 0 || isAdding}
             onClick={handleAddToCart}
           >
-            <ShoppingCart className="mr-2 h-4 w-4" />
-            {isAdding ? "Adding…" : "Add to cart"}
+            {isAdding ? (
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+            ) : (
+              <ShoppingCart className="mr-2 h-5 w-5" />
+            )}
+            {product.quantity <= 0 ? "Esgotado" : "Adicionar ao Carrinho"}
           </Button>
         </div>
       </div>
 
       <Separator className="my-10" />
-
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-        <section>
-          <h2 className="mb-4 text-2xl font-bold">Features</h2>
-          <ul className="space-y-2">
-            {product.features.map((feature) => (
-              <li
-                key={slugify(feature)}
-                className="flex items-start gap-2"
-              >
-                <span className="mt-1 h-2 w-2 rounded-full bg-primary" />
-                <span>{feature}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section>
-          <h2 className="mb-4 text-2xl font-bold">Specifications</h2>
-          <div className="space-y-2">
-            {Object.entries(product.specs).map(([key, value]) => (
-              <div
-                key={key}
-                className="flex justify-between border-b pb-2 text-sm"
-              >
-                <span className="capitalize font-medium">
-                  {key.replace(/([A-Z])/g, " $1")}
-                </span>
-                <span className="text-muted-foreground">{value}</span>
-              </div>
-            ))}
-          </div>
-        </section>
-      </div>
+      
+      {/* Aqui você pode adicionar seções de especificações se a API retornar */}
     </div>
   );
 }

@@ -110,24 +110,22 @@ const filteredProducts = React.useMemo(() => {
 
 /* --------------------------- Handlers --------------------------------- */
 const handleAddToCart = React.useCallback(
-  (productId) => {
-    const product = products.find((p) => p.id === productId);
-
+  (product) => {
     if (!product) return;
 
     addItem(
       {
-        category: product.category,
         id: product.id,
-        image: product.image,
         name: product.name,
         price: product.price,
+        image: product.image,
+        category: product.category,
       },
       1
     );
   },
-  [addItem, products]
-);
+  [addItem]
+)
 
 const handleAddToWishlist = React.useCallback((productId) => {
   // TODO: integrate with Wishlist feature
@@ -190,7 +188,7 @@ return (
             {filteredProducts.map((product) => (
               <ProductCard
                 key={product.id}
-                onAddToCart={handleAddToCart}
+                onAddToCart={(e) => handleAddToCart(e, product)}
                 onAddToWishlist={handleAddToWishlist}
                 product={product}
               />

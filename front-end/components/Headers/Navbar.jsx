@@ -4,8 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation"; 
 import {Cart} from "@/components/cart"
 import { Skeleton } from "@/primitives/skeleton";
+import { useAuth } from "@/contexts/AuthContext";
+
+
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const {user} = useAuth();
+
 
   return (
     <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -49,6 +54,18 @@ export default function Navbar() {
 
           {/* Auth buttons (desktop) */}
           <div className="hidden md:block">
+
+          {user ? (
+            <div className="flex items-center gap-2">
+              <h3 className="text-3xl text-red-950">{user.firstName}</h3>
+              <a href="/auth/sign-up">
+                <button className="h-8 rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground shadow-xs transition hover:bg-primary/90">
+                  LogOut
+                </button>
+              </a>
+            </div>
+          ):(
+
             <div className="flex items-center gap-2">
               <a href="/auth/sign-in">
                 <button className="h-8 rounded-md px-3 text-sm font-medium transition hover:bg-accent hover:text-accent-foreground">
@@ -62,7 +79,10 @@ export default function Navbar() {
                 </button>
               </a>
             </div>
+              )}
           </div>
+
+
 
           {/* Mobile menu */}
           <button

@@ -15,19 +15,28 @@ const [loading, setLoading] = useState(true);
 useEffect(()=>{
     const storedToken = localStorage.getItem("token");
 
-    if(storedToken){
+    if(storedToken && storedToken != undefined){
         setToken(storedToken);
+        console.log(storedToken)
         api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`
-        fetchMe();
+        fetchMe(storedToken);
     } else {
         setLoading(false)
+      
     }
 }, [])
 
-    async function fetchMe(){
+    async function fetchMe(token){
         try{
-            const res = await api.get('/users/me')
+              const res = await api.get('/users/me', {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                });
+
+
             setUser(res.data)
+            console.log("fetchMe done", JSON.stringify(res.data, null, 2));
         } catch{
             logout()
         } finally{
@@ -36,14 +45,15 @@ useEffect(()=>{
     }
 
     async function login(email, password){
-        const res = await api.post("auth/login", {email, password})
-    
-        const jwt = res.data.jwt;
 
+        console.log("Login iniciado") 
+
+        const res = await api.post("auth/login", {email, password})
+        const jwt = res.data.token;
         localStorage.setItem('token', jwt)
         api.defaults.headers.common['Authorization']=`Bearer ${jwt}`;
         setToken(jwt);
-
+ 
         await fetchMe();
     }
 
@@ -56,6 +66,20 @@ useEffect(()=>{
 
     }
 
+    async function register(firstName, lastName, email, password){
+
+        const res = await api.post("auth/register", { firstName, lastName, email, password })
+        console.log(res);
+
+        const jwt = res.data.token;
+        localStorage.setItem('token', jwt)
+        api.defaults.headers.common['Authorization']=`Bearer ${jwt}`;
+        setToken(jwt);
+
+        await fetchMe(jwt);
+
+    }
+
 return(
     <authContext.Provider
     value ={{
@@ -63,6 +87,7 @@ return(
         token,
         isAuthenticated: !!user,
         login,
+        register,
         logout,
         loading,
     }}>

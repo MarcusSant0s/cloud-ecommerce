@@ -27,15 +27,22 @@ import {
   SheetTrigger,
 } from "@/primitives/sheet";
 
-export function CartClient({ className, mockCart }) {
+import { useCart } from "@/lib/use-cart";
+
+export function CartClient({ className }) {
+
+  const { items, itemCount, removeItem} = useCart();
+
   const [isOpen, setIsOpen] = React.useState(false);
-  const [cartItems, setCartItems] = React.useState(mockCart);
+  const [cartItems, setCartItems] = React.useState(items);
   const [isMounted, setIsMounted] = React.useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
-
+  
+ 
   React.useEffect(() => {
     setIsMounted(true);
   }, []);
+ 
 
   const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
   const subtotal = cartItems.reduce(
@@ -53,8 +60,10 @@ export function CartClient({ className, mockCart }) {
   };
 
   const handleRemoveItem = (id) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== id));
+    setCartItems((prev) => removeItem(prev))
   };
+      // prev.filter((item) => item.id !== id));
+  
 
   const handleClearCart = () => {
     setCartItems([]);
@@ -68,11 +77,11 @@ export function CartClient({ className, mockCart }) {
       variant="outline"
     >
       <ShoppingCart className="h-4 w-4" />
-      {totalItems > 0 && (
-        <Badge
+      {itemCount > 0 && (
+        <Badge asChild
           className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] text-primary-foreground"
         >
-          {totalItems}
+          {itemCount}
         </Badge>
       )}
     </Button>

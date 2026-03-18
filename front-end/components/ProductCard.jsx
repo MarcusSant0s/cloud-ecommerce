@@ -1,37 +1,47 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { ShoppingCart } from "lucide-react"
+import { useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { ShoppingCart } from "lucide-react";
 
-const ProductCard = ({ product }) => {
-  const [isHovered, setIsHovered] = useState(false)
-  const [isAdding, setIsAdding] = useState(false)
+const ProductCard = ({ product, onAddToCart }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
 
-  const hasDiscount =
-    typeof product.discountPrice === "number" &&
-    product.discountPrice < product.originalPrice
+  // Mapeamento dos nomes da API para variáveis internas
+  const {
+    id,
+    name,
+    mainImageUrl: image,
+    priceOriginal: originalPrice,
+    priceDiscount: discountPrice,
+  } = product;
+
+  // Lógica de Desconto ajustada para os nomes da API
+  const hasDiscount = 
+    typeof discountPrice === "number" && 
+    discountPrice > 0 && 
+    discountPrice < originalPrice;
 
   const discountPercent = hasDiscount
-    ? Math.round(
-        ((product.originalPrice - product.discountPrice) /
-          product.originalPrice) *
-          100
-      )
-    : 0
+    ? Math.round(((originalPrice - discountPrice) / originalPrice) * 100)
+    : 0;
 
   const handleAddToCart = (e) => {
-    e.preventDefault()
-    setIsAdding(true)
+    e.preventDefault();
+    setIsAdding(true);
+    
+    // Passamos o objeto original ou o ID conforme sua necessidade
+    onAddToCart(product);
 
     setTimeout(() => {
-      setIsAdding(false)
-    }, 600)
-  }
+      setIsAdding(false);
+    }, 600);
+  };
 
   return (
-    <Link href={`/products/${product.id}`} className="group">
+    <Link href={`/products/${id}`} className="group">
       <div
         className={`
           relative flex h-full flex-col overflow-hidden rounded-lg border
@@ -43,49 +53,46 @@ const ProductCard = ({ product }) => {
         onMouseLeave={() => setIsHovered(false)}
       >
         {/* Image */}
-        <div className="relative aspect-square overflow-hidden">
-          <Image
-            src={product.image}
-            alt={product.name}
-            fill
-            className={`
-              object-cover transition-transform duration-300
-              ${isHovered ? "scale-105" : ""}
-            `}
-          />
+        <div className="relative aspect-square overflow-hidden bg-muted">
+          {image && (
+            <Image
+              src={image}
+              alt={name}
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className={`
+                object-cover transition-transform duration-300
+                ${isHovered ? "scale-105" : ""}
+              `}
+            />
+          )}
 
-          {/* Discount badge */}
           {hasDiscount && (
-            <span className="absolute right-2 top-2 rounded bg-destructive px-2 py-0.5 text-xs font-medium text-destructive-foreground">
+            <span className="absolute right-2 top-2 z-10 rounded bg-destructive px-2 py-0.5 text-xs font-medium text-destructive-foreground">
               {discountPercent}% OFF
             </span>
           )}
         </div>
 
         {/* Content */}
-        <div className="p-4">
-          <h3
-            className="
-              line-clamp-2 text-base font-medium transition-colors
-              group-hover:text-primary
-            "
-          >
-            {product.name}
+        <div className="p-4 flex-grow">
+          <h3 className="line-clamp-2 text-base font-medium transition-colors group-hover:text-primary">
+            {name}
           </h3>
 
           <div className="mt-2 flex items-center gap-2">
             {hasDiscount ? (
               <>
-                <span className="font-medium">
-                  R$ {product.discountPrice.toFixed(2)}
+                <span className="font-bold text-primary">
+                  R$ {discountPrice.toFixed(2)}
                 </span>
                 <span className="text-sm line-through text-muted-foreground">
-                  R$ {product.originalPrice.toFixed(2)}
+                  R$ {originalPrice.toFixed(2)}
                 </span>
               </>
             ) : (
-              <span className="font-medium">
-                R$ {product.originalPrice.toFixed(2)}
+              <span className="font-bold">
+                R$ {(originalPrice || 0).toFixed(2)}
               </span>
             )}
           </div>
@@ -95,7 +102,7 @@ const ProductCard = ({ product }) => {
         <div className="p-4 pt-0">
           <button
             onClick={handleAddToCart}
-            disabled={isAdding}
+            disabled={isAdding || product.inStock === false}
             className="
               flex w-full items-center justify-center gap-2
               rounded-md bg-primary px-4 py-2 text-sm font-medium
@@ -108,21 +115,21 @@ const ProductCard = ({ product }) => {
             ) : (
               <ShoppingCart className="h-4 w-4" />
             )}
-            Add to Cart
+            {isAdding ? "Adicionando..." : "Add to Cart"}
           </button>
         </div>
 
         {/* Out of stock overlay */}
         {product.inStock === false && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-            <span className="rounded bg-destructive px-3 py-1 text-sm text-destructive-foreground">
-              Out of stock
+          <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[2px]">
+            <span className="rounded bg-destructive px-3 py-1 text-sm font-bold text-white shadow-lg">
+              Esgotado
             </span>
           </div>
         )}
       </div>
     </Link>
-  )
-}
+  );
+};
 
-export default ProductCard
+export default ProductCard;

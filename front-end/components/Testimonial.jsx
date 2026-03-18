@@ -13,8 +13,7 @@ export default function Testimonial({
   const marqueeRef = useRef(null);
   const animationRef = useRef(null);
   const isHoveredRef = useRef(false);
-
-  console.log(testimonials)
+ 
   useEffect(() => {
     if (!marqueeRef.current) return;
 
