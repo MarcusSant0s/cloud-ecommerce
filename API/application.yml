@@ -1,0 +1,10 @@
+aws:
+  region: sa-east-1
+  s3:
+    bucket: spring-s3-user
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
