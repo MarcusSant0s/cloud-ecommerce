@@ -12,19 +12,23 @@ const [user, setUser] = useState(null);
 const [token, setToken] = useState(null);
 const [loading, setLoading] = useState(true);
 
-useEffect(()=>{
-    const storedToken = localStorage.getItem("token");
+    useEffect(()=>{
+        const loadUser = async () => {
+                    const storedToken = localStorage.getItem("token");
 
-    if(storedToken && storedToken != undefined){
-        setToken(storedToken);
-        console.log(storedToken)
-        api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`
-        fetchMe(storedToken);
-    } else {
-        setLoading(false)
-      
-    }
-}, [])
+                    if(storedToken){
+                        setToken(storedToken);
+                        console.log(storedToken)
+                        api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`
+                    await fetchMe(storedToken);
+                    } else {
+                        setLoading(false)
+                    
+                    }
+            }
+
+            loadUser();
+    }, [])
 
     async function fetchMe(token){
         try{

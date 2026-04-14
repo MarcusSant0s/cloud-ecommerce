@@ -1,35 +1,3 @@
-export const categories = [
-  {
-    image:
-      "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    name: "Camisetas",
-    productCount: 24,
-  },
-  {
-    image:
-      "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?q=80&w=697&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    name: "Calças",
-    productCount: 18,
-  },
-  {
-    image:
-      "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?q=80&w=736&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    name: "Jaquetas",
-    productCount: 9,
-  },
-  {
-    image:
-      "https://images.unsplash.com/photo-1631234764568-996fab371596?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    name: "Vestidos",
-    productCount: 14,
-  },
-  {
-    image:
-      "https://images.unsplash.com/photo-1506169894395-36397e4aaee4?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    name: "Acessórios",
-    productCount: 11,
-  },
-]
 
 
 export const featuredProductsHomepage = [

@@ -1,133 +1,137 @@
- "use client";
+"use client";
 
 import * as React from "react";
-
-/* -------------------------------------------------------------------------- */
-/*                                Context                                     */
-/* -------------------------------------------------------------------------- */
+import api from "@/services/api";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const CartContext = React.createContext(undefined);
 
-/* -------------------------------------------------------------------------- */
-/*                         Local-storage helpers                              */
-/* -------------------------------------------------------------------------- */
-
-const STORAGE_KEY = "cart";
-const DEBOUNCE_MS = 500;
-
-const loadCartFromStorage = () => {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) {
-      return parsed;
-    }
-  } catch (err) {
-    console.error("Failed to load cart:", err);
-  }
-  return [];
-};
-
-/* -------------------------------------------------------------------------- */
-/*                               Provider                                     */
-/* -------------------------------------------------------------------------- */
-
 export function CartProvider({ children }) {
-  const [items, setItems] = React.useState(loadCartFromStorage);
+  const { user } = useAuth();
+  const [items, setItems] = React.useState([]);
+  const [isLoading, setIsLoading] = React.useState(true);
 
-  const saveTimeout = React.useRef(null);
+  const fetchCart = React.useCallback(async () => {
+    if (!user?.id) {
+      setItems([]);
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const res = await api.get(`/cart/${user.id}`);
+      
+      // Ajustado para ler o seu DTO achatado (CartResponseDTO)
+      if (res.data && res.data.items) {
+        const formattedItems = res.data.items.map(item => ({
+          cartItemId: item.id,      // ID do CartItem no banco
+          productId: item.productId, // ID do Produto
+          name: item.name,
+          price: item.price,         // BigDecimal vindo do DTO
+          image: item.imageUrl,      // Campo imageUrl do DTO
+          quantity: item.quantity,
+          stock: item.stockAvailable
+        }));
+        setItems(formattedItems);
+      } else {
+        setItems([]);
+      }
+    } catch (err) {
+      console.error("Erro ao carregar carrinho:", err);
+      setItems([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user?.id]);
 
   React.useEffect(() => {
-    if (saveTimeout.current) clearTimeout(saveTimeout.current);
-    saveTimeout.current = setTimeout(() => {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-      } catch (err) {
-        console.error("Failed to save cart:", err);
-      }
-    }, DEBOUNCE_MS);
-
-    return () => {
-      if (saveTimeout.current) clearTimeout(saveTimeout.current);
-    };
-  }, [items]);
+    fetchCart();
+  }, [fetchCart]);
 
   /* ----------------------------- Actions -------------------------------- */
 
-  const addItem = React.useCallback((newItem, qty = 1) => {
-    if (qty <= 0) return;
-    setItems((prev) => {
-      const existing = prev.find((i) => i.id === newItem.id);
-      if (existing) {
-        return prev.map((i) =>
-          i.id === newItem.id
-            ? { ...i, quantity: i.quantity + qty }
-            : i
-        );
-      }
-      return [...prev, { ...newItem, quantity: qty }];
-    });
-  }, []);
+  const addItem = React.useCallback(async (product, qty = 1) => {
+    if (!user?.id) return toast.error("Faça login para comprar");
 
-  const removeItem = React.useCallback((id) => {
-    setItems((prev) => prev.filter((i) => i.id !== id));
-  }, []);
+    try {
+      await api.post(`/cart/${user.id}/add`, null, {
+        params: { productId: product.id, quantity: qty }
+      });
+      await fetchCart();
+      toast.success("Produto adicionado!");
+    } catch (err) {
+      toast.error("Erro ao adicionar item");
+    }
+  }, [user?.id, fetchCart]);
 
-  const updateQuantity = React.useCallback((id, qty) => {
-    setItems((prev) =>
-      prev.flatMap((i) => {
-        if (i.id !== id) return i;
-        if (qty <= 0) return [];
-        if (qty === i.quantity) return i;
-        return { ...i, quantity: qty };
-      })
-    );
-  }, []);
+  const updateQuantity = React.useCallback(async (cartItemId, isIncrement) => {
+    if (!user?.id) return;
 
-  const clearCart = React.useCallback(() => setItems([]), []);
+    try {
+      // Atualização Otimista (Local)
+      setItems(prev => prev.map(item => 
+        item.cartItemId === cartItemId 
+          ? { ...item, quantity: isIncrement ? item.quantity + 1 : item.quantity - 1 }
+          : item
+      ));
 
-  /* --------------------------- Derived data ----------------------------- */
+      await api.patch(`/cart/${user.id}/item/${cartItemId}`, null, {
+        params: { isIncrement }
+      });
+    } catch (err) {
+      toast.error("Erro ao atualizar quantidade");
+      fetchCart(); // Reverte para o estado do banco se der erro
+    }
+  }, [user?.id, fetchCart]);
 
-  const itemCount = React.useMemo(
-    () => items.reduce((t, i) => t + i.quantity, 0),
-    [items]
-  );
+  const removeItem = React.useCallback(async (cartItemId) => {
+    if (!user?.id) return;
 
-  const subtotal = React.useMemo(
-    () => items.reduce((t, i) => t + i.price * i.quantity, 0),
-    [items]
-  );
+    try {
+      // Remove localmente primeiro
+      setItems(prev => prev.filter(item => item.cartItemId !== cartItemId));
+      
+      await api.delete(`/cart/${user.id}/item/${cartItemId}`);
+      toast.success("Item removido");
+    } catch (err) {
+      toast.error("Erro ao remover item");
+      fetchCart();
+    }
+  }, [user?.id, fetchCart]);
 
-  const value = React.useMemo(
-    () => ({
-      addItem,
-      clearCart,
-      itemCount,
-      items,
-      removeItem,
-      subtotal,
-      updateQuantity,
-    }),
-    [items, addItem, removeItem, updateQuantity, clearCart, itemCount, subtotal]
-  );
+  const clearCart = React.useCallback(async () => {
+    if (!user?.id) return;
 
-  return (
-    <CartContext.Provider value={value}>
-      {children}
-    </CartContext.Provider>
-  );
+    try {
+      setItems([]);
+      await api.delete(`/cart/${user.id}`);
+      toast.success("Carrinho limpo");
+    } catch (err) {
+      toast.error("Erro ao limpar carrinho");
+      fetchCart();
+    }
+  }, [user?.id, fetchCart]);
+
+  /* --------------------------- Data ----------------------------- */
+
+  const value = React.useMemo(() => ({
+    items,
+    addItem,
+    updateQuantity,
+    removeItem,
+    clearCart,
+    itemCount: items.reduce((t, i) => t + i.quantity, 0),
+    subtotal: items.reduce((t, i) => t + (i.price * i.quantity), 0),
+    isLoading
+  }), [items, addItem, updateQuantity, removeItem, clearCart, isLoading]);
+
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
-
-/* -------------------------------------------------------------------------- */
-/*                                 Hook                                      */
-/* -------------------------------------------------------------------------- */
 
 export function useCart() {
   const ctx = React.useContext(CartContext);
-  if (!ctx) {
-    throw new Error("useCart must be used within a CartProvider");
-  }
+  if (!ctx) throw new Error("useCart must be used within a CartProvider");
   return ctx;
 }

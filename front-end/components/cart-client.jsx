@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Minus, Plus, ShoppingCart, X } from "lucide-react";
+import { Minus, Plus, ShoppingCart, X, Trash2, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import * as React from "react";
@@ -29,57 +29,47 @@ import {
 
 import { useCart } from "@/lib/use-cart";
 
-export function CartClient({ className }) {
+const CURRENCY_FORMATTER = new Intl.NumberFormat("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+});
 
-  const { items, itemCount, removeItem} = useCart();
+export function CartClient({ className }) {
+  // Pegamos tudo do nosso Context integrado
+  const { 
+    items, 
+    itemCount, 
+    subtotal, 
+    removeItem, 
+    updateQuantity, 
+    clearCart,
+    isLoading
+  } = useCart();
 
   const [isOpen, setIsOpen] = React.useState(false);
-  const [cartItems, setCartItems] = React.useState(items);
   const [isMounted, setIsMounted] = React.useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
   
- 
   React.useEffect(() => {
     setIsMounted(true);
   }, []);
- 
 
-  const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
-  const subtotal = cartItems.reduce(
-    (acc, item) => acc + item.price * item.quantity,
-    0
-  );
-
-  const handleUpdateQuantity = (id, newQuantity) => {
-    if (newQuantity < 1) return;
-    setCartItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, quantity: newQuantity } : item
-      )
-    );
-  };
-
-  const handleRemoveItem = (id) => {
-    setCartItems((prev) => removeItem(prev))
-  };
-      // prev.filter((item) => item.id !== id));
-  
-
-  const handleClearCart = () => {
-    setCartItems([]);
+  // Handlers que chamam a API via Context
+  const handleUpdateQuantity = (cartItemId, currentQty, isIncrement) => {
+    updateQuantity(cartItemId, isIncrement);
   };
 
   const CartTrigger = (
     <Button
       aria-label="Open cart"
-      className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border bg-background shadow-xs transition-all hover:bg-accent hover:text-accent-foreground hover:shadow-md focus-visible:ring-2 focus-visible:ring-accent/40"
+      className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border bg-background shadow-sm transition-all hover:bg-accent"
       size="icon"
       variant="outline"
     >
       <ShoppingCart className="h-4 w-4" />
-      {itemCount > 0 && (
-        <Badge asChild
-          className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] text-primary-foreground"
+      {isMounted && itemCount > 0 && (
+        <Badge 
+          className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground"
         >
           {itemCount}
         </Badge>
@@ -88,123 +78,95 @@ export function CartClient({ className }) {
   );
 
   const CartContent = (
-    <div className="flex flex-col">
+    <div className="flex flex-col h-full max-h-[100vh]">
       <div className="flex items-center justify-between border-b px-6 py-4">
         <div>
-          <div className="text-xl font-semibold">Your Cart</div>
+          <div className="text-xl font-semibold">Seu Carrinho</div>
           <div className="text-sm text-muted-foreground">
-            {totalItems === 0
-              ? "Your cart is empty"
-              : `You have ${totalItems} item${totalItems !== 1 ? "s" : ""} in your cart`}
+            {isLoading ? "Carregando..." : `${itemCount} item(s)`}
           </div>
         </div>
-        {isDesktop && (
-          <SheetClose asChild>
-            <Button size="icon" variant="ghost">
-              <X className="h-5 w-5" />
-            </Button>
-          </SheetClose>
-        )}
       </div>
 
       <div className="flex-1 overflow-y-auto px-6">
-        <AnimatePresence>
-          {cartItems.length === 0 ? (
+        <AnimatePresence mode="popLayout">
+          {items.length === 0 ? (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center py-12"
+              className="flex flex-col items-center justify-center py-12 text-center"
             >
               <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-muted">
                 <ShoppingCart className="h-10 w-10 text-muted-foreground" />
               </div>
-              <h3 className="mb-2 text-lg font-medium">Your cart is empty</h3>
-              <p className="mb-6 text-center text-sm text-muted-foreground">
-                Looks like you haven't added anything yet.
+              <h3 className="mb-2 text-lg font-medium">Carrinho vazio</h3>
+              <p className="mb-6 text-sm text-muted-foreground">
+                Você ainda não adicionou produtos.
               </p>
-              {isDesktop ? (
-                <SheetClose asChild>
-                  <Link href="/products">
-                    <Button>Browse Products</Button>
-                  </Link>
-                </SheetClose>
-              ) : (
-                <DrawerClose asChild>
-                  <Link href="/products">
-                    <Button>Browse Products</Button>
-                  </Link>
-                </DrawerClose>
-              )}
+              <SheetClose asChild>
+                <Link href="/products">
+                  <Button onClick={() => setIsOpen(false)}>Ver Produtos</Button>
+                </Link>
+              </SheetClose>
             </motion.div>
           ) : (
             <div className="space-y-4 py-4">
-              {cartItems.map((item) => (
+              {items.map((item) => (
                 <motion.div
-                  key={item.id}
+                  key={item.cartItemId}
                   layout
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.15 }}
-                  className="group relative flex rounded-lg border bg-card p-2 shadow-sm hover:bg-accent/50"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="group relative flex gap-4 rounded-lg border bg-card p-3 shadow-sm"
                 >
-                  <div className="relative h-20 w-20 overflow-hidden rounded">
+                  <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-md border">
                     <Image
                       alt={item.name}
                       fill
-                      src={item.image}
+                      src={item.image || "/placeholder.png"}
                       className="object-cover"
                     />
                   </div>
 
-                  <div className="ml-4 flex flex-1 flex-col justify-between">
-                    <div>
-                      <div className="flex items-start justify-between">
-                        <Link
-                          href={`/products/${item.id}`}
-                          onClick={() => setIsOpen(false)}
-                          className="line-clamp-2 text-sm font-medium group-hover:text-primary"
-                        >
-                          {item.name}
-                        </Link>
-                        <button
-                          onClick={() => handleRemoveItem(item.id)}
-                          className="rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-destructive"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {item.category}
-                      </p>
+                  <div className="flex flex-1 flex-col justify-between">
+                    <div className="flex justify-between gap-2">
+                      <Link
+                        href={`/products/${item.productId}`}
+                        onClick={() => setIsOpen(false)}
+                        className="line-clamp-2 text-sm font-medium hover:text-primary transition-colors"
+                      >
+                        {item.name}
+                      </Link>
+                      <button
+                        onClick={() => removeItem(item.cartItemId)}
+                        className="text-muted-foreground hover:text-destructive transition-colors"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
 
                     <div className="mt-2 flex items-center justify-between">
-                      <div className="flex items-center rounded-md border">
+                      <div className="flex items-center rounded-md border bg-background">
                         <button
-                          onClick={() =>
-                            handleUpdateQuantity(item.id, item.quantity - 1)
-                          }
+                          onClick={() => handleUpdateQuantity(item.cartItemId, item.quantity, false)}
                           disabled={item.quantity <= 1}
-                          className="h-7 w-7 border-r text-muted-foreground hover:bg-muted"
+                          className="flex h-8 w-8 items-center justify-center hover:bg-muted disabled:opacity-30"
                         >
                           <Minus className="h-3 w-3" />
                         </button>
-                        <span className="h-7 w-7 text-xs font-medium flex items-center justify-center">
+                        <span className="w-8 text-center text-xs font-semibold">
                           {item.quantity}
                         </span>
                         <button
-                          onClick={() =>
-                            handleUpdateQuantity(item.id, item.quantity + 1)
-                          }
-                          className="h-7 w-7 border-l text-muted-foreground hover:bg-muted"
+                          onClick={() => handleUpdateQuantity(item.cartItemId, item.quantity, true)}
+                          className="flex h-8 w-8 items-center justify-center hover:bg-muted"
                         >
                           <Plus className="h-3 w-3" />
                         </button>
                       </div>
-                      <div className="text-sm font-medium">
-                        ${(item.price * item.quantity).toFixed(2)}
+                      <div className="text-sm font-bold text-primary">
+                        {CURRENCY_FORMATTER.format(item.price * item.quantity)}
                       </div>
                     </div>
                   </div>
@@ -215,45 +177,43 @@ export function CartClient({ className }) {
         </AnimatePresence>
       </div>
 
-      {cartItems.length > 0 && (
-        <div className="border-t px-6 py-4 space-y-3">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Subtotal</span>
-            <span className="font-medium">${subtotal.toFixed(2)}</span>
+      {items.length > 0 && (
+        <div className="border-t bg-muted/20 px-6 py-6 space-y-4">
+          <div className="flex justify-between text-base font-semibold">
+            <span>Subtotal</span>
+            <span>{CURRENCY_FORMATTER.format(subtotal)}</span>
           </div>
-          <Separator />
-          <Button className="w-full" size="lg">
-            Checkout
-          </Button>
-          <Button variant="outline" onClick={handleClearCart}>
-            Clear Cart
-          </Button>
+          <div className="grid grid-cols-2 gap-2">
+            <Button variant="outline" onClick={() => clearCart()} className="w-full">
+              Limpar
+            </Button>
+            <Button className="w-full" size="default">
+              Finalizar
+            </Button>
+          </div>
         </div>
       )}
     </div>
   );
 
-  if (!isMounted) {
-    return <div className={cn("relative", className)}>{CartTrigger}</div>;
-  }
+  if (!isMounted) return <div className={className}>{CartTrigger}</div>;
 
   return (
     <div className={cn("relative", className)}>
       {isDesktop ? (
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild>{CartTrigger}</SheetTrigger>
-          <SheetContent className="flex w-[400px] flex-col p-0">
-            <SheetHeader>
-              <SheetTitle>Shopping Cart</SheetTitle>
-            </SheetHeader>
+          <SheetContent className="flex w-full sm:max-w-[420px] flex-col p-0">
             {CartContent}
           </SheetContent>
         </Sheet>
       ) : (
         <Drawer open={isOpen} onOpenChange={setIsOpen}>
-          <DrawerTitle> Carrinho</DrawerTitle>
           <DrawerTrigger asChild>{CartTrigger}</DrawerTrigger>
-          <DrawerContent>{CartContent}</DrawerContent>
+          <DrawerContent className="h-[85vh]">
+            <DrawerTitle className="sr-only">Carrinho de Compras</DrawerTitle>
+            {CartContent}
+          </DrawerContent>
         </Drawer>
       )}
     </div>

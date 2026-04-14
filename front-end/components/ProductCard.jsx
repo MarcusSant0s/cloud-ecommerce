@@ -3,22 +3,29 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Loader2 } from "lucide-react";
+import { useCart } from "@/lib/use-cart"; // Certifique-se que o caminho está correto
+import { toast } from "sonner";
 
-const ProductCard = ({ product, onAddToCart }) => {
+const ProductCard = ({ product }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
 
-  // Mapeamento dos nomes da API para variáveis internas
+  // Pegamos a função addItem do nosso contexto integrado com o Java
+  const { addItem } = useCart();
+  
   const {
     id,
     name,
     mainImageUrl: image,
     priceOriginal: originalPrice,
     priceDiscount: discountPrice,
+    quantity: stockQuantity // Usando a quantidade que vem da sua API
   } = product;
 
-  // Lógica de Desconto ajustada para os nomes da API
+  const inStock = stockQuantity > 0;
+  const currentPrice = discountPrice || originalPrice || 0;
+
   const hasDiscount = 
     typeof discountPrice === "number" && 
     discountPrice > 0 && 
@@ -28,16 +35,25 @@ const ProductCard = ({ product, onAddToCart }) => {
     ? Math.round(((originalPrice - discountPrice) / originalPrice) * 100)
     : 0;
 
-  const handleAddToCart = (e) => {
-    e.preventDefault();
-    setIsAdding(true);
+  const handleAddToCart = async (e) => {
+    e.preventDefault(); // Evita navegar para a página do produto ao clicar no botão
     
-    // Passamos o objeto original ou o ID conforme sua necessidade
-    onAddToCart(product);
-
-    setTimeout(() => {
+    setIsAdding(true);
+    try {
+      // Chamada para o contexto (que disparará o POST /cart/{userId}/add)
+      await addItem(
+        {
+          id:product.id,
+          quantity:1
+        }
+      );
+       
+      toast.success(`${name} adicionado ao carrinho!`);
+    } catch (error) {
+      toast.error("Não foi possível adicionar ao carrinho.");
+    } finally {
       setIsAdding(false);
-    }, 600);
+    }
   };
 
   return (
@@ -54,17 +70,21 @@ const ProductCard = ({ product, onAddToCart }) => {
       >
         {/* Image */}
         <div className="relative aspect-square overflow-hidden bg-muted">
-          {image && (
+          {image ? (
             <Image
               src={image}
               alt={name}
               fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              sizes="(max-width: 768px) 100vw, 33vw"
               className={`
                 object-cover transition-transform duration-300
                 ${isHovered ? "scale-105" : ""}
               `}
             />
+          ) : (
+            <div className="flex h-full items-center justify-center text-muted-foreground text-xs">
+              Sem Imagem
+            </div>
           )}
 
           {hasDiscount && (
@@ -76,7 +96,7 @@ const ProductCard = ({ product, onAddToCart }) => {
 
         {/* Content */}
         <div className="p-4 flex-grow">
-          <h3 className="line-clamp-2 text-base font-medium transition-colors group-hover:text-primary">
+          <h3 className="line-clamp-2 text-sm font-medium transition-colors group-hover:text-primary">
             {name}
           </h3>
 
@@ -86,13 +106,13 @@ const ProductCard = ({ product, onAddToCart }) => {
                 <span className="font-bold text-primary">
                   R$ {discountPrice.toFixed(2)}
                 </span>
-                <span className="text-sm line-through text-muted-foreground">
+                <span className="text-xs line-through text-muted-foreground">
                   R$ {originalPrice.toFixed(2)}
                 </span>
               </>
             ) : (
               <span className="font-bold">
-                R$ {(originalPrice || 0).toFixed(2)}
+                R$ {currentPrice.toFixed(2)}
               </span>
             )}
           </div>
@@ -102,7 +122,7 @@ const ProductCard = ({ product, onAddToCart }) => {
         <div className="p-4 pt-0">
           <button
             onClick={handleAddToCart}
-            disabled={isAdding || product.inStock === false}
+            disabled={isAdding || !inStock}
             className="
               flex w-full items-center justify-center gap-2
               rounded-md bg-primary px-4 py-2 text-sm font-medium
@@ -111,18 +131,18 @@ const ProductCard = ({ product, onAddToCart }) => {
             "
           >
             {isAdding ? (
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <ShoppingCart className="h-4 w-4" />
             )}
-            {isAdding ? "Adicionando..." : "Add to Cart"}
+            {isAdding ? "Aguarde..." : inStock ? "Adicionar" : "Esgotado"}
           </button>
         </div>
 
         {/* Out of stock overlay */}
-        {product.inStock === false && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[2px]">
-            <span className="rounded bg-destructive px-3 py-1 text-sm font-bold text-white shadow-lg">
+        {!inStock && (
+          <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[1px]">
+            <span className="rounded bg-destructive px-3 py-1 text-xs font-bold text-white shadow-lg">
               Esgotado
             </span>
           </div>
@@ -132,4 +152,4 @@ const ProductCard = ({ product, onAddToCart }) => {
   );
 };
 
-export default ProductCard;
+export default ProductCard; 

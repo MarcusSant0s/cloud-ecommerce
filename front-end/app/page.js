@@ -1,9 +1,19 @@
 import Categories from '@/components/Categories';
 import ProductSection from '@/components/ProductSection';
 import Testimonial from '@/components/Testimonial';
+import api from '@/services/api';
 import {testimonials} from '@/app/mocks'
 
-export default function Home() {
+export default async function Home() {
+
+    const categories = await api.get(
+      "http://localhost:8080/category/all-categories",
+      {
+        next: { revalidate: 60 } // revalida a cada 60s
+      }
+    ).then(res => res.data); 
+
+
   return (
     <div className="">
       <main className="          
@@ -13,7 +23,7 @@ export default function Home() {
           ">
       
 
-        <Categories></Categories>
+        <Categories categories={categories}></Categories>
 
          <ProductSection/>
 

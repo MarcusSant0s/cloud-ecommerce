@@ -1,10 +1,8 @@
-import { categories } from "@/app/mocks"
+ 
 import Link from "next/link"
-import Image from "next/image"
+import Image from "next/image" 
 
-export default function Categories(){
-
-
+export default function Categories({categories}){
 
     return  <section
               className={`
@@ -68,16 +66,16 @@ export default function Categories(){
                           `}
                           fill
                           sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
-                          src={category.image}
+                          src={category.url}
                         />
                       </div>
                       <div className="relative z-20 -mt-6 p-4">
                         <div className="mb-1 text-lg font-medium">
                           {category.name}
                         </div>
-                        <p className="text-sm text-muted-foreground">
+                        {/* <p className="text-sm text-muted-foreground">
                           {category.productCount} products
-                        </p>
+                        </p> */}
                       </div>
                     </Link>
                   ))}

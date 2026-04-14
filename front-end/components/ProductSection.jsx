@@ -8,9 +8,9 @@ const ProductSection = () => {
 
  const [products, setProducts] = useState([]);
 
-  useEffect(() => {
-    // 1. Define the async function inside the effect
-    const fetchProducts = async () => {
+  useEffect(() => { 
+
+     const fetchProducts = async () => {
       try {
         const res = await api.get("/product");
         setProducts(res.data);
@@ -20,16 +20,11 @@ const ProductSection = () => {
       }
     };
 
-    // 2. Call it immediately
-    fetchProducts();
+     fetchProducts();
 
-    // 3. The dependency array goes HERE, outside the function body
-  }, []);
+   }, []);
   
-
-  async () => {
- console.log(pro)
-  }
+ 
   return (
     <section className="bg-muted/50 py-12 md:py-16">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -54,7 +49,7 @@ const ProductSection = () => {
  
 
             {products.map(product =>(
-           <ProductCard key={product.id} product={product} /> 
+            <ProductCard key={product.id} product={product} /> 
             ) )}
 
  
