@@ -1,6 +1,8 @@
 package com.project.API.cart;
 
 import com.project.API.cart.dto.CartResponseDTO;
+import com.project.API.cart.dto.GuestItemDTO;
+import com.project.API.cart.dto.MergeCartDTO;
 import com.project.API.config.ResourceNotFoundException;
 import com.project.API.product.Product;
 import com.project.API.product.ProductRepository;
@@ -9,8 +11,7 @@ import com.project.API.user.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.server.ResponseStatusException;
+ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -106,6 +107,33 @@ public class CartService {
 
      }
 
+     @Transactional
+     public void mergeGuestCart(Long userId, MergeCartDTO request) {
+         if (request.items() == null || request.items().isEmpty()) return;
+
+         Cart cart = getOrCreateCart(userId);
+
+         for (GuestItemDTO item : request.items()) {
+             Product product = productRepository.findById(item.productId())
+                     .orElseThrow(() -> new RuntimeException("Product Not Found"));
+
+             Optional<CartItem> existing = cart.getCartItem().stream()
+                     .filter(i -> i.getProduct().getId().equals(item.productId()))
+                     .findFirst();
+
+             if (existing.isPresent()) {
+                 int total = existing.get().getQuantity() + item.quantity();
+                 validateStockAvailability(item.productId(), total);
+                 existing.get().setQuantity(total);
+             } else {
+                 validateStockAvailability(item.productId(), item.quantity());
+                 addItem(userId, item.productId(), item.quantity());
+             }
+         }        ;
+     }
+
+
+     // Helpers methods
     private void validateStockAvailability(Long productId, int requestedQuantity) {
         int stock = productRepository.findQuantityById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
@@ -121,20 +149,17 @@ public class CartService {
                 .map(item -> {
                     Product product = item.getProduct();
 
-                    // Escolhe o preço (Discount ou Original)
-                    BigDecimal unitPrice = product.getPriceDiscount() != null
-                            ? product.getPriceDiscount()
-                            : product.getPriceOriginal();
+
 
                     // Cálculo do Subtotal: preço * quantidade
-                    BigDecimal itemSubtotal = unitPrice.multiply(BigDecimal.valueOf(item.getQuantity()));
+                    BigDecimal itemSubtotal = item.getProduct().getFinalPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
 
                     return new CartResponseDTO.CartItemDTO(
                             item.getId(),
                             product.getId(),
                             product.getName(),
                             getMainImageUrl(product),
-                            unitPrice,
+                            product.getFinalPrice(),
                             item.getQuantity(),
                             product.getQuantity(),
                             itemSubtotal
@@ -148,8 +173,6 @@ public class CartService {
 
         return new CartResponseDTO(cart.getId(), cart.getStatus(), itemDTOs, totalCartValue);
     }
-
-
 
     private String getMainImageUrl(Product product) {
         Set<ProductImage> images = product.getImages(); // Pegando o Set
@@ -165,6 +188,7 @@ public class CartService {
                 .orElseGet(() -> images.iterator().next().getUrl()); // Se não houver 'main', pega qualquer uma do Set
 
     }
+
     public Cart getOrCreateCart(Long userId){
 
         Optional<Cart> cartOptional = cartrepository.findByUserIdAndStatus(userId, CartItemStatus.ACTIVE);

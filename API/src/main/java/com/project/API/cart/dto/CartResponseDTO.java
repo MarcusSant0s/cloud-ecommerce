@@ -16,9 +16,9 @@ public record CartResponseDTO(
             Long productId,
             String name,
             String imageUrl,
-            BigDecimal price, // Alterado para BigDecimal
+            BigDecimal finalPrice,
             int quantity,
             int stockAvailable,
-            BigDecimal subtotal // Bom enviar o subtotal já calculado
+            BigDecimal subtotal
     ) {}
 }
