@@ -1,29 +1,11 @@
- 'use client'
+ 
 import {featuredProductsHomepage} from '../app/mocks'; 
 import ProductCard from './ProductCard';
-import api from "@/services/api"; 
-import { useEffect, useState } from 'react';
+import api from "@/services/api";  
 
-const ProductSection = () => {
+const ProductSection = ({products}) => {
 
- const [products, setProducts] = useState([]);
-
-  useEffect(() => { 
-
-     const fetchProducts = async () => {
-      try {
-        const res = await api.get("/product");
-        setProducts(res.data);
-        console.log(res.data);
-      } catch (error) {
-        console.error("Failed to fetch products:", error);
-      }
-    };
-
-     fetchProducts();
-
-   }, []);
-  
+  console.log(products) 
  
   return (
     <section className="bg-muted/50 py-12 md:py-16">

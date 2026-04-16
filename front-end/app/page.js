@@ -14,6 +14,13 @@ export default async function Home() {
     ).then(res => res.data); 
 
 
+        const products = await api.get(
+      "http://localhost:8080/product?size=10",
+      {
+        next: { revalidate: 300 } // revalida a cada 60s
+      }
+    ).then(res => res.data.content); 
+
   return (
     <div className="">
       <main className="          
@@ -25,7 +32,7 @@ export default async function Home() {
 
         <Categories categories={categories}></Categories>
 
-         <ProductSection/>
+         <ProductSection products={products}/>
 
          <Testimonial
           className="py-0"

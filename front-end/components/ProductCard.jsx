@@ -20,6 +20,7 @@ const ProductCard = ({ product }) => {
     mainImageUrl: image,
     priceOriginal: originalPrice,
     priceDiscount: discountPrice,
+    finalPrice: finalPrice,
     quantity: stockQuantity // Usando a quantidade que vem da sua API
   } = product;
 
@@ -89,7 +90,7 @@ const ProductCard = ({ product }) => {
 
           {hasDiscount && (
             <span className="absolute right-2 top-2 z-10 rounded bg-destructive px-2 py-0.5 text-xs font-medium text-destructive-foreground">
-              {discountPercent}% OFF
+              {discountPrice * 100}% OFF
             </span>
           )}
         </div>
@@ -104,7 +105,7 @@ const ProductCard = ({ product }) => {
             {hasDiscount ? (
               <>
                 <span className="font-bold text-primary">
-                  R$ {discountPrice.toFixed(2)}
+                  R$ {finalPrice.toFixed(2)}
                 </span>
                 <span className="text-xs line-through text-muted-foreground">
                   R$ {originalPrice.toFixed(2)}
@@ -112,7 +113,7 @@ const ProductCard = ({ product }) => {
               </>
             ) : (
               <span className="font-bold">
-                R$ {currentPrice.toFixed(2)}
+                R$ {finalPrice.toFixed(2)}
               </span>
             )}
           </div>

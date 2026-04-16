@@ -63,7 +63,7 @@ const [loading, setLoading] = useState(true);
 
     function logout(){
 
-        localStorage.removeItem(token);
+        localStorage.removeItem("token");
         delete api.defaults.headers.common['Authorization'];
         setToken(null)
         setUser(null);

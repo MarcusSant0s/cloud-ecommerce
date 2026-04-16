@@ -29,7 +29,7 @@ export function CartProvider({ children }) {
           cartItemId: item.id,      // ID do CartItem no banco
           productId: item.productId, // ID do Produto
           name: item.name,
-          price: item.price,         // BigDecimal vindo do DTO
+          price: item.finalPrice,         // BigDecimal vindo do DTO
           image: item.imageUrl,      // Campo imageUrl do DTO
           quantity: item.quantity,
           stock: item.stockAvailable
