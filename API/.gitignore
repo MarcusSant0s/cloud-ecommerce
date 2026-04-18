@@ -5,6 +5,7 @@ target/
 !**/src/test/**/target/
 ./jwt/JwtService.java
 ./application.yml
+.env
 
 ### STS ###
 .apt_generated
