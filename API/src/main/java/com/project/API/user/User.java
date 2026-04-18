@@ -3,7 +3,6 @@ package com.project.API.user;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.project.API.cart.Cart;
 import jakarta.persistence.*;
-import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -38,10 +37,10 @@ public class User implements UserDetails {
    @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
-
     @OneToMany(mappedBy = "user")
     @JsonIgnoreProperties("user")
     private List<Cart> cart;
+
 
 
 
