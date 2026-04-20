@@ -33,15 +33,4 @@ public class UserController {
        return SingleUserRequest.from(user);
     }
 
-//    @PostMapping
-//    public ResponseEntity<?> create (@RequestBody CreateUserRequest request){
-//        User user = userService.createUser(
-//                request.firstName,
-//                request.lastName,
-//                request.email,
-//                request.password
-//        );
-//
-//                return ResponseEntity.status(HttpStatus.CREATED).build();
-//    }
 }

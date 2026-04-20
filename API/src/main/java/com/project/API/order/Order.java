@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "order")
+@Table(name = "orders")
 public class Order {
 //id, user, orderitem snspashot, total status
 
@@ -28,6 +28,11 @@ public class Order {
 
    @Enumerated(EnumType.STRING)
    private OrderStatus status;
+
+    @Column(name = "mercado_pago_preference_id")
+    private String mercadoPagoPreferenceId;
+    @Column(name = "mercado_pago_payment_id")
+    private String mercadoPagoPaymentId;
 
 
     private LocalDateTime createdAt;
@@ -51,6 +56,12 @@ public class Order {
 
     public void setItems(List<OrderItem> items) {
         this.items = items;
+    }
+
+    public void addItem(OrderItem orderItem){
+        orderItem.setOrder(this);
+        this.items.add(orderItem);
+
     }
 
     public BigDecimal getTotal() {
@@ -83,6 +94,22 @@ public class Order {
 
     public void setPaidAt(LocalDateTime paidAt) {
         this.paidAt = paidAt;
+    }
+
+    public String getMercadoPagoPreferenceId() {
+        return mercadoPagoPreferenceId;
+    }
+
+    public String getMercadoPagoPaymentId() {
+        return mercadoPagoPaymentId;
+    }
+
+    public void setMercadoPagoPaymentId(String mercadoPagoPaymentId) {
+        this.mercadoPagoPaymentId = mercadoPagoPaymentId;
+    }
+
+    public void setMercadoPagoPreferenceId(String mercadoPagoPreferenceId) {
+        this.mercadoPagoPreferenceId = mercadoPagoPreferenceId;
     }
 
 

@@ -2,6 +2,7 @@ package com.project.API.user;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.project.API.cart.Cart;
+import com.project.API.order.Order;
 import jakarta.persistence.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -34,12 +35,19 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String password;
 
-   @Column(nullable = false, updatable = false)
+    @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
     @OneToMany(mappedBy = "user")
     @JsonIgnoreProperties("user")
     private List<Cart> cart;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Order> order;
+
+    @OneToOne
+    @JoinColumn(name = "user_adress_id")
+    private UserAdress userAdress;
 
 
 
@@ -115,5 +123,19 @@ public class User implements UserDetails {
     }
     public void setCart(List<Cart> cart) {
         this.cart = cart;
+    }
+
+    public List<Order> getOrder() {
+        return order;
+    }
+    public void setOrder(List<Order> order) {
+        this.order = order;
+    }
+
+    public UserAdress getUserAdress() {
+        return userAdress;
+    }
+    public void setUserAdress(UserAdress userAdress) {
+        this.userAdress = userAdress;
     }
 }

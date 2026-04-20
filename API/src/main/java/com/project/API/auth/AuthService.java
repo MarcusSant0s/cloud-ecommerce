@@ -2,6 +2,7 @@ package com.project.API.auth;
 
 import com.project.API.auth.dto.CreateUserRequest;
 import com.project.API.user.User;
+import com.project.API.user.UserAdress;
 import com.project.API.user.UserRepository;
 import com.project.API.auth.dto.AuthResponse;
 import com.project.API.auth.dto.LoginRequest;
@@ -31,12 +32,22 @@ public class AuthService {
         if(userRepository.existsByEmail(request.getEmail())){
             throw new RuntimeException("Email já cadastrado");
         }
+
+        UserAdress userAdress = new UserAdress(
+                request.getStreet(),
+                request.getCity(),
+                request.getCep(),
+                request.getNumber()
+        );
+
         User user = new User(
          request.getFirstName( ),
         request.getLastName( ),
         request.getEmail( ),
         passwordEncoder.encode(request.getPassword())
         );
+
+        user.setUserAdress(userAdress);
 
         userRepository.save(user);
 

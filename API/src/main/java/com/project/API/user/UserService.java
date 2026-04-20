@@ -31,28 +31,6 @@ public class UserService {
 }
 
 
-//    public User createUser(String firstName, String lastName, String email, String rawPassword){
-//
-//        if(userRepository.existsByEmail(email)) {
-//            throw new RuntimeException(("Email already in use"));
-//        }
-//
-//        User user = new User();
-//        user.setFirstName(firstName);
-//        user.setLastName(lastName);
-//        user.setEmail(email);
-//        user.changePassword(passwordEncoder.encode(rawPassword));
-//
-//        return userRepository.save(user);
-//    }
-
-
-
-//    public Optional<SingleUserRequest> loadUserByUsername(String email){
-//        return userRepository.findByEmail(email)
-//                .orElseThrow(() -> new UserNotFoundException("User Not Found"));
-//
-//    }
 
 
 
