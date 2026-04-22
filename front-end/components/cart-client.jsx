@@ -28,14 +28,20 @@ import {
 } from "@/primitives/sheet";
 
 import { useCart } from "@/lib/use-cart";
+import { useAuth } from "@/contexts/AuthContext";
+import api from "@/services/api";
 
 const CURRENCY_FORMATTER = new Intl.NumberFormat("pt-BR", {
   style: "currency",
   currency: "BRL",
 });
 
+import { useRouter } from "next/navigation";
+
 export function CartClient({ className }) {
-  // Pegamos tudo do nosso Context integrado
+  
+  const router = useRouter(); 
+  const { user } = useAuth();
   const { 
     items, 
     itemCount, 
@@ -45,6 +51,8 @@ export function CartClient({ className }) {
     clearCart,
     isLoading
   } = useCart();
+
+
 
   const [isOpen, setIsOpen] = React.useState(false);
   const [isMounted, setIsMounted] = React.useState(false);
@@ -57,6 +65,12 @@ export function CartClient({ className }) {
   // Handlers que chamam a API via Context
   const handleUpdateQuantity = (cartItemId, currentQty, isIncrement) => {
     updateQuantity(cartItemId, isIncrement);
+  };
+
+  const handleCreateOrder  = async () => {
+    const res = await api.post(`/order/${user.id}`);
+    const checkoutUrl = res.data.checkoutUrl;
+    window.location.href = checkoutUrl; // ← redirects to MP checkout
   };
 
   const CartTrigger = (
@@ -187,7 +201,7 @@ export function CartClient({ className }) {
             <Button variant="outline" onClick={() => clearCart()} className="w-full">
               Limpar
             </Button>
-            <Button className="w-full" size="default">
+            <Button className="w-full" size="default" onClick={() => handleCreateOrder()}>
               Finalizar
             </Button>
           </div>

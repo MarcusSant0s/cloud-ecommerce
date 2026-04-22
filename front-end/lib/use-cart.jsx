@@ -53,8 +53,8 @@ export function CartProvider({ children }) {
   /* ----------------------------- Actions -------------------------------- */
 
   const addItem = React.useCallback(async (product, qty = 1) => {
-    if (!user?.id) return toast.error("Faça login para comprar");
-
+    if (!user?.id) return ;
+// router.push('/auth/sign-in')
     try {
       await api.post(`/cart/${user.id}/add`, null, {
         params: { productId: product.id, quantity: qty }

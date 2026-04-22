@@ -2,12 +2,13 @@
 
 import { useContext, useEffect, createContext, useState} from "react";
 import api from "@/services/api"; 
-
+import { useRouter } from "next/navigation";
 const authContext = createContext(null);
 
 
 
 export function AuthProvider({ children }) {
+    const router = useRouter();
 const [user, setUser] = useState(null);
 const [token, setToken] = useState(null);
 const [loading, setLoading] = useState(true);
@@ -30,22 +31,23 @@ const [loading, setLoading] = useState(true);
             loadUser();
     }, [])
 
-    async function fetchMe(token){
-        try{
-              const res = await api.get('/users/me', {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-                });
+    async function fetchMe(tokenParam){
+     try{
+        const tokenToUse = tokenParam || localStorage.getItem('token');
 
+        const res = await api.get('/users/me', {
+            headers: {
+                Authorization: `Bearer ${tokenToUse}`,
+            },
+        });
 
-            setUser(res.data)
-            console.log("fetchMe done", JSON.stringify(res.data, null, 2));
-        } catch{
-            logout()
-        } finally{
-            setLoading(false)
-        }
+        setUser(res.data);
+
+    } catch {
+        logout();
+    } finally {
+        setLoading(false);
+    }
     }
 
     async function login(email, password){
@@ -53,20 +55,26 @@ const [loading, setLoading] = useState(true);
         console.log("Login iniciado") 
 
         const res = await api.post("auth/login", {email, password})
-        const jwt = res.data.token;
-        localStorage.setItem('token', jwt)
+        const jwt = res.data.token; 
+
+         localStorage.setItem('token', jwt)
         api.defaults.headers.common['Authorization']=`Bearer ${jwt}`;
+      
+
         setToken(jwt);
  
-        await fetchMe();
+        await fetchMe(jwt);
     }
 
     function logout(){
+        localStorage.removeItem('token');
 
-        localStorage.removeItem("token");
         delete api.defaults.headers.common['Authorization'];
+
         setToken(null)
         setUser(null);
+
+        router.push('/')
 
     }
 
