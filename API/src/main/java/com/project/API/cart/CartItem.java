@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.project.API.product.Product;
 import jakarta.persistence.*;
 
-import java.util.Objects;
+
 
 @Entity
 @Table(name = "cartItem")
@@ -17,8 +17,8 @@ public class CartItem {
     private int quantity;
 
 
-    @OneToOne
-    @JoinColumn(name = "product_id")
+    @ManyToOne
+    @JoinColumn(name = "product_id", unique = false)
     private Product product;
 
     @ManyToOne

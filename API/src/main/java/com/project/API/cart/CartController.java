@@ -1,7 +1,7 @@
 package com.project.API.cart;
 
 import com.project.API.cart.dto.CartResponseDTO;
-import com.project.API.cart.dto.MergeCartDTO;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
  import org.springframework.web.bind.annotation.*;
@@ -25,13 +25,13 @@ public class CartController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @PostMapping("/{userId}/merge")
-    public ResponseEntity<?> mergeGuestCart(
-            @PathVariable Long userId,
-            @RequestParam MergeCartDTO request){
-        cartService.mergeGuestCart(userId, request);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
-    }
+//    @PostMapping("/{userId}/merge")
+//    public ResponseEntity<?> mergeGuestCart(
+//            @PathVariable Long userId,
+//            @RequestParam MergeCartDTO request){
+//        cartService.mergeGuestCart(userId, request);
+//        return ResponseEntity.status(HttpStatus.CREATED).build();
+//    }
     @RequestMapping("/{userId}")
     public ResponseEntity<CartResponseDTO>  getCartActive(
             @PathVariable Long userId){

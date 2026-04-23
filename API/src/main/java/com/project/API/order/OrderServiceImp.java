@@ -1,11 +1,13 @@
 package com.project.API.order;
 
+import com.mercadopago.client.payment.PaymentClient;
 import com.mercadopago.client.preference.PreferenceBackUrlsRequest;
 import com.mercadopago.client.preference.PreferenceClient;
 import com.mercadopago.client.preference.PreferenceItemRequest;
 import com.mercadopago.client.preference.PreferenceRequest;
 import com.mercadopago.exceptions.MPApiException;
 import com.mercadopago.exceptions.MPException;
+import com.mercadopago.resources.payment.Payment;
 import com.mercadopago.resources.preference.Preference;
 import com.project.API.cart.Cart;
 import com.project.API.cart.CartItem;
@@ -15,13 +17,15 @@ import com.project.API.config.ResourceNotFoundException;
 import com.project.API.product.ProductRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
+
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+
 
 @Service
 public class OrderServiceImp implements OrderService {
@@ -43,8 +47,10 @@ public class OrderServiceImp implements OrderService {
         Cart cart = cartRepository.findByUserIdAndStatus(userId, CartItemStatus.ACTIVE)
                 .orElseThrow(() -> new RuntimeException("Cart not found"));
 
-        cart.setStatus(CartItemStatus.CHECKOUT);
-
+        Optional<Order> pendingOrder = orderRepository.findByUserIdAndStatus(userId, OrderStatus.PENDING);
+        if (pendingOrder.isPresent()){
+            return pendingOrder.get();
+        }
         List<CartItem> cartItems = cart.getCartItem();
 
         Order order = new Order();
@@ -75,8 +81,9 @@ public class OrderServiceImp implements OrderService {
        return orderRepository.save(order);
     }
 
+    @Transactional
      @Override
-     public String createChekout(Long orderId) throws MPException, MPApiException {
+     public String createChekout(Long orderId, Long userId) throws MPException, MPApiException {
          Order order = orderRepository.findById(orderId)
                  .orElseThrow(() -> new RuntimeException("Order not found"));
 
@@ -93,26 +100,45 @@ public class OrderServiceImp implements OrderService {
                  ).toList();
 
          PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
-                 .success("https://seusite.com/orders/success")
-                 .failure("https://seusite.com/orders/failure")
-                 .pending("https://seusite.com/orders/pending")
+                 .success("http://localhost:3000/orders/success")
+                 .failure("http://localhost:3000/orders/failure")
+                 .pending("http://localhost:3000/orders/pending")
                  .build();
 
          PreferenceRequest preferenceRequest = PreferenceRequest.builder()
                  .items(items)
                  .backUrls(backUrls)
-                 .autoReturn("approved")
+//                 .autoReturn("approved")
+                 .notificationUrl("https://6da7-187-32-129-217.ngrok-free.app/order/webhook") // ← add this
+                 .externalReference(order.getId().toString())
                  .build();
 
          PreferenceClient client = new PreferenceClient();
-         Preference preference = client.create(preferenceRequest);
 
-         order.setMercadoPagoPreferenceId(preference.getId());
-         orderRepository.save(order);
+        try {
+            Preference preference = client.create(preferenceRequest);
+            order.setMercadoPagoPreferenceId(preference.getId());
+            order.setStatus(OrderStatus.PAID);
 
-         return preference.getInitPoint();
+            Cart cart = cartRepository.findByUserIdAndStatus(userId, CartItemStatus.ACTIVE)
+                    .orElseThrow(() -> new RuntimeException("Cart not found"));
+
+            cart.setStatus(CartItemStatus.CHECKOUT);
+
+
+            return preference.getInitPoint();
+
+        } catch (MPApiException e) {
+            System.out.println("Status: " + e.getStatusCode());
+            System.out.println("Response: " + e.getApiResponse().getContent());
+            throw e;
+
+
+        }
+
 
     }
+
 
 
 
@@ -124,6 +150,30 @@ public class OrderServiceImp implements OrderService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Estoque insuficiente: apenas " + stock + " disponíveis");        }
     }
 
+    @Override
+    public void processPayment(String paymentId)throws MPException, MPApiException{
+        PaymentClient paymentClient = new PaymentClient();
+        Payment payment = paymentClient.get(Long.parseLong(paymentId));
 
+        String orderId = payment.getExternalReference();
+        String status = payment.getStatus();
+
+        Order order = orderRepository.findById(Long.parseLong(orderId))
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+    switch (status) {
+        case "approved" -> {
+            order.setStatus(OrderStatus.PAID);
+            order.setMercadoPagoPaymentId(paymentId);
+            order.setPaidAt(LocalDateTime.now());
+        }
+        case "rejected" -> order.setStatus(OrderStatus.CANCELLED);
+        case "pending" -> order.setStatus(OrderStatus.PENDING);
+    }
+
+    orderRepository.save(order);
+
+
+    }
 
 }

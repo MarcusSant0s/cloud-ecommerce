@@ -1,8 +1,6 @@
 package com.project.API.cart;
 
 import com.project.API.cart.dto.CartResponseDTO;
-import com.project.API.cart.dto.GuestItemDTO;
-import com.project.API.cart.dto.MergeCartDTO;
 import com.project.API.config.ResourceNotFoundException;
 import com.project.API.product.Product;
 import com.project.API.product.ProductRepository;
@@ -108,29 +106,29 @@ public class CartService {
      }
 
      @Transactional
-     public void mergeGuestCart(Long userId, MergeCartDTO request) {
-         if (request.items() == null || request.items().isEmpty()) return;
-
-         Cart cart = getOrCreateCart(userId);
-
-         for (GuestItemDTO item : request.items()) {
-             Product product = productRepository.findById(item.productId())
-                     .orElseThrow(() -> new RuntimeException("Product Not Found"));
-
-             Optional<CartItem> existing = cart.getCartItem().stream()
-                     .filter(i -> i.getProduct().getId().equals(item.productId()))
-                     .findFirst();
-
-             if (existing.isPresent()) {
-                 int total = existing.get().getQuantity() + item.quantity();
-                 validateStockAvailability(item.productId(), total);
-                 existing.get().setQuantity(total);
-             } else {
-                 validateStockAvailability(item.productId(), item.quantity());
-                 addItem(userId, item.productId(), item.quantity());
-             }
-         }        ;
-     }
+//     public void mergeGuestCart(Long userId, MergeCartDTO request) {
+//         if (request.items() == null || request.items().isEmpty()) return;
+//
+//         Cart cart = getOrCreateCart(userId);
+//
+//         for (GuestItemDTO item : request.items()) {
+//             Product product = productRepository.findById(item.productId())
+//                     .orElseThrow(() -> new RuntimeException("Product Not Found"));
+//
+//             Optional<CartItem> existing = cart.getCartItem().stream()
+//                     .filter(i -> i.getProduct().getId().equals(item.productId()))
+//                     .findFirst();
+//
+//             if (existing.isPresent()) {
+//                 int total = existing.get().getQuantity() + item.quantity();
+//                 validateStockAvailability(item.productId(), total);
+//                 existing.get().setQuantity(total);
+//             } else {
+//                 validateStockAvailability(item.productId(), item.quantity());
+//                 addItem(userId, item.productId(), item.quantity());
+//             }
+//         }        ;
+//     }
 
 
      // Helpers methods
@@ -175,7 +173,7 @@ public class CartService {
     }
 
     private String getMainImageUrl(Product product) {
-        Set<ProductImage> images = product.getImages(); // Pegando o Set
+        Set<ProductImage> images = product.getImages();
 
         if (images == null || images.isEmpty()) {
             return null;
@@ -189,21 +187,41 @@ public class CartService {
 
     }
 
+
+
+
+
+
+
+
     public Cart getOrCreateCart(Long userId){
 
-        Optional<Cart> cartOptional = cartrepository.findByUserIdAndStatus(userId, CartItemStatus.ACTIVE);
-
-        if (cartOptional.isPresent()) {
-            return cartOptional.get();
-        }
-
-        Cart cart = new Cart();
-        cart.setUser(userRepository.getReferenceById(userId));
-        cart.setStatus(CartItemStatus.ACTIVE);
-
-        return cartrepository.save(cart);
-
+        return cartrepository.findByUserIdAndStatus(userId, CartItemStatus.ACTIVE)
+                .map(cart -> {
+                    // remove items whose product no longer exists
+                    cart.getCartItem().removeIf(cartItem ->
+                            productRepository.findQuantityById(cartItem.getProduct().getId()).isEmpty()
+                    );
+                    return cartrepository.save(cart);
+                })
+                    .orElseGet(() -> {
+                    Cart cart = new Cart();
+                    cart.setUser(userRepository.getReferenceById(userId));
+                    cart.setStatus(CartItemStatus.ACTIVE);
+                    return cartrepository.save(cart);
+                });
     }
+
+
+
+
+
+
+
+
+
+
+
 
     public CartItem getCartItem(Cart cart, Long id_cart_item){
         return  cart.getCartItem().stream().filter(item -> item.getId().equals(id_cart_item)).findFirst()

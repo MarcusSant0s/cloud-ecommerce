@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -59,6 +60,9 @@ public class Order {
     }
 
     public void addItem(OrderItem orderItem){
+        if (this.items == null) {
+            this.items = new ArrayList<>();
+        }
         orderItem.setOrder(this);
         this.items.add(orderItem);
 
