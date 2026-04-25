@@ -9,13 +9,17 @@ import com.mercadopago.exceptions.MPApiException;
 import com.mercadopago.exceptions.MPException;
 import com.mercadopago.resources.payment.Payment;
 import com.mercadopago.resources.preference.Preference;
-import com.project.API.cart.Cart;
+ import com.project.API.cart.Cart;
 import com.project.API.cart.CartItem;
 import com.project.API.cart.CartItemStatus;
 import com.project.API.cart.CartRepository;
 import com.project.API.config.ResourceNotFoundException;
+import com.project.API.order.DTO.OrderResponse;
 import com.project.API.product.ProductRepository;
+
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 
 import org.springframework.stereotype.Service;
@@ -40,12 +44,26 @@ public class OrderServiceImp implements OrderService {
         this.productRepository = productRepository;
     }
 
-    @Transactional
-    @Override
-    public Order createOrder(Long userId) {
 
+    public String checkout(Long userId) throws MPException, MPApiException {
         Cart cart = cartRepository.findByUserIdAndStatus(userId, CartItemStatus.ACTIVE)
                 .orElseThrow(() -> new RuntimeException("Cart not found"));
+
+        Order order = createOrder(userId, cart);
+
+        if (order.getMercadoPagoPreferenceId() != null) {
+            return "https://sandbox.mercadopago.com.br/checkout/v1/redirect?pref_id="
+                    + order.getMercadoPagoPreferenceId();
+        }
+
+        return createCheckout(order, cart);
+    }
+
+
+    @Transactional
+    @Override
+    public Order createOrder(Long userId, Cart cart) {
+
 
         Optional<Order> pendingOrder = orderRepository.findByUserIdAndStatus(userId, OrderStatus.PENDING);
         if (pendingOrder.isPresent()){
@@ -81,11 +99,10 @@ public class OrderServiceImp implements OrderService {
        return orderRepository.save(order);
     }
 
+
     @Transactional
-     @Override
-     public String createChekout(Long orderId, Long userId) throws MPException, MPApiException {
-         Order order = orderRepository.findById(orderId)
-                 .orElseThrow(() -> new RuntimeException("Order not found"));
+    @Override
+    public String createCheckout(Order order, Cart cart) throws MPException, MPApiException {
 
          List<PreferenceItemRequest> items = order.getItems().stream()
                  .map(item -> PreferenceItemRequest.builder()
@@ -118,10 +135,9 @@ public class OrderServiceImp implements OrderService {
         try {
             Preference preference = client.create(preferenceRequest);
             order.setMercadoPagoPreferenceId(preference.getId());
-            order.setStatus(OrderStatus.PAID);
 
-            Cart cart = cartRepository.findByUserIdAndStatus(userId, CartItemStatus.ACTIVE)
-                    .orElseThrow(() -> new RuntimeException("Cart not found"));
+
+
 
             cart.setStatus(CartItemStatus.CHECKOUT);
 
@@ -129,6 +145,9 @@ public class OrderServiceImp implements OrderService {
             return preference.getInitPoint();
 
         } catch (MPApiException e) {
+
+            cart.setStatus(CartItemStatus.CHECKOUT);
+            orderRepository.delete(order);
             System.out.println("Status: " + e.getStatusCode());
             System.out.println("Response: " + e.getApiResponse().getContent());
             throw e;
@@ -175,5 +194,14 @@ public class OrderServiceImp implements OrderService {
 
 
     }
+
+@Override
+    public Page<OrderResponse> getOrdersByUser(Long userId, Pageable pageable) {
+        return orderRepository.findByUserId(userId, pageable)
+                .map(OrderResponse::fromEntity);
+    }
+
+
+
 
 }

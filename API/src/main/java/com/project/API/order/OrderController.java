@@ -2,7 +2,12 @@ package com.project.API.order;
 
 import com.mercadopago.exceptions.MPApiException;
 import com.mercadopago.exceptions.MPException;
+import com.project.API.order.DTO.OrderResponse;
+import com.project.API.user.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -18,24 +23,23 @@ public class OrderController {
         this.orderService = orderService;
     }
 
+
     @PostMapping("/{userId}")
-    public ResponseEntity<Map<String, String>> createOrder(
+    public ResponseEntity<Map<String, String>> checkout(
             @PathVariable Long userId
     ) throws MPException, MPApiException {
 
-        Order order = orderService.createOrder(userId);
-
-        if (order.getMercadoPagoPreferenceId() != null) {
-            return ResponseEntity.ok(Map.of("checkoutUrl",
-                    "https://sandbox.mercadopago.com.br/checkout/v1/redirect?pref_id="
-                            + order.getMercadoPagoPreferenceId()));
-        }
-
-        String checkoutUrl = orderService.createChekout(order.getId(), userId);
-
+        String checkoutUrl = orderService.checkout(userId);
         return ResponseEntity.ok(Map.of("checkoutUrl", checkoutUrl));
     }
 
+    @GetMapping()
+    public Page<OrderResponse> getOrders(
+            @AuthenticationPrincipal User user,
+            Pageable pageable
+    ) {
+        return orderService.getOrdersByUser(user.getId(), pageable);
+    }
 
     @PostMapping("/webhook")
     public ResponseEntity<Void> webhook(@RequestBody Map<String, Object> payload)

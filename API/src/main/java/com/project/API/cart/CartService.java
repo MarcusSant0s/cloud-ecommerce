@@ -104,8 +104,6 @@ public class CartService {
         }
 
      }
-
-     @Transactional
 //     public void mergeGuestCart(Long userId, MergeCartDTO request) {
 //         if (request.items() == null || request.items().isEmpty()) return;
 //
@@ -200,7 +198,9 @@ public class CartService {
                 .map(cart -> {
                     // remove items whose product no longer exists
                     cart.getCartItem().removeIf(cartItem ->
-                            productRepository.findQuantityById(cartItem.getProduct().getId()).isEmpty()
+                            productRepository.findQuantityById(cartItem.getProduct().getId())
+                                    .map(stock -> stock < cartItem.getQuantity())
+                                    .orElse(true)
                     );
                     return cartrepository.save(cart);
                 })

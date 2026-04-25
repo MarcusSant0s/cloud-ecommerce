@@ -1,6 +1,7 @@
 package com.project.API.order;
 
-import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+ import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 
@@ -27,6 +28,7 @@ public class OrderItem {
 
     @ManyToOne
     @JoinColumn(name = "order_id")
+    @JsonBackReference
     private Order order;
 
     // snapshot

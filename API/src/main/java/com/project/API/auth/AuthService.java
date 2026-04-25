@@ -6,6 +6,8 @@ import com.project.API.user.UserAdress;
 import com.project.API.user.UserRepository;
 import com.project.API.auth.dto.AuthResponse;
 import com.project.API.auth.dto.LoginRequest;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.project.API.jwt.JwtService;
@@ -76,5 +78,13 @@ public class AuthService {
         String token = jwtService.generateToken(user);
 
         return new AuthResponse(token);
+    }
+
+    public Long getAuthenticatedUserId(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        User user = (User) authentication.getPrincipal();
+
+        return user.getId();
     }
 }

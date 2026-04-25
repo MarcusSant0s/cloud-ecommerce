@@ -1,5 +1,6 @@
 package com.project.API.order;
 
+ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.project.API.user.User;
 import jakarta.persistence.*;
 
@@ -22,7 +23,8 @@ public class Order {
 
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
-     private List<OrderItem> items;
+    @JsonManagedReference
+    private List<OrderItem> items;
 
    @Column(nullable = false)
     private BigDecimal total;
