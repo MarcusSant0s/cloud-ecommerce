@@ -1,6 +1,11 @@
 package com.project.API.user;
 
 import com.project.API.user.dto.AllUsersRequest;
+import com.project.API.user.dto.SingleUserRequest;
+import com.project.API.user.dto.UpdateUserRequest;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +32,20 @@ public class UserService {
                         user.getEmail()
                 ))
                 .toList();
+    }
+
+
+    @Transactional
+    public SingleUserRequest updateUser(
+                            UpdateUserRequest request,
+                            Long userId
+    ){
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        request.applyTo(user);
+
+        return SingleUserRequest.from(user);
     }
 }
 
