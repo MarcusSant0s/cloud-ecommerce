@@ -3,6 +3,7 @@ package com.project.API.auth;
 import com.project.API.auth.dto.CreateUserRequest;
 import com.project.API.user.User;
 import com.project.API.user.UserAdress;
+import com.project.API.user.UserAdressRepository;
 import com.project.API.user.UserRepository;
 import com.project.API.auth.dto.AuthResponse;
 import com.project.API.auth.dto.LoginRequest;
@@ -15,6 +16,7 @@ import com.project.API.jwt.JwtService;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final UserAdressRepository adressRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
@@ -22,9 +24,11 @@ public class AuthService {
     public AuthService(
             UserRepository userRepository,
             BCryptPasswordEncoder passwordEncoder,
-            JwtService jwtService
+            JwtService jwtService,
+            UserAdressRepository adressRepository
     ) {
         this.userRepository = userRepository;
+        this.adressRepository = adressRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
     }
@@ -41,6 +45,9 @@ public class AuthService {
                 request.getCep(),
                 request.getNumber()
         );
+
+        adressRepository.save(userAdress);
+
 
         User user = new User(
          request.getFirstName( ),

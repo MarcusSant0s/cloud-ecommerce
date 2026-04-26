@@ -1,12 +1,14 @@
 package com.project.API.user.dto;
 
 import com.project.API.user.User;
+import com.project.API.user.UserAdress;
 
 public record SingleUserRequest(
         Long id,
         String firstName,
         String lastName,
-        String email
+        String email,
+        UserAdress userAdress
 ) {
 
     public static SingleUserRequest from(User user){
@@ -14,7 +16,8 @@ public record SingleUserRequest(
                 user.getId(),
                 user.getFirstName(),
                 user.getLastName(),
-                user.getUsername()
+                user.getUsername(),
+                user.getUserAdress()
         );
     }
 }

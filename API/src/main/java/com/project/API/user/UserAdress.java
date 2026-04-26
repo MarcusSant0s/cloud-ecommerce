@@ -3,7 +3,7 @@ package com.project.API.user;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "user_adress")
+@Table(name = "user_address")
 public class UserAdress {
 
     public UserAdress(String street, String city, String cep,String number){
@@ -29,11 +29,6 @@ public class UserAdress {
 
     @Column(nullable = false)
     private String number;
-
-    @Column(nullable = false)
-    private String neighborhood;
-
-
 
     @OneToOne(mappedBy = "userAdress")
     private User user;
@@ -69,13 +64,6 @@ public class UserAdress {
     }
     public void setNumber(String number) {
         this.number = number;
-    }
-
-    public String getNeighborhood() {
-        return neighborhood;
-    }
-    public void setNeighborhood(String neighborhood) {
-        this.neighborhood = neighborhood;
     }
 
     public User getUser() {

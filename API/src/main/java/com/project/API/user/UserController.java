@@ -6,10 +6,8 @@ import com.project.API.user.dto.SingleUserRequest;
 import com.project.API.user.dto.UpdateUserRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController; 
+import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -33,9 +31,9 @@ public class UserController {
        return SingleUserRequest.from(user);
     }
 
-    @PutMapping
+    @PutMapping("/UpdateMe")
     public ResponseEntity<SingleUserRequest> updateUser(@AuthenticationPrincipal User user,
-                                           UpdateUserRequest request){
+                                           @ModelAttribute UpdateUserRequest request){
 
         return ResponseEntity.ok(userService.updateUser(request, user.getId()));
     }

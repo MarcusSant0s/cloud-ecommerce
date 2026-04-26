@@ -1,6 +1,5 @@
 package com.project.API.auth.dto;
 
-import jakarta.persistence.Column;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
@@ -21,12 +20,9 @@ public class CreateUserRequest {
     @NotBlank
     private String cep;
     @NotBlank
-    private String numberAdress;
+    private String numberAddress;
 
-    @Column(nullable = false)
-    private String neighborhood;
-
-    public CreateUserRequest(String firstName, String lastName, String email,String password, String street, String city, String cep,String numberAdress){
+    public CreateUserRequest(String firstName, String lastName, String email,String password, String street, String city, String cep,String numberAddress){
         this.firstName=firstName;
         this.lastName=lastName;
         this.email=email;
@@ -34,7 +30,7 @@ public class CreateUserRequest {
         this.street=street;
         this.city=city;
         this.cep=cep;
-        this.numberAdress=numberAdress;
+        this.numberAddress=numberAddress;
     }
 
     public String getEmail(){
@@ -74,16 +70,10 @@ public class CreateUserRequest {
     }
 
     public String getNumber() {
-        return numberAdress;
+        return numberAddress;
     }
     public void setNumber(String number) {
-        this.numberAdress = number;
+        this.numberAddress = number;
     }
 
-    public String getNeighborhood() {
-        return neighborhood;
-    }
-    public void setNeighborhood(String neighborhood) {
-        this.neighborhood = neighborhood;
-    }
 }
