@@ -5,6 +5,7 @@ import com.project.API.user.dto.AllUsersRequest;
 import com.project.API.user.dto.SingleUserRequest;
 import com.project.API.user.dto.UpdateUserRequest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +20,7 @@ public class UserController {
         this.userService = userService;
     }
 
-
+    @PreAuthorize(("hasRole('ADMIN')"))
     @GetMapping
     public ResponseEntity<List<AllUsersRequest>> getAll(){
         return ResponseEntity.ok(userService.GetAllUsers());

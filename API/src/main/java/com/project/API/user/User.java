@@ -5,6 +5,7 @@ import com.project.API.cart.Cart;
 import com.project.API.order.Order;
 import jakarta.persistence.*;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.Instant;
@@ -49,6 +50,9 @@ public class User implements UserDetails {
     @JoinColumn(name = "user_adress_id")
     private UserAdress userAdress;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, name = "user_role")
+    private Role userRole = Role.USER;
 
 
 
@@ -66,7 +70,7 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(); // ou roles depois
+        return List.of(new SimpleGrantedAuthority("ROLE_" + userRole.name())); // ou roles depois
     }
 
     @Override
@@ -137,5 +141,12 @@ public class User implements UserDetails {
     }
     public void setUserAdress(UserAdress userAdress) {
         this.userAdress = userAdress;
+    }
+
+    public Role getRole() {
+        return userRole;
+    }
+    public void setRole(Role role) {
+        this.userRole = role;
     }
 }
