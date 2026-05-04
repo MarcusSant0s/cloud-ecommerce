@@ -1,161 +1,206 @@
 'use client'
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import Link from "next/link";
-import { usePathname } from "next/navigation"; 
-import {Cart} from "@/components/cart"
-import { Skeleton } from "@/primitives/skeleton";
+import { Cart } from "@/components/cart"
 import { useAuth } from "@/contexts/AuthContext";
-
+import { User, Package, LogOut, ChevronDown, ShieldCheck } from "lucide-react";
+import useIsAdmin from "@/lib/useIsAdmin";
 
 export default function Navbar() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const {user, logout} = useAuth();
 
-  const handleLogout = () => {
-    logout();
-  
-  } 
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const dropdownRef = useRef(null)
+
+  const { user, logout } = useAuth();
+  const isAdmin = useIsAdmin();
+   
+  // close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setDropdownOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
 
   return (
     <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div className="flex h-16 items-center justify-between">
+
         {/* Left */}
         <div className="flex items-center gap-6">
-          <a href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <span className="text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text tracking-tight text-transparent">
               Loja
             </span>
-          </a>
+          </Link>
 
           <nav className="hidden md:flex">
             <ul className="flex items-center gap-6">
               <li>
-                <a
-                  href="/"
-                  className="text-sm font-semibold text-primary transition-colors hover:text-primary"
-                >
+                <Link href="/" className="text-sm font-semibold text-primary transition-colors hover:text-primary">
                   Home
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="/products"
-                  className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-                >
+                <Link href="/products" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
                   Products
-                </a>
+                </Link>
               </li>
             </ul>
           </nav>
         </div>
 
         {/* Right */}
-        <div className="flex items-center gap-4">
-          {/* Cart */}
-          <div className="relative">
-           <Cart/>
-          </div>
+        <div className="flex items-center gap-3">
+          <Cart />
 
-          {/* Auth buttons (desktop) */}
+          {/* Auth — desktop */}
           <div className="hidden md:block">
-
-          {user ? (
-            <div className="flex items-center gap-2">
-              <h3 className="text-3xl text-red-950">{user.firstName}</h3>
+            {user ? (
+              <div className="relative" ref={dropdownRef}>
+                {/* trigger */}
                 <button
-                onClick={handleLogout} 
-                className="
-                h-8 rounded-md bg-primary
-                 px-3 text-sm font-medium 
-                 text-primary-foreground 
-                 shadow-xs transition 
-                 hover:bg-primary/90
-                 "
-                 >
-                  LogOut
+                  onClick={() => setDropdownOpen(prev => !prev)}
+                  className="flex items-center gap-2 rounded-full border bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition hover:bg-accent"
+                >
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                    <User className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="max-w-[100px] truncate">{user.firstName}</span>
+                  <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
                 </button>
-            
-            </div>
-          ):(
 
-            <div className="flex items-center gap-2">
-              <a href="/auth/sign-in">
-                <button className="h-8 rounded-md px-3 text-sm font-medium transition hover:bg-accent hover:text-accent-foreground">
-                  Log in
-                </button>
-              </a>
+                {/* dropdown */}
+                {(dropdownOpen) && (
+                  <div className="absolute right-0 z-50 mt-2 w-48 rounded-lg border bg-popover p-1 shadow-md">
+                    <div className="px-3 py-2 border-b mb-1">
+                      <p className="text-xs text-muted-foreground">Signed in as</p>
+                      <p className="text-sm font-medium truncate">{user.firstName} {user.lastName}</p>
+                    </div>
 
-              <a href="/auth/sign-up">
-                <button className="h-8 rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground shadow-xs transition hover:bg-primary/90">
-                  Sign up
-                </button>
-              </a>
-            </div>
-              )}
+                    {isAdmin && (
+                      <Link
+                        href="/admin"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center gap-2 rounded-md px-3 py-2 text-sm transition hover:bg-accent"
+                      >
+                        <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+                        Admin Panel
+                      </Link>
+                    )}
+
+                    <Link
+                      href="/orders"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2 rounded-md px-3 py-2 text-sm transition hover:bg-accent"
+                    >
+                      <Package className="h-4 w-4 text-muted-foreground" />
+                      My Orders
+                    </Link>
+
+                    <Link
+                      href="/account-user"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2 rounded-md px-3 py-2 text-sm transition hover:bg-accent"
+                    >
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      Account
+                    </Link>
+
+                    <div className="border-t mt-1 pt-1">
+                      <button
+                        onClick={() => { logout(); setDropdownOpen(false); }}
+                        className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-destructive transition hover:bg-destructive/10"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Log out
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+
+
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Link href="/auth/sign-in">
+                  <button className="h-8 rounded-md px-3 text-sm font-medium transition hover:bg-accent hover:text-accent-foreground">
+                    Log in
+                  </button>
+                </Link>
+                <Link href="/auth/sign-up">
+                  <button className="h-8 rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground shadow-xs transition hover:bg-primary/90">
+                    Sign up
+                  </button>
+                </Link>
+              </div>
+            )}
           </div>
 
-
-
-          {/* Mobile menu */}
+          {/* Mobile menu button */}
           <button
             type="button"
             className="inline-flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium transition hover:bg-accent hover:text-accent-foreground md:hidden"
-              onClick={() => setMobileMenuOpen(prev => !prev)}          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-5 w-5"
-            >
-              <path d="M4 6h16" />
-              <path d="M4 12h16" />
-              <path d="M4 18h16" />
+            onClick={() => setMobileMenuOpen(prev => !prev)}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+              <path d="M4 6h16" /><path d="M4 12h16" /><path d="M4 18h16" />
             </svg>
           </button>
         </div>
-
       </div>
 
-{/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden border-t py-4">
-            <ul className="flex flex-col gap-4">
-             <li>
-                <a
-                  href="/products"
-                  className="block rounded-md px-3 py-2 text-base font-medium text-foreground hover:bg-muted hover:text-primary"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Products
-                </a>
-              </li>
-            </ul>
+      {/* Mobile menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t py-4">
+          <ul className="flex flex-col gap-1">
+            <li>
+              <Link href="/products" className="block rounded-md px-3 py-2 text-base font-medium hover:bg-muted hover:text-primary" onClick={() => setMobileMenuOpen(false)}>
+                Products
+              </Link>
+            </li>
+            {user && (
+              <>
+                <li>
+                  <Link href="/orders" className="flex items-center gap-2 rounded-md px-3 py-2 text-base font-medium hover:bg-muted" onClick={() => setMobileMenuOpen(false)}>
+                    <Package className="h-4 w-4" /> My Orders
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/account-user" className="flex items-center gap-2 rounded-md px-3 py-2 text-base font-medium hover:bg-muted" onClick={() => setMobileMenuOpen(false)}>
+                    <User className="h-4 w-4" /> Account
+                  </Link>
+                </li>
+              </>
+            )}
+          </ul>
 
-            <div className="mt-6 flex flex-col gap-2">
-              <a href="/auth/sign-in">
-                <button className="w-full rounded-md px-3 py-2 text-base font-medium
-                  hover:bg-muted/50">
-                  Log in
-                </button>
-              </a>
-
-              <a href="/auth/sign-up">
-                <button className="w-full  rounded-md bg-primary px-3 py-2 text-base font-medium
-                  text-primary-foreground
-                  hover:bg-primary/90">
-                  Sign up
-                </button>
-              </a>
-            </div>
+          <div className="mt-4 flex flex-col gap-2 border-t pt-4">
+            {user ? (
+              <button
+                onClick={() => { logout(); setMobileMenuOpen(false); }}
+                className="flex items-center gap-2 rounded-md px-3 py-2 text-base font-medium text-destructive hover:bg-destructive/10"
+              >
+                <LogOut className="h-4 w-4" /> Log out
+              </button>
+            ) : (
+              <>
+                <Link href="/auth/sign-in" onClick={() => setMobileMenuOpen(false)}>
+                  <button className="w-full rounded-md px-3 py-2 text-base font-medium hover:bg-muted/50">Log in</button>
+                </Link>
+                <Link href="/auth/sign-up" onClick={() => setMobileMenuOpen(false)}>
+                  <button className="w-full rounded-md bg-primary px-3 py-2 text-base font-medium text-primary-foreground hover:bg-primary/90">Sign up</button>
+                </Link>
+              </>
+            )}
           </div>
-        )}
-
-
-
+        </div>
+      )}
     </div>
   )
 }

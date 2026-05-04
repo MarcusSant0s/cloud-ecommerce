@@ -66,6 +66,9 @@ const [loading, setLoading] = useState(true);
         await fetchMe(jwt);
     }
 
+    function isAdmin(){
+        user.AuthProvider
+    }
     function logout(){
         localStorage.removeItem('token');
 
@@ -78,9 +81,12 @@ const [loading, setLoading] = useState(true);
 
     }
 
-    async function register(firstName, lastName, email, password){
-
-        const res = await api.post("auth/register", { firstName, lastName, email, password })
+async function register(firstName, lastName, email, password, street, city, cep, numberAddress) {
+        const res = await api.post("auth/register", {
+    firstName, lastName, email, password,
+    street, city, cep, numberAddress
+  });
+        
         console.log(res);
 
         const jwt = res.data.token;
@@ -102,6 +108,7 @@ return(
         register,
         logout,
         loading,
+        fetchMe
     }}>
         {children}
     </authContext.Provider>
