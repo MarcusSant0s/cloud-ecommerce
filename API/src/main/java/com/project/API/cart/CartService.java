@@ -2,15 +2,13 @@ package com.project.API.cart;
 
 import com.project.API.cart.dto.CartResponseDTO;
 import com.project.API.cart.exception.InsufficientStockException;
-import com.project.API.config.ResourceNotFoundException;
+import com.project.API.commom.exception.ResourceNotFoundException;
 import com.project.API.product.Product;
 import com.project.API.product.ProductRepository;
 import com.project.API.productImage.ProductImage;
 import com.project.API.user.UserRepository;
 import jakarta.transaction.Transactional;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
- import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -47,7 +45,7 @@ public class CartService {
         }else{
 
             Product  product = productRepository.findById(id_product)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado cm o id" + id_product));
+                    .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado com o id " + id_product));
 
             CartItem cartItem = new CartItem();
             cartItem.setProduct(product);
@@ -228,7 +226,7 @@ public class CartService {
 
     public CartItem getCartItem(Cart cart, Long id_cart_item){
         return  cart.getCartItem().stream().filter(item -> item.getId().equals(id_cart_item)).findFirst()
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "iTEM não encontrado, id" + id_cart_item));
+                .orElseThrow(() -> new ResourceNotFoundException("Item não encontrado, id " + id_cart_item));
     }
 
 

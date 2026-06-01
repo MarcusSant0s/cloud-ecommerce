@@ -1,5 +1,6 @@
 package com.project.API.productImage;
 
+import com.project.API.commom.exception.ResourceNotFoundException;
 import com.project.API.product.Product;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -17,7 +18,7 @@ public class ProductImageService{
     public ProductImage setMainImage(Long imageId) {
 
         ProductImage image = repository.findById(imageId)
-                .orElseThrow(() -> new RuntimeException("Image not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Image not found"));
 
         Long productId = image.getProduct().getId();
 

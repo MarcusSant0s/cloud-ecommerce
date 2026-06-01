@@ -1,9 +1,10 @@
 package com.project.API.category;
 
 import com.project.API.category.DTO.ResponseCategoryDTO;
+import com.project.API.commom.exception.ResourceNotFoundException;
+import com.project.API.commom.exception.StorageException;
 import com.project.API.file.S3StorageService;
 import jakarta.transaction.Transactional;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -43,22 +44,19 @@ public class CategoryService {
         category.setS3key(key);
         category.setUrl("https://cloud-commerce-stack.s3.sa-east-1.amazonaws.com/" + key);
 
-        try {
-            return categoryRepository.save(category);
-        } catch (DataIntegrityViolationException e) {
-            throw new RuntimeException("Category already exists");
-        }    }
+        return categoryRepository.save(category);
+    }
 
     public void DeleteCategory(Long id){
 
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
         try {
             storageService.delete(category.getS3key());
             categoryRepository.deleteById(category.getId());
         } catch (Exception e) {
-            throw new RuntimeException("Erro ao deletar categoria", e);
+            throw new StorageException("Erro ao deletar categoria", e);
         }
 
     }
@@ -66,7 +64,7 @@ public class CategoryService {
     @Transactional
     public Category editCategory(Long category_id, String name, MultipartFile file){
         Category category = categoryRepository.findById(category_id)
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
         if(name != null && !name.isEmpty()){
             category.setName(name);

@@ -1,11 +1,11 @@
 package com.project.API.product;
 
+import com.project.API.commom.exception.ResourceNotFoundException;
 import com.project.API.file.S3StorageService;
 import com.project.API.product.dto.*;
 import com.project.API.productImage.ProductImage;
 import com.project.API.category.Category;
 import com.project.API.category.CategoryRepository;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -47,7 +47,7 @@ import java.util.Set;
         @Override
         public Product update(Long id, UpdateProduct product) {
             Product existing = repository.findById(id)
-                    .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
             existing.setName(product.name());
             existing.setDescription(product.description());
@@ -75,7 +75,7 @@ import java.util.Set;
         @Override
         public void delete(Long id) {
             if (!repository.existsById(id)) {
-                throw new EntityNotFoundException("Product not found");
+                throw new ResourceNotFoundException("Product not found");
             }
             repository.deleteById(id);
         }
@@ -83,7 +83,7 @@ import java.util.Set;
     @Override
     public Product findById(Long id) {
         Product product =  repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
          return product;
         }
@@ -94,7 +94,7 @@ import java.util.Set;
         List<ProductsImagesResponse> images = repository.findImagesById(id);
 
         if (images.isEmpty()) {
-            throw new EntityNotFoundException("No images found for product id " + id);
+            throw new ResourceNotFoundException("No images found for product id " + id);
         }
 
         return images;
@@ -117,7 +117,7 @@ import java.util.Set;
         )  {
 
             Product product = repository.findById(id)
-                        .orElseThrow(() -> new RuntimeException("Product not found"));
+                        .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
             String key = storage.upload(file);
 

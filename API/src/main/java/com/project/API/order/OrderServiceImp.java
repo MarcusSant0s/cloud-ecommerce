@@ -13,17 +13,15 @@ import com.mercadopago.resources.preference.Preference;
 import com.project.API.cart.CartItem;
 import com.project.API.cart.CartItemStatus;
 import com.project.API.cart.CartRepository;
-import com.project.API.config.ResourceNotFoundException;
+import com.project.API.cart.exception.InsufficientStockException;
+import com.project.API.commom.exception.ResourceNotFoundException;
 import com.project.API.order.DTO.OrderResponse;
 import com.project.API.product.ProductRepository;
 
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -47,7 +45,7 @@ public class OrderServiceImp implements OrderService {
 
     public String checkout(Long userId) throws MPException, MPApiException {
         Cart cart = cartRepository.findByUserIdAndStatus(userId, CartItemStatus.ACTIVE)
-                .orElseThrow(() -> new RuntimeException("Cart not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
 
         Order order = createOrder(userId, cart);
 
@@ -166,7 +164,8 @@ public class OrderServiceImp implements OrderService {
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
         if (stock < requestedQuantity){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Estoque insuficiente: apenas " + stock + " disponíveis");        }
+            throw new InsufficientStockException("Estoque insuficiente: apenas " + stock + " disponíveis");
+        }
     }
 
     @Override
@@ -178,7 +177,7 @@ public class OrderServiceImp implements OrderService {
         String status = payment.getStatus();
 
         Order order = orderRepository.findById(Long.parseLong(orderId))
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
     switch (status) {
         case "approved" -> {
@@ -206,7 +205,7 @@ public class OrderServiceImp implements OrderService {
     public Order changeOrderStatus(Long orderId, OrderStatus orderStatus){
 
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
         order.setStatus(orderStatus);
         return  orderRepository.save(order);

@@ -1,5 +1,6 @@
 package com.project.API.file;
 
+import com.project.API.commom.exception.StorageException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -33,7 +34,7 @@ public class S3StorageService {
         );
 
         } catch (IOException e) {
-            throw new RuntimeException("Erro no upload", e);
+            throw new StorageException("Erro no upload", e);
         }
 
         return key;
@@ -50,7 +51,7 @@ public class S3StorageService {
 
             s3Client.deleteObject(deleteObjectRequest);
         } catch (S3Exception e) {
-            throw new RuntimeException("Erro no delete", e);
+            throw new StorageException("Erro no delete", e);
         }
 
     }
