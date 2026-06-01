@@ -2,6 +2,7 @@ package com.project.API.category;
 
 import com.project.API.category.DTO.ResponseCategoryDTO;
 import com.project.API.file.S3StorageService;
+import jakarta.transaction.Transactional;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -60,5 +61,24 @@ public class CategoryService {
             throw new RuntimeException("Erro ao deletar categoria", e);
         }
 
+    }
+
+    @Transactional
+    public Category editCategory(Long category_id, String name, MultipartFile file){
+        Category category = categoryRepository.findById(category_id)
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+
+        if(name != null && !name.isEmpty()){
+            category.setName(name);
+        }
+        if(file != null && !file.isEmpty()){
+            storageService.delete(category.getS3key());
+            String key = storageService.upload(file);
+            category.setS3key(key);
+            category.setUrl("https://cloud-commerce-stack.s3.sa-east-1.amazonaws.com/" + key);
+        }
+
+
+        return category;
     }
 }

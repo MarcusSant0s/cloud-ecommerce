@@ -43,6 +43,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/product/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/product/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/category/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/category/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/{id}/images").hasRole("ADMIN")
 
                         .anyRequest().authenticated()
