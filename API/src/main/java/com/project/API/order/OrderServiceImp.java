@@ -202,6 +202,15 @@ public class OrderServiceImp implements OrderService {
     }
 
 
+    @Override
+    public Order changeOrderStatus(Long orderId, OrderStatus orderStatus){
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Not found"));
+
+        order.setStatus(orderStatus);
+        return  orderRepository.save(order);
+    }
 
 
 }

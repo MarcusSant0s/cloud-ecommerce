@@ -33,7 +33,13 @@ public class OrderController {
         return ResponseEntity.ok(Map.of("checkoutUrl", checkoutUrl));
     }
 
-    @GetMapping()
+    @PatchMapping
+    public ResponseEntity<OrderStatus> changeOrderStatus(Long orderId, OrderStatus orderStatus){
+      Order order = orderService.changeOrderStatus(orderId, orderStatus);
+      return ResponseEntity.ok(order.getStatus());
+    }
+
+    @GetMapping
     public Page<OrderResponse> getOrders(
             @AuthenticationPrincipal User user,
             Pageable pageable
@@ -55,4 +61,7 @@ public class OrderController {
 
         return ResponseEntity.ok().build();
     }
+
+
+
 }

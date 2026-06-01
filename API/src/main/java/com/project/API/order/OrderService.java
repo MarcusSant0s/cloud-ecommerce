@@ -24,4 +24,6 @@ public interface OrderService {
     String createCheckout(Order order, Cart cart) throws MPException, MPApiException;
 
     void processPayment(String paymentId)throws MPException, MPApiException;
+
+    Order changeOrderStatus(Long orderId, OrderStatus orderStatus);
 }
