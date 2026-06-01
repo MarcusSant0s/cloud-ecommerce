@@ -1,5 +1,6 @@
 package com.project.API.user;
 
+import jakarta.transaction.Transactional;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -15,11 +16,13 @@ public class CustomUserDetailsService implements UserDetailsService {
         this.userRepository = userRepository;
     }
 
+    @Transactional
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepository.findByEmail(username)
-                .orElseThrow(() ->
-                        new UsernameNotFoundException("User not found")
-                );
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+
+
     }
 }

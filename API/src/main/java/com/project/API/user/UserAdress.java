@@ -14,6 +14,10 @@ public class UserAdress {
             this.number=number;
 
     }
+
+    public UserAdress(){
+    };
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;

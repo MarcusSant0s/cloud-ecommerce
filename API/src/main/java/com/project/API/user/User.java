@@ -1,5 +1,6 @@
 package com.project.API.user;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.project.API.cart.Cart;
 import com.project.API.order.Order;
@@ -40,10 +41,12 @@ public class User implements UserDetails {
     private Instant createdAt;
 
     @OneToMany(mappedBy = "user")
-    @JsonIgnoreProperties("user")
+    @JsonIgnore
+//    @JsonIgnoreProperties("user")z
     private List<Cart> cart;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Order> order;
 
     @OneToOne
