@@ -13,22 +13,24 @@ public class ProductImageController {
         this.service = service;
     }
 
-    @PatchMapping("/{id}/set-main")
-    public ResponseEntity<String> setMainImage(@PathVariable Long id) {
+        @PatchMapping("/{id}/set-main")
+        public ResponseEntity<String> setMainImage(@PathVariable Long id) {
 
-        ProductImage image = service.setMainImage(id);
+            ProductImage image = service.setMainImage(id);
 
-        return ResponseEntity.ok(image.getUrl());
+            return ResponseEntity.ok(image.getUrl());
+        }
+
+        @DeleteMapping("/{id}")
+        public ResponseEntity<Void> deleteImage(
+                @PathVariable Long id) {
+
+            service.deleteImage(id);
+
+            return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteImage(
-            @PathVariable Long id) {
 
-        service.deleteImage(id);
-
-        return ResponseEntity.noContent().build();
-    }
 
 
 }

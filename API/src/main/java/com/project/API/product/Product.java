@@ -39,14 +39,14 @@ public class Product {
 
     // Disount percentage ex: 5% -> 0.05
     @DecimalMin("0.01")
-    @DecimalMax("0.09")
+    @DecimalMax("0.9")
     @Column(nullable  = true)
     private BigDecimal priceDiscount;
 
     @Formula("price_original * (1 - price_discount)")
     private BigDecimal finalPrice;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany()
     @JoinTable(
             name = "product_category",
             joinColumns = @JoinColumn(name = "product_id"),
@@ -61,6 +61,7 @@ public class Product {
 
     @OneToOne
     @JoinColumn(name = "main_image_id", nullable = true)
+    @JsonIgnoreProperties("product")
     private ProductImage mainImage;
 
     // Methods

@@ -41,6 +41,10 @@ public class ProductImage {
         return s3Key;
     }
 
+    public Long getId() {
+        return id;
+    }
+
     public void setS3Key(String s3Key) {
         this.s3Key = s3Key;
     }

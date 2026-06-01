@@ -1,9 +1,6 @@
 package com.project.API.product;
 
-import com.project.API.product.dto.ProductPageResponseDTO;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
+import com.project.API.product.dto.ProductsImagesResponse;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -19,6 +16,14 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
     @Query("SELECT p.quantity FROM Product p WHERE p.id = :id")
     Optional<Integer> findQuantityById(@Param("id") Long id);
+
+    @Query("""
+    SELECT i.id AS id, i.url AS url, i.isMain AS isMain
+    FROM Product p
+    JOIN p.images i
+    WHERE p.id = :id
+    """)
+    List<ProductsImagesResponse> findImagesById(@Param("id") Long id);
 
 
 }

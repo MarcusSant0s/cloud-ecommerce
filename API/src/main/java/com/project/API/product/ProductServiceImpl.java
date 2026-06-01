@@ -1,24 +1,21 @@
 package com.project.API.product;
 
 import com.project.API.file.S3StorageService;
-import com.project.API.product.dto.CreateProduct;
-import com.project.API.product.dto.ProductFilterDTO;
-import com.project.API.product.dto.ProductMapper;
-import com.project.API.product.dto.ProductPageResponseDTO;
+import com.project.API.product.dto.*;
 import com.project.API.productImage.ProductImage;
 import com.project.API.category.Category;
 import com.project.API.category.CategoryRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
-import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -48,16 +45,29 @@ import java.util.Set;
         }
 
         @Override
-        public Product update(Long id, Product product) {
+        public Product update(Long id, UpdateProduct product) {
             Product existing = repository.findById(id)
                     .orElseThrow(() -> new EntityNotFoundException("Product not found"));
 
-            existing.setName(product.getName());
-            existing.setDescription(product.getDescription());
-            existing.setQuantity(product.getQuantity());
-            existing.setPriceOriginal(product.getPriceOriginal());
-            existing.setPriceDiscount(product.getPriceDiscount());
-            existing.setCategories(product.getCategories());
+            existing.setName(product.name());
+            existing.setDescription(product.description());
+            existing.setQuantity(product.quantity());
+            existing.setPriceOriginal(product.priceOriginal());
+            existing.setPriceDiscount(product.priceDiscount());
+
+            //Category
+            ObjectMapper mapper = new ObjectMapper();
+            List<Long> categoryIds = mapper.readValue(
+                    product.categoryIds(),
+                    new TypeReference<List<Long>>() {}
+            );
+
+             if(product.categoryIds() != null){
+                Set<Category> categories = new HashSet<>(categoryRepository.findAllById(categoryIds));
+                existing.setCategories(categories);
+
+            }
+
 
             return repository.save(existing);
         }
@@ -70,11 +80,27 @@ import java.util.Set;
             repository.deleteById(id);
         }
 
-        @Override
-        public Product findById(Long id) {
-            return repository.findById(id)
-                    .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+    @Override
+    public Product findById(Long id) {
+        Product product =  repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+
+         return product;
         }
+
+    @Override
+    public List<ProductsImagesResponse> findImagesById(Long id) {
+
+        List<ProductsImagesResponse> images = repository.findImagesById(id);
+
+        if (images.isEmpty()) {
+            throw new EntityNotFoundException("No images found for product id " + id);
+        }
+
+        return images;
+    }
+
+
 
     @Transactional(readOnly = true)
     @Override
@@ -85,9 +111,10 @@ import java.util.Set;
         }
 
         @Override
-        public void UploadImages(
-                        @RequestParam("File") @NotNull MultipartFile file,
-                        @PathVariable Long id )  {
+        public void uploadImages(
+                MultipartFile file,
+                Long id
+        )  {
 
             Product product = repository.findById(id)
                         .orElseThrow(() -> new RuntimeException("Product not found"));
@@ -105,7 +132,12 @@ import java.util.Set;
             product.AddImages(image);
 
             repository.save(product);
- return;
+             return;
 
         }
+
+
+
+
+
     }

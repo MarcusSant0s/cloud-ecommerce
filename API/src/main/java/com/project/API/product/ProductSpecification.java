@@ -20,7 +20,6 @@ public class ProductSpecification{
     }
     private static Specification<Product> byCategoryId(Long categoryId) {
         return (root, query, cb) -> {
-            System.out.println("byCategoryId chamado com: " + categoryId);
             if (categoryId == null) return null;
             query.distinct(true);
             Join<Product, Category> categories = root.join("categories", JoinType.INNER);
