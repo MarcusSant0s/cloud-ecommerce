@@ -1,6 +1,7 @@
 package com.project.API.cart;
 
 import com.project.API.cart.dto.CartResponseDTO;
+import com.project.API.cart.exception.InsufficientStockException;
 import com.project.API.config.ResourceNotFoundException;
 import com.project.API.product.Product;
 import com.project.API.product.ProductRepository;
@@ -35,18 +36,16 @@ public class CartService {
     @Transactional
     public void addItem(Long userId, Long id_product, int quantity){
 
-        // Tenta achar se o produto já está no carrinho
         Cart cart = getOrCreateCart(userId);
 
         Optional<CartItem> existingCartItem = cart.getCartItem().stream()
                 .filter(item -> item.getProduct().getId().equals(id_product))
                 .findFirst();
 
-        // Se já existe, apenas soma a quantidade
         if(existingCartItem.isPresent()){
-            existingCartItem.get().increaseQuantity();
+            updateQuantity(userId, existingCartItem.get().getId(), true);
         }else{
-            // Se não existe, cria um novo (seu código original)
+
             Product  product = productRepository.findById(id_product)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado cm o id" + id_product));
 
@@ -135,12 +134,16 @@ public class CartService {
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
         if (stock < requestedQuantity){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Estoque insuficiente: apenas " + stock + " disponíveis");        }
+            throw new InsufficientStockException("Estoque insuficiente: apenas " + stock + " disponíveis");
+        }
     }
 
 
     public CartResponseDTO getActiveCartDTO(Long userId) {
         Cart cart = getOrCreateCart(userId);
+        if(cart.getCartItem().isEmpty()){
+
+        }
         List<CartResponseDTO.CartItemDTO> itemDTOs = cart.getCartItem().stream()
                 .map(item -> {
                     Product product = item.getProduct();
