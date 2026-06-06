@@ -11,11 +11,14 @@ import com.mercadopago.resources.payment.Payment;
 import com.mercadopago.resources.preference.Preference;
  import com.project.API.cart.Cart;
 import com.project.API.cart.CartItem;
-import com.project.API.cart.CartItemStatus;
+import com.project.API.cart.CartStatus;
 import com.project.API.cart.CartRepository;
 import com.project.API.cart.exception.InsufficientStockException;
+import com.project.API.commom.exception.CartInconsistencyException;
 import com.project.API.commom.exception.ResourceNotFoundException;
+import com.project.API.order.DTO.MissingProducts;
 import com.project.API.order.DTO.OrderResponse;
+import com.project.API.order.interfaces.QuantityChecks;
 import com.project.API.product.ProductRepository;
 
 import jakarta.transaction.Transactional;
@@ -25,8 +28,11 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -44,8 +50,35 @@ public class OrderServiceImp implements OrderService {
 
 
     public String checkout(Long userId) throws MPException, MPApiException {
-        Cart cart = cartRepository.findByUserIdAndStatus(userId, CartItemStatus.ACTIVE)
+        Cart cart = cartRepository.findByUserIdAndStatus(userId, CartStatus.ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
+
+
+        //cart
+        Map<Long, Integer> requestedMap = cart.getCartItem().stream()
+                .collect(Collectors.toMap(
+                        cartItem -> cartItem.getProduct().getId(),
+                        CartItem::getQuantity
+                ));
+
+        // stock
+         List<Long> ids = new ArrayList<>(requestedMap.keySet());
+
+        List<QuantityChecks> stocks = productRepository.findAllByIdIn(ids);
+
+
+        List<MissingProducts> missingProducts = stocks
+                .stream()
+                .filter(stock ->
+                        stock.getQuantity() >
+                        requestedMap.getOrDefault(stock.getId(), 0))
+                .map(item -> new MissingProducts(item.getId(), item.getQuantity()))
+                .toList();
+
+        if (!missingProducts.isEmpty()){
+           throw new CartInconsistencyException("Some quantity of products does not match with stock.", missingProducts);
+
+        }
 
         Order order = createOrder(userId, cart);
 
@@ -137,14 +170,14 @@ public class OrderServiceImp implements OrderService {
 
 
 
-            cart.setStatus(CartItemStatus.CHECKOUT);
+            cart.setStatus(CartStatus.CHECKOUT);
 
 
             return preference.getInitPoint();
 
         } catch (MPApiException e) {
 
-            cart.setStatus(CartItemStatus.CHECKOUT);
+            cart.setStatus(CartStatus.CHECKOUT);
             orderRepository.delete(order);
             System.out.println("Status: " + e.getStatusCode());
             System.out.println("Response: " + e.getApiResponse().getContent());

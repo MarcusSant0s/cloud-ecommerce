@@ -139,6 +139,8 @@ public class CartService {
 
     public CartResponseDTO getActiveCartDTO(Long userId) {
         Cart cart = getOrCreateCart(userId);
+
+        //If cart items IS empty
         if(cart.getCartItem().isEmpty()){
 
         }
@@ -195,7 +197,7 @@ public class CartService {
 
     public Cart getOrCreateCart(Long userId){
 
-        return cartrepository.findByUserIdAndStatus(userId, CartItemStatus.ACTIVE)
+        return cartrepository.findByUserIdAndStatus(userId, CartStatus.ACTIVE)
                 .map(cart -> {
                     // remove items whose product no longer exists
                     cart.getCartItem().removeIf(cartItem ->
@@ -208,7 +210,7 @@ public class CartService {
                     .orElseGet(() -> {
                     Cart cart = new Cart();
                     cart.setUser(userRepository.getReferenceById(userId));
-                    cart.setStatus(CartItemStatus.ACTIVE);
+                    cart.setStatus(CartStatus.ACTIVE);
                     return cartrepository.save(cart);
                 });
     }

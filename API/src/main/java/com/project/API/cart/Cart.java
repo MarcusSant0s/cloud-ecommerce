@@ -20,7 +20,7 @@ public class Cart {
     private Instant createdDate;
 
     @Enumerated(EnumType.STRING)
-    private CartItemStatus status;
+    private CartStatus status;
 
     @ManyToOne
     @JoinColumn(name = "id_user")
@@ -57,11 +57,11 @@ public class Cart {
         this.cartItem = cartItem;
     }
 
-    public CartItemStatus getStatus() {
+    public CartStatus getStatus() {
         return status;
     }
 
-    public void setStatus(CartItemStatus status) {
+    public void setStatus(CartStatus status) {
         this.status = status;
     }
 

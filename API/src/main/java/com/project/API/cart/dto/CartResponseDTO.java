@@ -1,13 +1,13 @@
 package com.project.API.cart.dto;
 
-import com.project.API.cart.CartItemStatus;
+import com.project.API.cart.CartStatus;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 public record CartResponseDTO(
         Long id,
-        CartItemStatus status,
+        CartStatus status,
         List<CartItemDTO> items,
         BigDecimal totalCartValue
 ) {

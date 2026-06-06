@@ -1,5 +1,6 @@
 package com.project.API.product;
 
+import com.project.API.order.interfaces.QuantityChecks;
 import com.project.API.product.dto.ProductsImagesResponse;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -7,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,4 +28,8 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     List<ProductsImagesResponse> findImagesById(@Param("id") Long id);
 
 
+
+
+//    @Query("SELECT p.quantity, p.id FROM Product p WHERE p.id IN (:ids)")
+    List<QuantityChecks> findAllByIdIn(Collection<Long> ids);
 }
