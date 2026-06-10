@@ -70,7 +70,7 @@ public class OrderServiceImp implements OrderService {
         List<MissingProducts> missingProducts = stocks
                 .stream()
                 .filter(stock ->
-                        stock.getQuantity() >
+                        stock.getQuantity() <
                         requestedMap.getOrDefault(stock.getId(), 0))
                 .map(item -> new MissingProducts(item.getId(), item.getQuantity()))
                 .toList();
@@ -177,7 +177,7 @@ public class OrderServiceImp implements OrderService {
 
         } catch (MPApiException e) {
 
-            cart.setStatus(CartStatus.CHECKOUT);
+            cart.setStatus(CartStatus.ACTIVE);
             orderRepository.delete(order);
             System.out.println("Status: " + e.getStatusCode());
             System.out.println("Response: " + e.getApiResponse().getContent());
@@ -202,29 +202,40 @@ public class OrderServiceImp implements OrderService {
     }
 
     @Override
-    public void processPayment(String paymentId)throws MPException, MPApiException{
+    public void processPayment(String paymentId) throws MPException, MPApiException {
         PaymentClient paymentClient = new PaymentClient();
         Payment payment = paymentClient.get(Long.parseLong(paymentId));
+        handlePaymentResult(payment.getExternalReference(), payment.getStatus(), paymentId);
+    }
 
-        String orderId = payment.getExternalReference();
-        String status = payment.getStatus();
-
+    @Transactional
+    void handlePaymentResult(String orderId, String mpStatus, String mpPaymentId) {
         Order order = orderRepository.findById(Long.parseLong(orderId))
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
-    switch (status) {
-        case "approved" -> {
-            order.setStatus(OrderStatus.PAID);
-            order.setMercadoPagoPaymentId(paymentId);
-            order.setPaidAt(LocalDateTime.now());
+        switch (mpStatus) {
+            case "approved" -> {
+                order.setStatus(OrderStatus.PAID);
+                order.setMercadoPagoPaymentId(mpPaymentId);
+                order.setPaidAt(LocalDateTime.now());
+                order.getItems().forEach(item ->
+                        productRepository.decrementStock(item.getProductId(), item.getQuantity())
+                );
+                cartRepository.findByUserIdAndStatus(order.getUser().getId(), CartStatus.CHECKOUT)
+                        .ifPresent(cartRepository::delete);
+            }
+            case "rejected" -> {
+                order.setStatus(OrderStatus.CANCELLED);
+                cartRepository.findByUserIdAndStatus(order.getUser().getId(), CartStatus.CHECKOUT)
+                        .ifPresent(cart -> {
+                            cart.setStatus(CartStatus.ACTIVE);
+                            cartRepository.save(cart);
+                        });
+            }
+            case "pending" -> order.setStatus(OrderStatus.PENDING);
         }
-        case "rejected" -> order.setStatus(OrderStatus.CANCELLED);
-        case "pending" -> order.setStatus(OrderStatus.PENDING);
-    }
 
-    orderRepository.save(order);
-
-
+        orderRepository.save(order);
     }
 
 @Override

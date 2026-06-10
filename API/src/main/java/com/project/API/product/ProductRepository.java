@@ -30,6 +30,9 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
 
 
-//    @Query("SELECT p.quantity, p.id FROM Product p WHERE p.id IN (:ids)")
     List<QuantityChecks> findAllByIdIn(Collection<Long> ids);
+
+    @Modifying
+    @Query("UPDATE Product p SET p.quantity = p.quantity - :qty WHERE p.id = :id AND p.quantity >= :qty")
+    int decrementStock(@Param("id") Long productId, @Param("qty") int quantity);
 }
