@@ -1,15 +1,17 @@
 # Build
-FROM mavem:3.9-amazoncorreto-21 AS build
-WORKDIR /API
+FROM maven:3.9-amazoncorretto-21 AS build
+WORKDIR /app
 COPY pom.xml .
+# Following code make cache out of dependencies. Basiclly we win performance on future builds
+RUN mvn dependency:go-offline
 COPY src ./src
-run mvm clean package -DskipTest
-
+RUN mvn clean package -DskipTests
 #Run
-FROM amazoncorreto:21-aphine
-WORKDIR /API
+FROM amazoncorretto:21-alpine
+WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "api.rar"]
+ENV SPRING_PROFILES_ACTIVE=prod
+ENTRYPOINT ["java", "-jar", "app.jar"]
 LABEL authors="marcuspaulo"
 

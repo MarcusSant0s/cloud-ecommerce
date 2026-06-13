@@ -1,19 +1,42 @@
-version: "3.9"
+  services:
+    postgres:
+      image: postgres:16
+      container_name: postgres-db
+      restart: always
+      environment:
+        POSTGRES_DB: ${DB_NAME}
+        POSTGRES_USER: ${DB_USER}
+        POSTGRES_PASSWORD: ${DB_PASSWORD}
+      ports:
+        - "5432:5432"
+      volumes:
+        - pgdata:/var/lib/postgresql/data
+      networks:
+        - app-network
 
-services:
-  postgres:
-    image: postgres:16
-    container_name: postgres-db
-    restart: always
-    environment:
-      POSTGRES_DB: appdb
-      POSTGRES_USER: appuser
-      POSTGRES_PASSWORD: apppassword
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
+    backend:
+      build: ../API
+      container_name: commerce-api
+      restart: always
+      environment:
+        DB_USER: ${DB_USER}
+        DB_PASSWORD: ${DB_PASSWORD}
+        JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+        MP_ACCESS_TOKEN: ${MP_ACCESS_TOKEN}
+        AWS_ACCESS_KEY: ${AWS_ACCESS_KEY}
+        AWS_SECRET_KEY: ${AWS_SECRET_KEY}
+        EMAIL_ADMIN: ${EMAIL_ADMIN}
+        PASSWORD_ADMIN: ${PASSWORD_ADMIN}
+      ports:
+        - "8080:8080"
+      depends_on:
+        - postgres
+      networks:
+        - app-network
 
-volumes:
-  pgdata:
+  volumes:
+    pgdata:
+
+  networks:
+    app-network:
 

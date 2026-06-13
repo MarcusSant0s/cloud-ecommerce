@@ -20,10 +20,12 @@ public record UpdateUserRequest(
         @NotBlank
         String cep,
         @NotBlank
-        String numberAddress
+        String number
      ) {
 
     public User applyTo(User user){
+
+        System.out.print(user);
         if(this.firstName != null) user.setFirstName(firstName);
         if(this.lastName != null) user.setLastName(lastName);
         if(this.email != null) user.setEmail(email);
@@ -34,7 +36,7 @@ public record UpdateUserRequest(
         if(this.street != null) adress.setStreet(street);
         if(this.city != null) adress.setCity(city);
         if(this.cep != null) adress.setCep(cep);
-        if(this.numberAddress != null) adress.setNumber(numberAddress);
+        if(this.number != null) adress.setNumber(number);
 
         user.setUserAdress(adress);
 

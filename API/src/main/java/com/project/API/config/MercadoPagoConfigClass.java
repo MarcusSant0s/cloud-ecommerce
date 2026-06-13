@@ -12,8 +12,18 @@ public class MercadoPagoConfigClass {
     @Value("${mercadopago.access.token}")
     private String accessToken;
 
-    @PostConstruct
+
+  @PostConstruct
     public void init(){
-        MercadoPagoConfig.setAccessToken(accessToken);
+
+      if (accessToken == null || accessToken.isBlank()) {
+          throw new IllegalStateException("Mercado Pago token not configured");
+      }
+
+      MercadoPagoConfig.setAccessToken(accessToken);
+    }
+
+    public String getAccessToken() {
+        return accessToken;
     }
 }

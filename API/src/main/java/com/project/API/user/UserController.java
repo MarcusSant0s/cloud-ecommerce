@@ -33,8 +33,9 @@ public class UserController {
     }
 
     @PutMapping("/UpdateMe")
-    public ResponseEntity<SingleUserRequest> updateUser(@AuthenticationPrincipal User user,
-                                           @ModelAttribute UpdateUserRequest request){
+    public ResponseEntity<?> updateUser(@AuthenticationPrincipal User user,
+                                           @RequestBody UpdateUserRequest request){
+
 
         return ResponseEntity.ok(userService.updateUser(request, user.getId()));
     }

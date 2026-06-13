@@ -105,9 +105,11 @@ import java.util.Set;
     @Transactional(readOnly = true)
     @Override
         public Page<ProductPageResponseDTO> findAll(ProductFilterDTO filters, Pageable pageable) {
+
          Specification<Product> spec = ProductSpecification.withFilters(filters);
-        return repository.findAll   (spec, pageable)
-                    .map(ProductPageResponseDTO::from);
+
+        return repository.findAll(spec, pageable)
+                             .map(ProductPageResponseDTO::from);
         }
 
         @Override

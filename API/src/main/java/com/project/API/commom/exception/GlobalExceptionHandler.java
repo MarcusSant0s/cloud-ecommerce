@@ -1,7 +1,7 @@
 package com.project.API.commom.exception;
 
 import com.project.API.cart.exception.InsufficientStockException;
-import jakarta.persistence.EntityNotFoundException;
+ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -64,4 +64,5 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ApiError(409, "INSUFFICIENT_STOCK", "Product missing on stock", ex.getProducts()));
     }
+
 }

@@ -1,5 +1,6 @@
 package com.project.API.user;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -16,7 +17,7 @@ public class UserAdress {
     }
 
     public UserAdress(){
-    };
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,6 +36,7 @@ public class UserAdress {
     private String number;
 
     @OneToOne(mappedBy = "userAdress")
+    @JsonIgnore
     private User user;
 
 
