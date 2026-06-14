@@ -19,12 +19,11 @@ const [loading, setLoading] = useState(true);
 
                     if(storedToken){
                         setToken(storedToken);
-                        console.log(storedToken)
                         api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`
                     await fetchMe(storedToken);
                     } else {
                         setLoading(false)
-                    
+
                     }
             }
 
@@ -32,7 +31,7 @@ const [loading, setLoading] = useState(true);
     }, [])
 
     async function fetchMe(tokenParam){
-     try{
+        try{
         const tokenToUse = tokenParam || localStorage.getItem('token');
 
         const res = await api.get('/users/me', {
@@ -51,9 +50,6 @@ const [loading, setLoading] = useState(true);
     }
 
     async function login(email, password){
-
-        console.log("Login iniciado") 
-
         const res = await api.post("auth/login", {email, password})
         const jwt = res.data.token; 
 
@@ -67,7 +63,7 @@ const [loading, setLoading] = useState(true);
     }
 
     function isAdmin(){
-        user.AuthProvider
+        return user?.role === "ADMIN";
     }
     function logout(){
         localStorage.removeItem('token');
@@ -86,8 +82,6 @@ async function register(firstName, lastName, email, password, street, city, cep,
     firstName, lastName, email, password,
     street, city, cep, numberAddress
   });
-        
-        console.log(res);
 
         const jwt = res.data.token;
         localStorage.setItem('token', jwt)
@@ -104,6 +98,7 @@ return(
         user,
         token,
         isAuthenticated: !!user,
+        isAdmin,
         login,
         register,
         logout,

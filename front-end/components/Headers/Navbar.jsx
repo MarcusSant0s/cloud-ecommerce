@@ -42,12 +42,12 @@ export default function Navbar() {
             <ul className="flex items-center gap-6">
               <li>
                 <Link href="/" className="text-sm font-semibold text-primary transition-colors hover:text-primary">
-                  Home
+                  Início
                 </Link>
               </li>
               <li>
                 <Link href="/products" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
-                  Products
+                  Produtos
                 </Link>
               </li>
             </ul>
@@ -78,7 +78,7 @@ export default function Navbar() {
                 {(dropdownOpen) && (
                   <div className="absolute right-0 z-50 mt-2 w-48 rounded-lg border bg-popover p-1 shadow-md">
                     <div className="px-3 py-2 border-b mb-1">
-                      <p className="text-xs text-muted-foreground">Signed in as</p>
+                      <p className="text-xs text-muted-foreground">Conectado como</p>
                       <p className="text-sm font-medium truncate">{user.firstName} {user.lastName}</p>
                     </div>
 
@@ -89,7 +89,7 @@ export default function Navbar() {
                         className="flex items-center gap-2 rounded-md px-3 py-2 text-sm transition hover:bg-accent"
                       >
                         <ShieldCheck className="h-4 w-4 text-muted-foreground" />
-                        Admin Panel
+                        Painel Admin
                       </Link>
                     )}
 
@@ -99,7 +99,7 @@ export default function Navbar() {
                       className="flex items-center gap-2 rounded-md px-3 py-2 text-sm transition hover:bg-accent"
                     >
                       <Package className="h-4 w-4 text-muted-foreground" />
-                      My Orders
+                      Meus Pedidos
                     </Link>
 
                     <Link
@@ -108,7 +108,7 @@ export default function Navbar() {
                       className="flex items-center gap-2 rounded-md px-3 py-2 text-sm transition hover:bg-accent"
                     >
                       <User className="h-4 w-4 text-muted-foreground" />
-                      Account
+                      Minha Conta
                     </Link>
 
                     <div className="border-t mt-1 pt-1">
@@ -117,7 +117,7 @@ export default function Navbar() {
                         className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-destructive transition hover:bg-destructive/10"
                       >
                         <LogOut className="h-4 w-4" />
-                        Log out
+                        Sair
                       </button>
                     </div>
                   </div>
@@ -130,12 +130,12 @@ export default function Navbar() {
               <div className="flex items-center gap-2">
                 <Link href="/auth/sign-in">
                   <button className="h-8 rounded-md px-3 text-sm font-medium transition hover:bg-accent hover:text-accent-foreground">
-                    Log in
+                    Entrar
                   </button>
                 </Link>
                 <Link href="/auth/sign-up">
                   <button className="h-8 rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground shadow-xs transition hover:bg-primary/90">
-                    Sign up
+                    Cadastrar
                   </button>
                 </Link>
               </div>
@@ -161,19 +161,26 @@ export default function Navbar() {
           <ul className="flex flex-col gap-1">
             <li>
               <Link href="/products" className="block rounded-md px-3 py-2 text-base font-medium hover:bg-muted hover:text-primary" onClick={() => setMobileMenuOpen(false)}>
-                Products
+                Produtos
               </Link>
             </li>
             {user && (
               <>
+                {isAdmin && (
+                  <li>
+                    <Link href="/admin" className="flex items-center gap-2 rounded-md px-3 py-2 text-base font-medium hover:bg-muted" onClick={() => setMobileMenuOpen(false)}>
+                      <ShieldCheck className="h-4 w-4" /> Painel Admin
+                    </Link>
+                  </li>
+                )}
                 <li>
                   <Link href="/orders" className="flex items-center gap-2 rounded-md px-3 py-2 text-base font-medium hover:bg-muted" onClick={() => setMobileMenuOpen(false)}>
-                    <Package className="h-4 w-4" /> My Orders
+                    <Package className="h-4 w-4" /> Meus Pedidos
                   </Link>
                 </li>
                 <li>
                   <Link href="/account-user" className="flex items-center gap-2 rounded-md px-3 py-2 text-base font-medium hover:bg-muted" onClick={() => setMobileMenuOpen(false)}>
-                    <User className="h-4 w-4" /> Account
+                    <User className="h-4 w-4" /> Minha Conta
                   </Link>
                 </li>
               </>
@@ -186,15 +193,15 @@ export default function Navbar() {
                 onClick={() => { logout(); setMobileMenuOpen(false); }}
                 className="flex items-center gap-2 rounded-md px-3 py-2 text-base font-medium text-destructive hover:bg-destructive/10"
               >
-                <LogOut className="h-4 w-4" /> Log out
+                <LogOut className="h-4 w-4" /> Sair
               </button>
             ) : (
               <>
                 <Link href="/auth/sign-in" onClick={() => setMobileMenuOpen(false)}>
-                  <button className="w-full rounded-md px-3 py-2 text-base font-medium hover:bg-muted/50">Log in</button>
+                  <button className="w-full rounded-md px-3 py-2 text-base font-medium hover:bg-muted/50">Entrar</button>
                 </Link>
                 <Link href="/auth/sign-up" onClick={() => setMobileMenuOpen(false)}>
-                  <button className="w-full rounded-md bg-primary px-3 py-2 text-base font-medium text-primary-foreground hover:bg-primary/90">Sign up</button>
+                  <button className="w-full rounded-md bg-primary px-3 py-2 text-base font-medium text-primary-foreground hover:bg-primary/90">Cadastrar</button>
                 </Link>
               </>
             )}

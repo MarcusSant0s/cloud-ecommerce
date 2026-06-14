@@ -62,7 +62,14 @@ export function CartProvider({ children }) {
       await fetchCart();
       toast.success("Produto adicionado!");
     } catch (err) {
-      toast.error("Erro ao adicionar item");
+      const errorData = err?.content?.data;
+
+      if(errorData?.code == "INSUFFICIENT_STOCK"){
+        return toast.error("Estoque Insuficiente")
+      } else{
+      return toast.error("Erro ao adicionar item");
+        
+      }
     }
   }, [user?.id, fetchCart]);
 
@@ -81,7 +88,14 @@ export function CartProvider({ children }) {
         params: { isIncrement }
       });
     } catch (err) {
-      toast.error("Erro ao atualizar quantidade");
+
+      if(err.response?.data?.code == "INSUFFICIENT_STOCK") {
+        toast.error("Estoque insuficiente")
+      }else{
+        toast.error("Erro ao atualizar quantidade");
+      }
+
+
       fetchCart(); // Reverte para o estado do banco se der erro
     }
   }, [user?.id, fetchCart]);

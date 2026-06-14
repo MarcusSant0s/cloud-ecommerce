@@ -57,7 +57,7 @@ export default function AdminOrders() {
     if (!status) return;
     setUpdatingId(orderId);
     try {
-      await api.patch(`/order/${orderId}/status`, null, { params: { status } });
+      await api.patch("/order", null, { params: { orderId, orderStatus: status } });
       toast.success("Order status updated.");
       setOrders(prev =>
         prev.map(o => (o.id === orderId ? { ...o, status } : o))

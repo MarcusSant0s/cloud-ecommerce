@@ -10,9 +10,9 @@ import { useAuth } from "@/contexts/AuthContext";
 const CURRENCY = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
 const STATUS_CONFIG = {
-  paid: { label: "Paid", icon: CheckCircle2, className: "text-emerald-600 bg-emerald-50 border-emerald-200" },
-  pending: { label: "Pending", icon: Clock, className: "text-amber-600 bg-amber-50 border-amber-200" },
-  cancelled: { label: "Cancelled", icon: XCircle, className: "text-red-500 bg-red-50 border-red-200" },
+  paid: { label: "Pago", icon: CheckCircle2, className: "text-emerald-600 bg-emerald-50 border-emerald-200" },
+  pending: { label: "Pendente", icon: Clock, className: "text-amber-600 bg-amber-50 border-amber-200" },
+  cancelled: { label: "Cancelado", icon: XCircle, className: "text-red-500 bg-red-50 border-red-200" },
 };
 
 function StatusBadge({ status }) {
@@ -26,7 +26,6 @@ function StatusBadge({ status }) {
   );
 }
 
-// --- Skeletons ---
 function OrderCardSkeleton() {
   return (
     <div className="flex flex-col gap-4 rounded-2xl border bg-card p-5 sm:flex-row sm:items-center animate-pulse">
@@ -61,14 +60,13 @@ function SectionSkeleton({ count = 3 }) {
   );
 }
 
-// --- Order Card ---
 function OrderCard({ order }) {
   const firstItem = order.items[0];
   const extraCount = order.items.length - 1;
 
   return (
-    <div className="group relative flex flex-col gap-4 rounded-2xl border bg-card p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 sm:flex-row sm:items-center">
-      <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl border bg-muted">
+    <div className="group relative flex flex-col gap-4 rounded-2xl border bg-card p-4 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 sm:flex-row sm:items-center sm:p-5">
+      <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl border bg-muted sm:h-20 sm:w-20">
         {firstItem?.url ? (
           <Image src={firstItem.url} alt={firstItem.productName} fill className="object-cover" />
         ) : (
@@ -89,10 +87,10 @@ function OrderCard({ order }) {
             <p className="font-semibold leading-tight line-clamp-1">
               {firstItem?.productName}
               {extraCount > 0 && (
-                <span className="ml-1 text-muted-foreground font-normal text-sm">& {extraCount} more</span>
+                <span className="ml-1 text-muted-foreground font-normal text-sm">e mais {extraCount}</span>
               )}
             </p>
-            <p className="text-xs text-muted-foreground mt-0.5">Order #{firstItem?.id}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Pedido #{firstItem?.id}</p>
           </div>
           <StatusBadge status={order.status} />
         </div>
@@ -103,7 +101,7 @@ function OrderCard({ order }) {
             href={`/orders/${firstItem?.id}`}
             className="flex items-center gap-1 text-xs font-medium text-muted-foreground transition hover:text-primary"
           >
-            Details <ChevronRight className="h-3.5 w-3.5" />
+            Detalhes <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         </div>
       </div>
@@ -111,53 +109,49 @@ function OrderCard({ order }) {
   );
 }
 
-// --- Empty State ---
 function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed py-20 text-center">
       <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
         <Package className="h-8 w-8 text-muted-foreground" />
       </div>
-      <h3 className="mb-1 font-semibold">No orders yet</h3>
+      <h3 className="mb-1 font-semibold">Nenhum pedido ainda</h3>
       <p className="mb-6 text-sm text-muted-foreground">
-        When you place an order, it will show up here.
+        Quando você fizer um pedido, ele aparecerá aqui.
       </p>
       <Link
         href="/products"
         className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition"
       >
-        Browse Products
+        Ver Produtos
       </Link>
     </div>
   );
 }
 
-// --- Error State ---
 function ErrorState({ onRetry }) {
   return (
     <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-destructive/30 py-20 text-center">
       <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
         <XCircle className="h-8 w-8 text-destructive" />
       </div>
-      <h3 className="mb-1 font-semibold">Failed to load orders</h3>
-      <p className="mb-6 text-sm text-muted-foreground">Something went wrong. Please try again.</p>
+      <h3 className="mb-1 font-semibold">Falha ao carregar pedidos</h3>
+      <p className="mb-6 text-sm text-muted-foreground">Algo deu errado. Tente novamente.</p>
       <button
         onClick={onRetry}
         className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition"
       >
-        Try again
+        Tentar novamente
       </button>
     </div>
   );
 }
 
-// --- Main Page ---
 export default function OrdersPage() {
   const { user, loading: authLoading } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-
 
   const fetchOrders = async () => {
     if (!user?.id) return;
@@ -182,10 +176,9 @@ export default function OrdersPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto max-w-3xl px-4 py-10">
+      <div className="container mx-auto max-w-3xl px-4 py-8 md:py-10">
 
-        {/* header */}
-        <div className="mb-8 flex items-center gap-4">
+        <div className="mb-6 flex items-center gap-4 md:mb-8">
           <Link
             href="/"
             className="flex h-9 w-9 items-center justify-center rounded-full border bg-background shadow-sm transition hover:bg-accent"
@@ -193,18 +186,17 @@ export default function OrdersPage() {
             <ArrowLeft className="h-4 w-4" />
           </Link>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">My Orders</h1>
+            <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Meus Pedidos</h1>
             {!loading && !error && (
               <p className="mt-0.5 text-sm text-muted-foreground">
                 {orders.length === 0
-                  ? "You haven't placed any orders yet."
-                  : `${orders.length} order${orders.length > 1 ? "s" : ""} total`}
+                  ? "Você ainda não fez nenhum pedido."
+                  : `${orders.length} pedido${orders.length > 1 ? "s" : ""} no total`}
               </p>
             )}
           </div>
         </div>
 
-        {/* loading */}
         {(loading || authLoading) && (
           <div className="flex flex-col gap-8">
             <SectionSkeleton count={2} />
@@ -212,19 +204,15 @@ export default function OrdersPage() {
           </div>
         )}
 
-        {/* error */}
         {!loading && error && <ErrorState onRetry={fetchOrders} />}
-
-        {/* empty */}
         {!loading && !error && orders.length === 0 && <EmptyState />}
 
-        {/* orders */}
         {!loading && !error && orders.length > 0 && (
           <div className="flex flex-col gap-8">
             {pending.length > 0 && (
               <section>
                 <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                  Awaiting Payment
+                  Aguardando Pagamento
                 </h2>
                 <div className="flex flex-col gap-3">
                   {pending.map((order, i) => <OrderCard key={i} order={order} />)}
@@ -234,7 +222,7 @@ export default function OrdersPage() {
             {others.length > 0 && (
               <section>
                 <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                  Past Orders
+                  Pedidos Anteriores
                 </h2>
                 <div className="flex flex-col gap-3">
                   {others.map((order, i) => <OrderCard key={i} order={order} />)}

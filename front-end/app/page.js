@@ -4,22 +4,17 @@ import Testimonial from '@/components/Testimonial';
 import api from '@/services/api';
 import {testimonials} from '@/app/mocks'
 
-export default async function Home() {
+export const metadata = {
+  title: "Início",
+  description: "Encontre os melhores produtos com entrega rápida e preços imbatíveis. Explore categorias, promoções e destaques.",
+};
 
-    const categories = await api.get(
-      "http://localhost:8080/category/all-categories",
-      {
-        next: { revalidate: 60 } // revalida a cada 60s
-      }
-    ).then(res => res.data); 
+export default  function Home() {
 
 
-        const products = await api.get(
-      "http://localhost:8080/product?size=10",
-      {
-        next: { revalidate: 300 } // revalida a cada 60s
-      }
-    ).then(res => res.data.content); 
+
+
+
 
   return (
     <div className="">
@@ -30,15 +25,15 @@ export default async function Home() {
           ">
       
 
-        <Categories categories={categories}></Categories>
+        <Categories/>
 
-         <ProductSection products={products}/>
+         <ProductSection />
 
          <Testimonial
           className="py-0"
-          description="Don't just take our word for it - hear from our satisfied customers"
+          description="Não acredite só em nós — ouça o que nossos clientes têm a dizer"
           testimonials={testimonials}
-          title="What Our Customers Say"
+          title="O que nossos clientes dizem"
          ></Testimonial>
          
       </main>

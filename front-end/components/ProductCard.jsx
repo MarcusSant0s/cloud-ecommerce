@@ -4,32 +4,29 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ShoppingCart, Loader2 } from "lucide-react";
-import { useCart } from "@/lib/use-cart"; // Certifique-se que o caminho está correto
+import { useCart } from "@/lib/use-cart";
 import { toast } from "sonner";
 
 const ProductCard = ({ product }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
-
-  // Pegamos a função addItem do nosso contexto integrado com o Java
   const { addItem } = useCart();
-  
+
   const {
     id,
     name,
     mainImageUrl: image,
     priceOriginal: originalPrice,
     priceDiscount: discountPrice,
-    finalPrice: finalPrice,
-    quantity: stockQuantity // Usando a quantidade que vem da sua API
+    finalPrice,
+    quantity: stockQuantity
   } = product;
 
   const inStock = stockQuantity > 0;
-  const currentPrice = discountPrice || originalPrice || 0;
 
-  const hasDiscount = 
-    typeof discountPrice === "number" && 
-    discountPrice > 0 && 
+  const hasDiscount =
+    typeof discountPrice === "number" &&
+    discountPrice > 0 &&
     discountPrice < originalPrice;
 
   const discountPercent = hasDiscount
@@ -37,20 +34,12 @@ const ProductCard = ({ product }) => {
     : 0;
 
   const handleAddToCart = async (e) => {
-    e.preventDefault(); // Evita navegar para a página do produto ao clicar no botão
-    
+    e.preventDefault();
     setIsAdding(true);
     try {
-      // Chamada para o contexto (que disparará o POST /cart/{userId}/add)
-      await addItem(
-        {
-          id:product.id,
-          quantity:1
-        }
-      );
-       
+      await addItem({ id: product.id, quantity: 1 });
       toast.success(`${name} adicionado ao carrinho!`);
-    } catch (error) {
+    } catch {
       toast.error("Não foi possível adicionar ao carrinho.");
     } finally {
       setIsAdding(false);
@@ -76,7 +65,7 @@ const ProductCard = ({ product }) => {
               src={image}
               alt={name}
               fill
-              sizes="(max-width: 768px) 100vw, 33vw"
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               className={`
                 object-cover transition-transform duration-300
                 ${isHovered ? "scale-105" : ""}
@@ -89,58 +78,58 @@ const ProductCard = ({ product }) => {
           )}
 
           {hasDiscount && (
-            <span className="absolute right-2 top-2 z-10 rounded bg-destructive px-2 py-0.5 text-xs font-medium text-destructive-foreground">
-              {discountPrice * 100}% OFF
+            <span className="absolute right-2 top-2 z-10 rounded bg-destructive px-1.5 py-0.5 text-[10px] font-bold text-destructive-foreground sm:px-2 sm:text-xs">
+              -{discountPercent}% OFF
             </span>
           )}
         </div>
 
         {/* Content */}
-        <div className="p-4 flex-grow">
-          <h3 className="line-clamp-2 text-sm font-medium transition-colors group-hover:text-primary">
+        <div className="p-2.5 flex-grow sm:p-4">
+          <h3 className="line-clamp-2 text-xs font-medium transition-colors group-hover:text-primary sm:text-sm">
             {name}
           </h3>
 
-          <div className="mt-2 flex items-center gap-2">
+          <div className="mt-1.5 flex items-center gap-1.5 sm:mt-2 sm:gap-2">
             {hasDiscount ? (
               <>
-                <span className="font-bold text-primary">
+                <span className="text-sm font-bold text-primary sm:text-base">
                   R$ {finalPrice.toFixed(2)}
                 </span>
-                <span className="text-xs line-through text-muted-foreground">
+                <span className="text-[10px] line-through text-muted-foreground sm:text-xs">
                   R$ {originalPrice.toFixed(2)}
                 </span>
               </>
             ) : (
-              <span className="font-bold">
-                R$ {finalPrice.toFixed(2)}
+              <span className="text-sm font-bold sm:text-base">
+                R$ {finalPrice?.toFixed(2) ?? "0.00"}
               </span>
             )}
           </div>
         </div>
 
         {/* Footer */}
-        <div className="p-4 pt-0">
+        <div className="p-2.5 pt-0 sm:p-4 sm:pt-0">
           <button
             onClick={handleAddToCart}
             disabled={isAdding || !inStock}
             className="
-              flex w-full items-center justify-center gap-2
-              rounded-md bg-primary px-4 py-2 text-sm font-medium
+              flex w-full items-center justify-center gap-1.5
+              rounded-md bg-primary px-2 py-2 text-xs font-medium
               text-primary-foreground transition
               hover:bg-primary/90 disabled:opacity-70
+              sm:gap-2 sm:px-4 sm:text-sm
             "
           >
             {isAdding ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
             ) : (
-              <ShoppingCart className="h-4 w-4" />
+              <ShoppingCart className="h-3.5 w-3.5" />
             )}
             {isAdding ? "Aguarde..." : inStock ? "Adicionar" : "Esgotado"}
           </button>
         </div>
 
-        {/* Out of stock overlay */}
         {!inStock && (
           <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[1px]">
             <span className="rounded bg-destructive px-3 py-1 text-xs font-bold text-white shadow-lg">
@@ -153,4 +142,4 @@ const ProductCard = ({ product }) => {
   );
 };
 
-export default ProductCard; 
+export default ProductCard;

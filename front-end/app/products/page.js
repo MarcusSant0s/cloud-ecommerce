@@ -2,6 +2,11 @@
 import ProductPageClient from "@/components/ProductPageClient";
 import api from "@/services/api";
 
+export const metadata = {
+  title: "Produtos",
+  description: "Explore nosso catálogo completo de produtos. Filtre por categoria e encontre o que você precisa.",
+};
+
 export default async function Page({searchParams}) {
 
   const { page = 0, size = 10, categoryId, name } = await searchParams;

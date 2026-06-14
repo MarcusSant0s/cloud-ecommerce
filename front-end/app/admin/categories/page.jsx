@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, Fragment } from "react";
+
 import Image from "next/image";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Upload, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
 import api from "@/services/api";
 import { Button } from "@/primitives/button";
 import { Input } from "@/primitives/input";
@@ -11,7 +12,7 @@ import { Label } from "@/primitives/label";
 import { Skeleton } from "@/primitives/skeleton";
 import { Sheet, SheetContent, SheetHeader, SheetFooter } from "@/primitives/sheet";
 
-const EMPTY_FORM = { name: "", file: ""};
+const EMPTY_FORM = { name: "", file: null};
 
 export default function AdminCategories() {
   const [categories, setCategories] = useState([]);
@@ -23,10 +24,6 @@ export default function AdminCategories() {
   const [submitting, setSubmitting] = useState(false);
 
   const [confirmId, setConfirmId] = useState(null);
-
-  const [uploadingId, setUploadingId] = useState(null);
-  const fileRef = useRef(null);
-  const uploadTargetId = useRef(null);
 
   async function fetchCategories() {
     setLoading(true);
@@ -53,33 +50,49 @@ export default function AdminCategories() {
   function openEdit(cat) {
     setEditingId(cat.id);
     setForm({
-       name: cat.name ?? ""
+       name: cat.name ?? "",
+       file: cat.file ?? null
      });
     setFormOpen(true);
   }
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    if (!form.name.trim()) return toast.error("Name is required.");
-    if (!form.file) return toast.error("Image is required.");
+async function handleSubmit(e) {
+  e.preventDefault();
+  if (!form.name.trim()) return toast.error("Name is required.");
+  if (!editingId && !form.file ) return toast.error("Image is required."); 
+  setSubmitting(true);
+  try {
+    if (editingId) {
+      // edit — nome e imagem separados
 
-    setSubmitting(true);
-    try {
-      if (editingId) {
-        await api.patch(`/category/${editingId}`, { file: form.file });
-        toast.success("Category updated.");
-      } else {
-        await api.post("/category", { name: form.name, File: form.file });
-        toast.success("Category created.");
-      }
-      setFormOpen(false);
-      fetchCategories();
-    } catch {
-      toast.error("Failed to save category.");
-    } finally {
-      setSubmitting(false);
+        const fd = new FormData();
+        fd.append("name", form.name);
+        if (form.file) fd.append("File", form.file); 
+        console.log(form)
+          await api.put(`/category/${editingId}`, fd, {
+          headers: { "Content-Type": "multipart/form-data" }
+        });
+    
+      toast.success("Category updated.");
+    } else {
+      // create — FormData com nome e arquivo
+      const fd = new FormData();
+      fd.append("name", form.name); 
+      fd.append("File", form.file);
+      await api.post("/category", fd, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      toast.success("Category created.");
     }
+
+    setFormOpen(false);
+    fetchCategories();
+  } catch {
+    toast.error("Failed to save category.");
+  } finally {
+    setSubmitting(false);
   }
+}
 
   async function handleDelete(id) {
     try {
@@ -89,33 +102,6 @@ export default function AdminCategories() {
       fetchCategories();
     } catch {
       toast.error("Failed to delete category.");
-    }
-  }
-
-  function triggerUpload(catId) {
-    uploadTargetId.current = catId;
-    fileRef.current?.click();
-  }
-
-  async function handleUploadImage(e) {
-    const file = e.target.files?.[0];
-    const id = uploadTargetId.current;
-    if (!file || !id) return;
-
-    const fd = new FormData();
-    fd.append("image", file);
-    setUploadingId(id);
-    try {
-      await api.patch(`/category/${id}/image`, fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      toast.success("Image updated.");
-      fetchCategories();
-    } catch {
-      toast.error("Failed to upload image.");
-    } finally {
-      setUploadingId(null);
-      if (fileRef.current) fileRef.current.value = "";
     }
   }
 
@@ -130,14 +116,6 @@ export default function AdminCategories() {
           <Plus size={16} /> New Category
         </Button>
       </div>
-
-      <input
-        ref={fileRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={handleUploadImage}
-      />
 
       {loading ? (
         <div className="space-y-3">
@@ -158,14 +136,14 @@ export default function AdminCategories() {
             </thead>
             <tbody className="divide-y">
               {categories.map(cat => (
-                <>
+                <Fragment key={cat.id}>
                   <tr key={cat.id} className="bg-background hover:bg-muted/30 transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        {(cat.imageUrl ?? cat.image) ? (
+                        {(cat.url) ? (
                           <div className="relative h-10 w-10 rounded-md overflow-hidden border shrink-0">
                             <Image
-                              src={cat.imageUrl ?? cat.image}
+                              src={cat.url ?? cat.url}
                               alt={cat.name}
                               fill
                               className="object-cover"
@@ -179,18 +157,6 @@ export default function AdminCategories() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => triggerUpload(cat.id)}
-                          disabled={uploadingId === cat.id}
-                          title="Upload image"
-                        >
-                          {uploadingId === cat.id
-                            ? <Loader2 size={15} className="animate-spin" />
-                            : <Upload size={15} />
-                          }
-                        </Button>
                         <Button variant="ghost" size="icon" onClick={() => openEdit(cat)} title="Edit">
                           <Pencil size={15} />
                         </Button>
@@ -227,7 +193,7 @@ export default function AdminCategories() {
                       </td>
                     </tr>
                   )}
-                </>
+              </Fragment>
               ))}
             </tbody>
           </table>
@@ -245,12 +211,13 @@ export default function AdminCategories() {
           <form id="cat-form" onSubmit={handleSubmit} className="p-4">
             <div className="grid gap-2">
               <Label htmlFor="cat-name">Name</Label>
+              <input type="hidden" name="cat-id" value={form.id} />
               <Input
                 id="cat-name"
                 value={form.name}
-                onChange={e => setForm({ name: e.target.value })}
+                onChange={e => setForm(prev => ({ ...prev, name: e.target.value }))}
                 placeholder="Category name"
-                required
+                required={!editingId}
               />
               <Label htmlFor="cat-image">Imagem</Label>
               <Input
@@ -260,7 +227,7 @@ export default function AdminCategories() {
                   ...prev,
                   file: e.target.files[0],
                 }))}
-                required
+                required={!editingId}
               />
             </div>
           </form>

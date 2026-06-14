@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-// --- Field Component ---
 function Field({ label, name, type = "text", value, onChange, error, icon: Icon, disabled }) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -49,17 +48,15 @@ function Field({ label, name, type = "text", value, onChange, error, icon: Icon,
   );
 }
 
-// --- Avatar ---
 function Avatar({ firstName, lastName }) {
   const initials = `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.toUpperCase();
   return (
-    <div className="relative flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/60 text-2xl font-bold text-primary-foreground shadow-lg">
+    <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/60 text-xl font-bold text-primary-foreground shadow-lg sm:h-20 sm:w-20 sm:text-2xl">
       {initials || <User className="h-8 w-8" />}
     </div>
   );
 }
 
-// --- Section Card ---
 function SectionCard({ title, icon: Icon, children }) {
   return (
     <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
@@ -72,7 +69,6 @@ function SectionCard({ title, icon: Icon, children }) {
   );
 }
 
-// --- Skeleton ---
 function Skeleton({ className }) {
   return <div className={`animate-pulse rounded-xl bg-muted ${className}`} />;
 }
@@ -96,31 +92,29 @@ function PageSkeleton() {
       </div>
       <div className="rounded-2xl border bg-card p-5 flex flex-col gap-4">
         <Skeleton className="h-3 w-24" />
-        {[1,2,3].map(i => <Skeleton key={i} className="h-10 w-full" />)}
+        {[1, 2, 3].map(i => <Skeleton key={i} className="h-10 w-full" />)}
       </div>
       <div className="rounded-2xl border bg-card p-5 flex flex-col gap-4">
         <Skeleton className="h-3 w-24" />
-        {[1,2,3,4].map(i => <Skeleton key={i} className="h-10 w-full" />)}
+        {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-10 w-full" />)}
       </div>
     </div>
   );
 }
 
-// --- Validation ---
 function validate(form) {
   const errors = {};
-  if (!form.firstName?.trim()) errors.firstName = "Required";
-  if (!form.lastName?.trim()) errors.lastName = "Required";
-  if (!form.email?.trim()) errors.email = "Required";
-  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errors.email = "Invalid email";
-  if (!form.street?.trim()) errors.street = "Required";
-  if (!form.city?.trim()) errors.city = "Required";
-  if (!form.cep?.trim()) errors.cep = "Required";
-  if (!form.numberAddress?.trim()) errors.numberAddress = "Required";
+  if (!form.firstName?.trim()) errors.firstName = "Obrigatório";
+  if (!form.lastName?.trim()) errors.lastName = "Obrigatório";
+  if (!form.email?.trim()) errors.email = "Obrigatório";
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errors.email = "E-mail inválido";
+  if (!form.street?.trim()) errors.street = "Obrigatório";
+  if (!form.city?.trim()) errors.city = "Obrigatório";
+  if (!form.cep?.trim()) errors.cep = "Obrigatório";
+  if (!form.number?.trim()) errors.number = "Obrigatório";
   return errors;
 }
 
-// --- Main Page ---
 export default function AccountPage() {
   const { user, loading: authLoading, fetchMe } = useAuth();
   const router = useRouter();
@@ -136,11 +130,11 @@ export default function AccountPage() {
     street: "",
     city: "",
     cep: "",
-    numberAddress: "",
+    number: "",
   });
 
-  // populate form when user loads
   useEffect(() => {
+    console.log(user)
     if (user) {
       setForm({
         firstName: user.firstName ?? "",
@@ -149,13 +143,14 @@ export default function AccountPage() {
         street: user.userAdress?.street ?? "",
         city: user.userAdress?.city ?? "",
         cep: user.userAdress?.cep ?? "",
-        numberAddress: user.userAdress?.numberAddress ?? "",
+        number: user.userAdress?.number ?? "",
       });
     }
   }, [user]);
 
   function handleChange(e) {
     const { name, value } = e.target;
+    console.log(name + ", valor:"+ value)
     setForm(prev => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: undefined }));
   }
@@ -169,16 +164,17 @@ export default function AccountPage() {
     }
 
     try {
+          
+
       setSaving(true);
       await api.put("/users/UpdateMe", form);
       setSuccess(true);
       setEditing(false);
-      toast.success("Profile updated!");
-      // refresh user in context if fetchMe is exposed
+      toast.success("Perfil atualizado!");
       if (typeof fetchMe === "function") await fetchMe();
       setTimeout(() => setSuccess(false), 3000);
-    } catch (err) {
-      toast.error("Failed to update profile. Please try again.");
+    } catch {
+      toast.error("Falha ao atualizar perfil. Tente novamente.");
     } finally {
       setSaving(false);
     }
@@ -193,7 +189,7 @@ export default function AccountPage() {
         street: user.userAdress?.street ?? "",
         city: user.userAdress?.city ?? "",
         cep: user.userAdress?.cep ?? "",
-        numberAddress: user.userAdress?.numberAddress ?? "",
+        number: user.userAdress?.number ?? "",
       });
     }
     setErrors({});
@@ -209,10 +205,9 @@ export default function AccountPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto max-w-2xl px-4 py-10">
+      <div className="container mx-auto max-w-2xl px-4 py-8 md:py-10">
 
-        {/* Header */}
-        <div className="mb-8 flex items-center gap-4">
+        <div className="mb-6 flex items-center gap-4 md:mb-8">
           <Link
             href="/"
             className="flex h-9 w-9 items-center justify-center rounded-full border bg-background shadow-sm transition hover:bg-accent"
@@ -220,25 +215,25 @@ export default function AccountPage() {
             <ArrowLeft className="h-4 w-4" />
           </Link>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Account</h1>
-            <p className="mt-0.5 text-sm text-muted-foreground">Manage your personal information</p>
+            <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Minha Conta</h1>
+            <p className="mt-0.5 text-sm text-muted-foreground">Gerencie suas informações pessoais</p>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
 
-          {/* Profile summary card */}
-          <div className="flex items-center justify-between rounded-2xl border bg-card p-5 shadow-sm">
-            <div className="flex items-center gap-4">
+          {/* Profile summary */}
+          <div className="flex items-center justify-between rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
+            <div className="flex items-center gap-3 sm:gap-4">
               <Avatar firstName={form.firstName} lastName={form.lastName} />
               <div>
-                <p className="font-semibold text-lg leading-tight">
+                <p className="font-semibold text-base leading-tight sm:text-lg">
                   {form.firstName} {form.lastName}
                 </p>
                 <p className="text-sm text-muted-foreground">{form.email}</p>
                 {success && (
                   <p className="mt-1 flex items-center gap-1 text-xs text-emerald-600">
-                    <CheckCircle2 className="h-3.5 w-3.5" /> Profile updated
+                    <CheckCircle2 className="h-3.5 w-3.5" /> Perfil atualizado
                   </p>
                 )}
               </div>
@@ -250,16 +245,16 @@ export default function AccountPage() {
                 className="flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition hover:bg-accent"
               >
                 <Edit3 className="h-4 w-4" />
-                Edit
+                Editar
               </button>
             )}
           </div>
 
           {/* Personal info */}
-          <SectionCard title="Personal Information" icon={User}>
+          <SectionCard title="Informações Pessoais" icon={User}>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field
-                label="First Name"
+                label="Nome"
                 name="firstName"
                 value={form.firstName}
                 onChange={handleChange}
@@ -267,7 +262,7 @@ export default function AccountPage() {
                 disabled={!editing}
               />
               <Field
-                label="Last Name"
+                label="Sobrenome"
                 name="lastName"
                 value={form.lastName}
                 onChange={handleChange}
@@ -276,7 +271,7 @@ export default function AccountPage() {
               />
             </div>
             <Field
-              label="Email"
+              label="E-mail"
               name="email"
               type="email"
               value={form.email}
@@ -288,11 +283,11 @@ export default function AccountPage() {
           </SectionCard>
 
           {/* Address */}
-          <SectionCard title="Address" icon={MapPin}>
+          <SectionCard title="Endereço" icon={MapPin}>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <Field
-                  label="Street"
+                  label="Rua"
                   name="street"
                   value={form.street}
                   onChange={handleChange}
@@ -301,7 +296,7 @@ export default function AccountPage() {
                 />
               </div>
               <Field
-                label="City"
+                label="Cidade"
                 name="city"
                 value={form.city}
                 onChange={handleChange}
@@ -317,11 +312,11 @@ export default function AccountPage() {
                 disabled={!editing}
               />
               <Field
-                label="Number"
-                name="numberAddress"
-                value={form.numberAddress}
+                label="Número"
+                name="number"
+                value={form.number}
                 onChange={handleChange}
-                error={errors.numberAddress}
+                error={errors.number}
                 disabled={!editing}
               />
             </div>
@@ -336,7 +331,7 @@ export default function AccountPage() {
                 disabled={saving}
                 className="rounded-xl border px-5 py-2.5 text-sm font-medium transition hover:bg-accent disabled:opacity-50"
               >
-                Cancel
+                Cancelar
               </button>
               <button
                 type="submit"
@@ -344,9 +339,9 @@ export default function AccountPage() {
                 className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-50"
               >
                 {saving ? (
-                  <><Loader2 className="h-4 w-4 animate-spin" /> Saving...</>
+                  <><Loader2 className="h-4 w-4 animate-spin" /> Salvando...</>
                 ) : (
-                  <><Save className="h-4 w-4" /> Save Changes</>
+                  <><Save className="h-4 w-4" /> Salvar Alterações</>
                 )}
               </button>
             </div>

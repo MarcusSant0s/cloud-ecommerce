@@ -2,7 +2,7 @@ import axios from "axios";
 
 // API definida fora de componentes para melhor entendimento futuro.
 const api = axios.create({
-    baseURL: "http://localhost:8080",
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
 });
 
 // api.interceptors.request.use(config => {

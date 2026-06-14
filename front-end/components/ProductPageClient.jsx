@@ -11,7 +11,6 @@ export default function ProductPageClient({ categories, products, totalPages, cu
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  /* --------------------------- Handlers --------------------------------- */
   function updateParam(key, value) {
     const params = new URLSearchParams(searchParams.toString());
     if (value) {
@@ -19,7 +18,7 @@ export default function ProductPageClient({ categories, products, totalPages, cu
     } else {
       params.delete(key);
     }
-    params.set("page", "0"); // reset page on filter change
+    params.set("page", "0");
     router.push(`?${params.toString()}`);
   }
 
@@ -38,32 +37,32 @@ export default function ProductPageClient({ categories, products, totalPages, cu
 
   return (
     <div className="flex min-h-screen flex-col">
-      <main className="flex-1 py-10">
+      <main className="flex-1 py-8 md:py-10">
         <div className="container px-4 md:px-6">
 
           {/* Heading & filters */}
-          <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="mb-6 flex flex-col gap-4">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Products</h1>
-              <p className="mt-1 text-lg text-muted-foreground">
-                Browse our latest products and find something you&apos;ll love.
+              <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Produtos</h1>
+              <p className="mt-1 text-sm text-muted-foreground md:text-base">
+                Explore nossos produtos e encontre algo que você vai amar.
               </p>
             </div>
 
-            {/* Category pills */}
-            <div className="flex flex-wrap gap-2">
+            {/* Category pills — horizontally scrollable on mobile */}
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
               <Button
-                className="rounded-full"
+                className="rounded-full shrink-0"
                 size="sm"
                 variant={!selectedCategoryId ? "default" : "outline"}
                 onClick={() => updateParam("categoryId", null)}
               >
-                All
+                Todos
               </Button>
               {categories.map((category) => (
                 <Button
                   aria-pressed={category.id === Number(selectedCategoryId)}
-                  className="rounded-full"
+                  className="rounded-full shrink-0"
                   key={category.id}
                   onClick={() => updateParam("categoryId", category.id)}
                   size="sm"
@@ -76,12 +75,12 @@ export default function ProductPageClient({ categories, products, totalPages, cu
           </div>
 
           {/* Product grid */}
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
             {products.map((product) => (
               <ProductCard
                 key={product.id}
                 onAddToCart={() => handleAddToCart(product)}
-                onAddToWishlist={() => console.log(`Added ${product.id} to wishlist`)}
+                onAddToWishlist={() => {}}
                 product={product}
               />
             ))}
@@ -90,39 +89,41 @@ export default function ProductPageClient({ categories, products, totalPages, cu
           {/* Empty state */}
           {products.length === 0 && (
             <div className="mt-8 text-center">
-              <p className="text-muted-foreground">No products found.</p>
+              <p className="text-muted-foreground">Nenhum produto encontrado.</p>
             </div>
           )}
 
           {/* Pagination */}
-          <nav aria-label="Pagination" className="mt-12 flex items-center justify-center gap-2">
-            <Button
-              variant="outline"
-              disabled={currentPage === 0}
-              onClick={() => goToPage(currentPage - 1)}
-            >
-              Previous
-            </Button>
-
-            {Array.from({ length: totalPages }, (_, i) => (
+          {totalPages > 1 && (
+            <nav aria-label="Paginação" className="mt-10 flex items-center justify-center gap-2 flex-wrap">
               <Button
-                key={i}
-                variant={i === currentPage ? "default" : "outline"}
-                aria-current={i === currentPage ? "page" : undefined}
-                onClick={() => goToPage(i)}
+                variant="outline"
+                disabled={currentPage === 0}
+                onClick={() => goToPage(currentPage - 1)}
               >
-                {i + 1}
+                Anterior
               </Button>
-            ))}
 
-            <Button
-              variant="outline"
-              disabled={currentPage === totalPages - 1}
-              onClick={() => goToPage(currentPage + 1)}
-            >
-              Next
-            </Button>
-          </nav>
+              {Array.from({ length: totalPages }, (_, i) => (
+                <Button
+                  key={i}
+                  variant={i === currentPage ? "default" : "outline"}
+                  aria-current={i === currentPage ? "page" : undefined}
+                  onClick={() => goToPage(i)}
+                >
+                  {i + 1}
+                </Button>
+              ))}
+
+              <Button
+                variant="outline"
+                disabled={currentPage === totalPages - 1}
+                onClick={() => goToPage(currentPage + 1)}
+              >
+                Próximo
+              </Button>
+            </nav>
+          )}
 
         </div>
       </main>
