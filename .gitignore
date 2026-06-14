@@ -1,0 +1,15 @@
+# Environment
+.env
+.env.local
+.env*.local
+
+# Node
+front-end/node_modules/
+front-end/.next/
+
+# Java/Maven
+API/target/
+
+# IDE
+.idea/
+*.iml
