@@ -1,6 +1,7 @@
- 
 import ProductPageClient from "@/components/ProductPageClient";
 import api from "@/services/api";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Produtos",
@@ -12,7 +13,7 @@ export default async function Page({searchParams}) {
   const { page = 0, size = 10, categoryId, name } = await searchParams;
 
   const [categories, productsPage] = await Promise.all([
-    fetch("http://localhost:8080/category/all-categories", {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/category/all-categories`, {
       next: { revalidate: 60 }
     }).then(res => res.json()),
 

@@ -9,6 +9,7 @@ front-end/.next/
 
 # Java/Maven
 API/target/
+API/src/main/resources/application-local.properties
 
 # IDE
 .idea/

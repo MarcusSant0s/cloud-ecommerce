@@ -4,7 +4,7 @@ import Image from "next/image"
 
 export default async function Categories(){
 
-  // Axios isnt compatiple with cache. It must be updated ASAP
+  // Axios isnt compatiple with cache. It must be updated ASAPwwww
   
   const categories = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/category/all-categories`,

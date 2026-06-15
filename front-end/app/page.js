@@ -1,8 +1,9 @@
 import Categories from '@/components/Categories';
 import ProductSection from '@/components/ProductSection';
 import Testimonial from '@/components/Testimonial';
-import api from '@/services/api';
 import {testimonials} from '@/app/mocks'
+
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Início",
