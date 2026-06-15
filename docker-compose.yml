@@ -39,7 +39,7 @@ services:
     build:
       context: ./front-end
       args:
-        NEXT_PUBLIC_API_URL:${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     container_name: commerce-web
     restart: always
     ports:
