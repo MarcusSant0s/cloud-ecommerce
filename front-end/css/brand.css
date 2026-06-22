@@ -1,0 +1,360 @@
+/* ════════════════════════════════════════════════════════════
+   Brenda Nunes · Design System
+   Importar em globals.css ou app/globals.css:
+   @import "../css/brand.css";
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Brand Tokens ─────────────────────────────────────────── */
+/* Fontes são injetadas via next/font/google em layout.js      */
+/* --font-bn-display = Cormorant Garamond                      */
+/* --font-bn-body    = Jost                                    */
+:root {
+  /* Colors */
+  --bn-rose:        #E8C8D2;
+  --bn-rose-deep:   #D9B0BF;
+  --bn-off-white:   #F7F3F1;
+  --bn-gold:        #D4B483;
+  --bn-gold-light:  #E8D5B0;
+  --bn-text:        #3A3A3A;
+  --bn-text-light:  #8A7F7A;
+  --bn-black:       #1A1A1A;
+
+  /* Typography — variáveis injetadas pelo next/font em layout.js */
+  --bn-font-display: var(--font-bn-display, Georgia, serif);
+  --bn-font-body:    var(--font-bn-body, system-ui, sans-serif);
+
+  /* Letter-spacing */
+  --bn-tracking-brand: 0.3em;
+  --bn-tracking-label: 0.25em;
+  --bn-tracking-body:  0.03em;
+
+  /* Font weights */
+  --bn-weight-light:   300;
+  --bn-weight-regular: 400;
+  --bn-weight-medium:  500;
+
+  /* Spacing scale */
+  --bn-space-1: 0.25rem;   /*  4px */
+  --bn-space-2: 0.5rem;    /*  8px */
+  --bn-space-3: 0.75rem;   /* 12px */
+  --bn-space-4: 1rem;      /* 16px */
+  --bn-space-6: 1.5rem;    /* 24px */
+  --bn-space-8: 2rem;      /* 32px */
+  --bn-space-12: 3rem;     /* 48px */
+  --bn-space-16: 4rem;     /* 64px */
+  --bn-space-24: 6rem;     /* 96px */
+
+  /* Border radius */
+  --bn-radius-none: 0;
+  --bn-radius-sm:   2px;
+  --bn-radius-md:   4px;
+  --bn-radius-full: 9999px;
+
+  /* Transitions */
+  --bn-transition: 250ms ease;
+}
+
+/* ── Tailwind v4 @theme integration ───────────────────────── */
+@theme inline {
+  /* Override shadcn defaults with Brenda Nunes brand */
+  --color-background:          var(--bn-off-white);
+  --color-foreground:          var(--bn-text);
+  --color-primary:             var(--bn-text);
+  --color-primary-foreground:  var(--bn-off-white);
+  --color-secondary:           var(--bn-rose);
+  --color-secondary-foreground:var(--bn-text);
+  --color-accent:              var(--bn-gold);
+  --color-accent-foreground:   var(--bn-black);
+  --color-muted:               var(--bn-rose);
+  --color-muted-foreground:    var(--bn-text-light);
+  --color-border:              rgba(212, 180, 131, 0.25);
+  --color-ring:                var(--bn-gold);
+  --color-card:                #ffffff;
+  --color-card-foreground:     var(--bn-text);
+
+  /* Brand-specific Tailwind colors */
+  --color-bn-rose:       var(--bn-rose);
+  --color-bn-rose-deep:  var(--bn-rose-deep);
+  --color-bn-off-white:  var(--bn-off-white);
+  --color-bn-gold:       var(--bn-gold);
+  --color-bn-gold-light: var(--bn-gold-light);
+  --color-bn-text:       var(--bn-text);
+  --color-bn-text-light: var(--bn-text-light);
+  --color-bn-black:      var(--bn-black);
+
+  /* Typography */
+  --font-display: var(--bn-font-display);
+  --font-sans:    var(--bn-font-body);
+
+  /* Radius */
+  --radius: 2px;
+  --radius-sm: 0px;
+  --radius-md: 2px;
+  --radius-lg: 4px;
+  --radius-xl: 4px;
+}
+
+/* ── Base overrides ───────────────────────────────────────── */
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: var(--bn-off-white);
+    color: var(--bn-text);
+    font-family: var(--bn-font-body);
+    font-weight: 300;
+    letter-spacing: var(--bn-tracking-body);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--bn-font-display);
+    font-weight: 300;
+    letter-spacing: 0.05em;
+    color: var(--bn-text);
+  }
+
+  h1 { font-size: clamp(2rem, 5vw, 3.5rem);  letter-spacing: 0.08em; }
+  h2 { font-size: clamp(1.5rem, 3vw, 2.2rem); letter-spacing: 0.06em; }
+  h3 { font-size: clamp(1.2rem, 2vw, 1.6rem); letter-spacing: 0.04em; }
+  h4 { font-size: 1.1rem; letter-spacing: 0.04em; }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+    transition: color var(--bn-transition);
+  }
+
+  input, textarea, select {
+    font-family: var(--bn-font-body);
+    font-weight: 300;
+    letter-spacing: 0.05em;
+  }
+
+  ::selection {
+    background: var(--bn-rose);
+    color: var(--bn-text);
+  }
+}
+
+/* ── Utility classes ──────────────────────────────────────── */
+@layer utilities {
+  /* Brand name display */
+  .bn-brand-name {
+    font-family: var(--bn-font-display);
+    font-weight: 300;
+    letter-spacing: var(--bn-tracking-brand);
+    text-transform: uppercase;
+  }
+
+  /* Section eyebrow / label */
+  .bn-label {
+    font-family: var(--bn-font-body);
+    font-weight: 300;
+    font-size: 0.65rem;
+    letter-spacing: var(--bn-tracking-label);
+    text-transform: uppercase;
+    color: var(--bn-gold);
+  }
+
+  /* Gold divider line */
+  .bn-divider {
+    width: 3rem;
+    height: 1px;
+    background: var(--bn-gold);
+    opacity: 0.6;
+    margin: 2rem auto;
+  }
+
+  .bn-divider--left {
+    margin-left: 0;
+  }
+
+  /* Italic accent quote */
+  .bn-quote {
+    font-family: var(--bn-font-display);
+    font-style: italic;
+    font-weight: 300;
+    font-size: 1.4rem;
+    letter-spacing: 0.04em;
+    color: var(--bn-text-light);
+    line-height: 1.6;
+  }
+}
+
+/* ── Component classes ────────────────────────────────────── */
+@layer components {
+
+  /* ── Button primary (dark) */
+  .bn-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--bn-font-body);
+    font-weight: 300;
+    font-size: 0.7rem;
+    letter-spacing: var(--bn-tracking-label);
+    text-transform: uppercase;
+    cursor: pointer;
+    border: none;
+    transition: all var(--bn-transition);
+    white-space: nowrap;
+    outline: none;
+  }
+
+  .bn-btn-primary {
+    background: var(--bn-text);
+    color: var(--bn-off-white);
+    padding: 0.85rem 2.2rem;
+  }
+  .bn-btn-primary:hover { background: var(--bn-black); }
+
+  .bn-btn-gold {
+    background: var(--bn-gold);
+    color: var(--bn-black);
+    padding: 0.85rem 2.2rem;
+  }
+  .bn-btn-gold:hover { background: var(--bn-gold-light); }
+
+  .bn-btn-outline {
+    background: transparent;
+    color: var(--bn-text);
+    padding: 0.8rem 2.15rem;
+    border: 1px solid currentColor;
+  }
+  .bn-btn-outline:hover { color: var(--bn-black); }
+
+  .bn-btn-ghost {
+    background: transparent;
+    color: var(--bn-gold);
+    padding: 0.8rem 2.15rem;
+    border: 1px solid var(--bn-gold);
+  }
+  .bn-btn-ghost:hover { background: var(--bn-gold); color: var(--bn-black); }
+
+  /* ── Input (underline style) */
+  .bn-input {
+    font-family: var(--bn-font-body);
+    font-weight: 300;
+    font-size: 0.9rem;
+    color: var(--bn-text);
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(58, 58, 58, 0.2);
+    padding: 0.7rem 0;
+    outline: none;
+    width: 100%;
+    transition: border-color var(--bn-transition);
+    letter-spacing: 0.05em;
+  }
+  .bn-input:focus { border-bottom-color: var(--bn-gold); }
+  .bn-input::placeholder { color: rgba(58, 58, 58, 0.3); }
+
+  .bn-label-field {
+    font-family: var(--bn-font-body);
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--bn-text-light);
+    display: block;
+    margin-bottom: 0.4rem;
+  }
+
+  /* ── Badge */
+  .bn-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.9rem;
+    font-family: var(--bn-font-body);
+    font-size: 0.58rem;
+    font-weight: 300;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .bn-badge-rose    { background: var(--bn-rose);  color: var(--bn-text);  }
+  .bn-badge-gold    { background: var(--bn-gold);  color: var(--bn-black); }
+  .bn-badge-outline {
+    background: transparent;
+    color: var(--bn-text);
+    border: 1px solid rgba(58, 58, 58, 0.25);
+  }
+  .bn-badge-dark {
+    background: var(--bn-text);
+    color: var(--bn-off-white);
+  }
+
+  /* ── Product card */
+  .bn-product-card {
+    background: white;
+    display: flex;
+    flex-direction: column;
+    transition: box-shadow var(--bn-transition);
+  }
+  .bn-product-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+
+  .bn-product-image {
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+    position: relative;
+    background: var(--bn-rose);
+  }
+  .bn-product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 600ms ease;
+  }
+  .bn-product-card:hover .bn-product-image img { transform: scale(1.04); }
+
+  .bn-product-info  { padding: 1.2rem; }
+  .bn-product-cat   { font-size: 0.58rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--bn-gold); margin-bottom: 0.4rem; }
+  .bn-product-name  { font-family: var(--bn-font-display); font-weight: 400; font-size: 1.05rem; letter-spacing: 0.05em; color: var(--bn-text); margin-bottom: 0.3rem; }
+  .bn-product-price { font-family: var(--bn-font-body); font-weight: 300; font-size: 0.85rem; letter-spacing: 0.06em; color: var(--bn-text-light); }
+  .bn-product-actions { padding: 0 1.2rem 1.2rem; }
+
+  /* ── Section layout */
+  .bn-section {
+    padding: 6rem 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .bn-section-full {
+    padding: 6rem 2rem;
+  }
+
+  /* ── Navbar brand */
+  .bn-navbar-brand {
+    font-family: var(--bn-font-display);
+    font-weight: 300;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    font-size: 1.1rem;
+    color: var(--bn-text);
+    text-decoration: none;
+  }
+
+  /* ── Price display */
+  .bn-price {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.3rem;
+  }
+  .bn-price-currency {
+    font-family: var(--bn-font-body);
+    font-weight: 300;
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    color: var(--bn-text-light);
+  }
+  .bn-price-value {
+    font-family: var(--bn-font-display);
+    font-weight: 300;
+    font-size: 1.3rem;
+    letter-spacing: 0.05em;
+    color: var(--bn-text);
+  }
+}

@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brenda Nunes — Brand Identity</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@200;300;400&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    /* ─── TOKENS ─────────────────────────────────────────────── */
+    :root {
+      --rose:       #E8C8D2;
+      --rose-deep:  #D9B0BF;
+      --off-white:  #F7F3F1;
+      --gold:       #D4B483;
+      --gold-light: #E8D5B0;
+      --text:       #3A3A3A;
+      --text-light: #8A7F7A;
+      --black:      #1A1A1A;
+
+      --font-display: 'Cormorant Garamond', Georgia, serif;
+      --font-body:    'Jost', system-ui, sans-serif;
+
+      --space-xs:  0.5rem;
+      --space-sm:  1rem;
+      --space-md:  2rem;
+      --space-lg:  4rem;
+      --space-xl:  6rem;
+      --space-2xl: 10rem;
+    }
+
+    /* ─── RESET ──────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body {
+      background: var(--off-white);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-weight: 300;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+    img, svg { display: block; max-width: 100%; }
+
+    /* ─── LAYOUT ─────────────────────────────────────────────── */
+    .section {
+      padding: var(--space-xl) var(--space-md);
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .section-label {
+      font-family: var(--font-body);
+      font-weight: 300;
+      font-size: 0.65rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: var(--space-md);
+    }
+    .section-title {
+      font-family: var(--font-display);
+      font-weight: 300;
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      color: var(--text);
+      margin-bottom: var(--space-lg);
+      letter-spacing: 0.05em;
+    }
+    .divider {
+      width: 3rem;
+      height: 1px;
+      background: var(--gold);
+      margin: var(--space-xl) auto;
+      opacity: 0.6;
+    }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-md); }
+    @media (max-width: 700px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    }
+
+    /* ─── COVER ──────────────────────────────────────────────── */
+    .cover {
+      min-height: 100vh;
+      background: var(--black);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: var(--space-lg) var(--space-md);
+      position: relative;
+      overflow: hidden;
+    }
+    .cover::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 40% at 50% 30%, rgba(232,200,210,0.07) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 60% at 80% 80%, rgba(212,180,131,0.05) 0%, transparent 60%);
+    }
+    .cover-monogram {
+      width: clamp(100px, 18vw, 160px);
+      margin-bottom: var(--space-md);
+      position: relative;
+      z-index: 1;
+    }
+    .cover-brand {
+      font-family: var(--font-display);
+      font-weight: 300;
+      font-size: clamp(1.1rem, 3vw, 1.6rem);
+      letter-spacing: 0.35em;
+      color: var(--off-white);
+      position: relative;
+      z-index: 1;
+      text-transform: uppercase;
+    }
+    .cover-tagline {
+      font-family: var(--font-body);
+      font-weight: 200;
+      font-size: 0.7rem;
+      letter-spacing: 0.25em;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-top: var(--space-sm);
+      position: relative;
+      z-index: 1;
+    }
+    .cover-label {
+      position: absolute;
+      bottom: var(--space-md);
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--font-body);
+      font-weight: 200;
+      font-size: 0.6rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: rgba(247,243,241,0.25);
+    }
+
+    /* ─── MONOGRAM SHOWCASE ──────────────────────────────────── */
+    .logo-board {
+      background: white;
+      border: 1px solid rgba(212,180,131,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      padding: var(--space-lg) var(--space-md);
+      gap: var(--space-sm);
+    }
+    .logo-board.dark-bg  { background: var(--black); }
+    .logo-board.rose-bg  { background: var(--rose); }
+
+    .logo-version-label {
+      font-family: var(--font-body);
+      font-size: 0.6rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--text-light);
+      margin-top: var(--space-sm);
+    }
+    .logo-board.dark-bg .logo-version-label { color: rgba(255,255,255,0.3); }
+
+    .logo-horizontal {
+      display: flex;
+      align-items: center;
+      gap: 1.4rem;
+    }
+    .logo-horizontal .brand-text-block {
+      text-align: left;
+    }
+    .brand-name-text {
+      font-family: var(--font-display);
+      font-weight: 300;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      line-height: 1.1;
+    }
+    .brand-sub-text {
+      font-family: var(--font-body);
+      font-weight: 200;
+      font-size: 0.55rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-top: 0.3rem;
+    }
+
+    /* ─── COLOR PALETTE ──────────────────────────────────────── */
+    .swatch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 1px;
+      border: 1px solid rgba(212,180,131,0.15);
+    }
+    .swatch {
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: var(--space-sm);
+    }
+    .swatch-name {
+      font-family: var(--font-body);
+      font-weight: 300;
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+    .swatch-hex {
+      font-family: var(--font-body);
+      font-weight: 200;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      margin-top: 0.15rem;
+      opacity: 0.7;
+    }
+
+    /* ─── TYPOGRAPHY ─────────────────────────────────────────── */
+    .type-sample {
+      background: white;
+      padding: var(--space-md) var(--space-lg);
+      border: 1px solid rgba(212,180,131,0.15);
+      margin-bottom: 1px;
+    }
+    .type-meta {
+      font-family: var(--font-body);
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: var(--space-sm);
+    }
+
+    /* ─── DESIGN SYSTEM ──────────────────────────────────────── */
+    .ds-panel {
+      background: white;
+      padding: var(--space-lg);
+      border: 1px solid rgba(212,180,131,0.15);
+    }
+    .ds-panel-title {
+      font-family: var(--font-body);
+      font-size: 0.6rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: var(--space-md);
+      padding-bottom: var(--space-sm);
+      border-bottom: 1px solid rgba(212,180,131,0.2);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-body);
+      font-weight: 300;
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border: none;
+      transition: all 0.25s ease;
+      text-decoration: none;
+      gap: 0.5rem;
+    }
+    .btn-primary {
+      background: var(--text);
+      color: var(--off-white);
+      padding: 0.85rem 2.2rem;
+    }
+    .btn-primary:hover { background: var(--black); }
+
+    .btn-gold {
+      background: var(--gold);
+      color: var(--black);
+      padding: 0.85rem 2.2rem;
+    }
+    .btn-gold:hover { background: var(--gold-light); }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--text);
+      padding: 0.8rem 2.15rem;
+      border: 1px solid currentColor;
+    }
+    .btn-outline:hover { color: var(--black); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--gold);
+      padding: 0.8rem 2.15rem;
+      border: 1px solid var(--gold);
+    }
+    .btn-ghost:hover { background: var(--gold); color: var(--black); }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+      align-items: center;
+    }
+
+    /* Inputs */
+    .field-group { display: flex; flex-direction: column; gap: 0.4rem; }
+    .field-label {
+      font-family: var(--font-body);
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-light);
+    }
+    .field-input {
+      font-family: var(--font-body);
+      font-weight: 300;
+      font-size: 0.85rem;
+      color: var(--text);
+      background: var(--off-white);
+      border: none;
+      border-bottom: 1px solid rgba(58,58,58,0.2);
+      padding: 0.7rem 0;
+      outline: none;
+      width: 100%;
+      transition: border-color 0.2s;
+      letter-spacing: 0.05em;
+    }
+    .field-input:focus { border-bottom-color: var(--gold); }
+    .field-input::placeholder { color: rgba(58,58,58,0.3); }
+
+    /* Badge */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.9rem;
+      font-family: var(--font-body);
+      font-size: 0.58rem;
+      font-weight: 300;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+    .badge-rose   { background: var(--rose);     color: var(--text); }
+    .badge-gold   { background: var(--gold);     color: var(--black); }
+    .badge-outline{ background: transparent; color: var(--text); border: 1px solid rgba(58,58,58,0.25); }
+
+    /* Product card */
+    .product-card-demo {
+      background: white;
+      display: flex;
+      flex-direction: column;
+    }
+    .product-img-area {
+      background: var(--rose);
+      aspect-ratio: 3/4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .product-img-area svg { opacity: 0.35; }
+    .product-badge-pos {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+    }
+    .product-info {
+      padding: 1.2rem;
+    }
+    .product-category {
+      font-size: 0.58rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 0.4rem;
+    }
+    .product-name {
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: 1.05rem;
+      letter-spacing: 0.05em;
+      color: var(--text);
+      margin-bottom: 0.3rem;
+    }
+    .product-price {
+      font-family: var(--font-body);
+      font-weight: 300;
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      color: var(--text-light);
+    }
+    .product-actions {
+      padding: 0 1.2rem 1.2rem;
+    }
+
+    /* Spacing tokens */
+    .spacing-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .spacing-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .spacing-bar {
+      background: var(--rose);
+      width: 2rem;
+    }
+    .spacing-val {
+      font-family: var(--font-body);
+      font-size: 0.58rem;
+      letter-spacing: 0.1em;
+      color: var(--text-light);
+      text-align: center;
+    }
+
+    /* ─── MOCKUPS ─────────────────────────────────────────────── */
+    .mockup-section {
+      background: var(--text);
+      padding: var(--space-xl) var(--space-md);
+    }
+    .mockup-section .section-label { color: var(--gold); }
+    .mockup-section .section-title { color: var(--off-white); }
+    .mockup-section .divider       { background: var(--gold); }
+    .mockup-grid {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-md);
+    }
+    @media (max-width: 800px) { .mockup-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 500px) { .mockup-grid { grid-template-columns: 1fr; } }
+    .mockup-item { display: flex; flex-direction: column; align-items: center; gap: var(--space-sm); }
+    .mockup-caption {
+      font-family: var(--font-body);
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(247,243,241,0.4);
+    }
+
+    /* Box mockup */
+    .mock-box {
+      width: 140px;
+      height: 140px;
+      background: var(--rose);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 6px 6px 20px rgba(0,0,0,0.2), inset 0 0 0 1px rgba(212,180,131,0.15);
+      position: relative;
+    }
+    .mock-box::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 8px;
+      right: -8px;
+      height: 100%;
+      background: var(--rose-deep);
+      z-index: -1;
+    }
+
+    /* Bag mockup */
+    .mock-bag {
+      width: 110px;
+      height: 140px;
+      background: var(--off-white);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(212,180,131,0.3);
+      position: relative;
+      box-shadow: 4px 4px 16px rgba(0,0,0,0.15);
+    }
+    .mock-bag::before {
+      content: '';
+      position: absolute;
+      top: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 50px;
+      height: 18px;
+      border: 1.5px solid rgba(58,58,58,0.4);
+      border-bottom: none;
+      border-radius: 30px 30px 0 0;
+    }
+
+    /* Card mockup */
+    .mock-card {
+      width: 190px;
+      height: 118px;
+      background: var(--off-white);
+      border: 1px solid rgba(212,180,131,0.25);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      box-shadow: 2px 2px 12px rgba(0,0,0,0.1);
+    }
+    .mock-card-sub {
+      font-family: var(--font-body);
+      font-weight: 200;
+      font-size: 0.45rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--text-light);
+    }
+
+    /* Tag mockup */
+    .mock-tag {
+      width: 80px;
+      height: 130px;
+      background: var(--off-white);
+      border: 1px solid rgba(212,180,131,0.3);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+      position: relative;
+    }
+    .mock-tag::before {
+      content: '';
+      position: absolute;
+      top: 10px;
+      width: 8px;
+      height: 8px;
+      border: 1px solid rgba(212,180,131,0.5);
+      border-radius: 50%;
+    }
+    .mock-tag-line {
+      width: 40px;
+      height: 1px;
+      background: rgba(212,180,131,0.5);
+    }
+    .mock-tag-price {
+      font-family: var(--font-display);
+      font-size: 0.75rem;
+      color: var(--text);
+      letter-spacing: 0.05em;
+    }
+
+    /* Instagram mockup */
+    .mock-instagram {
+      width: 140px;
+      height: 140px;
+      background: var(--rose);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow: 0 0 0 3px var(--gold), 0 0 0 7px rgba(212,180,131,0.2);
+    }
+
+    /* Favicon mockup */
+    .mock-favicon-wrap {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .mock-favicon {
+      width: 32px;
+      height: 32px;
+      background: var(--rose);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .mock-favicon-sm {
+      width: 16px;
+      height: 16px;
+      background: var(--rose);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .mock-favicon-lg {
+      width: 48px;
+      height: 48px;
+      background: var(--rose);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ─── FOOTER ─────────────────────────────────────────────── */
+    .brand-footer {
+      background: var(--black);
+      padding: var(--space-lg) var(--space-md);
+      text-align: center;
+    }
+    .brand-footer-name {
+      font-family: var(--font-display);
+      font-weight: 300;
+      font-size: 0.85rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--off-white);
+    }
+    .brand-footer-sub {
+      font-family: var(--font-body);
+      font-weight: 200;
+      font-size: 0.58rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-top: 0.5rem;
+    }
+    .brand-footer-copy {
+      font-family: var(--font-body);
+      font-size: 0.55rem;
+      letter-spacing: 0.1em;
+      color: rgba(247,243,241,0.18);
+      margin-top: var(--space-md);
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════
+     COVER
+══════════════════════════════════════════════════════════ -->
+<section class="cover">
+  <!-- Main monogram -->
+  <div class="cover-monogram">
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-label="Brenda Nunes monograma BN">
+      <!-- Decorative outer circle -->
+      <circle cx="50" cy="50" r="44" fill="none" stroke="#D4B483" stroke-width="0.7"/>
+      <!-- Inner ring accent -->
+      <circle cx="50" cy="50" r="41" fill="none" stroke="#D4B483" stroke-width="0.25" stroke-dasharray="2 4"/>
+
+      <!-- ── Letter B ── -->
+      <!-- Vertical spine -->
+      <line x1="22" y1="20" x2="22" y2="80" stroke="#D4B483" stroke-width="1.25" stroke-linecap="square"/>
+      <!-- Top serif -->
+      <line x1="18.5" y1="20" x2="26" y2="20" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+      <!-- Bottom serif -->
+      <line x1="18.5" y1="80" x2="26" y2="80" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+      <!-- Middle crossbar -->
+      <line x1="22" y1="50" x2="26" y2="50" stroke="#D4B483" stroke-width="0.8" stroke-linecap="square"/>
+      <!-- Upper bump -->
+      <path d="M 22,20 C 36,20 45,26 45,38 C 45,50 36,50 22,50"
+            fill="none" stroke="#D4B483" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- Lower bump (slightly wider/taller) -->
+      <path d="M 22,50 C 38,50 49,57 49,66 C 49,76 38,80 22,80"
+            fill="none" stroke="#D4B483" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+
+      <!-- ── Letter N ── -->
+      <!-- Left spine -->
+      <line x1="53" y1="20" x2="53" y2="80" stroke="#D4B483" stroke-width="1.25" stroke-linecap="square"/>
+      <!-- Left top serif -->
+      <line x1="49.5" y1="20" x2="57" y2="20" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+      <!-- Left bottom serif -->
+      <line x1="49.5" y1="80" x2="57" y2="80" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+      <!-- Right spine -->
+      <line x1="75" y1="20" x2="75" y2="80" stroke="#D4B483" stroke-width="1.25" stroke-linecap="square"/>
+      <!-- Right top serif -->
+      <line x1="71.5" y1="20" x2="78.5" y2="20" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+      <!-- Right bottom serif -->
+      <line x1="71.5" y1="80" x2="78.5" y2="80" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+      <!-- Diagonal -->
+      <line x1="53" y1="20" x2="75" y2="80" stroke="#D4B483" stroke-width="1.25" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <p class="cover-brand">Brenda Nunes</p>
+  <p class="cover-tagline">Semijoias · Elegância · Exclusividade</p>
+  <p class="cover-label">Brand Identity System · 2025</p>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     MONOGRAM VERSIONS
+══════════════════════════════════════════════════════════ -->
+<div style="background:var(--off-white); padding: var(--space-xl) var(--space-md);">
+  <div style="max-width:1100px; margin:0 auto;">
+    <p class="section-label">01 — Identidade Visual</p>
+    <h2 class="section-title">Versões da Logo</h2>
+
+    <!-- VERSION A: Principal -->
+    <div class="logo-board" style="margin-bottom: 1px;">
+      <!-- Monogram stacked -->
+      <svg width="90" height="90" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="44" fill="none" stroke="#3A3A3A" stroke-width="0.7"/>
+        <circle cx="50" cy="50" r="41" fill="none" stroke="#3A3A3A" stroke-width="0.25" stroke-dasharray="2 4"/>
+        <line x1="22" y1="20" x2="22" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="square"/>
+        <line x1="18.5" y1="20" x2="26" y2="20" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+        <line x1="18.5" y1="80" x2="26" y2="80" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+        <line x1="22" y1="50" x2="26" y2="50" stroke="#3A3A3A" stroke-width="0.8" stroke-linecap="square"/>
+        <path d="M 22,20 C 36,20 45,26 45,38 C 45,50 36,50 22,50" fill="none" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="round"/>
+        <path d="M 22,50 C 38,50 49,57 49,66 C 49,76 38,80 22,80" fill="none" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="round"/>
+        <line x1="53" y1="20" x2="53" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="square"/>
+        <line x1="49.5" y1="20" x2="57" y2="20" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+        <line x1="49.5" y1="80" x2="57" y2="80" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+        <line x1="75" y1="20" x2="75" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="square"/>
+        <line x1="71.5" y1="20" x2="78.5" y2="20" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+        <line x1="71.5" y1="80" x2="78.5" y2="80" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+        <line x1="53" y1="20" x2="75" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="round"/>
+      </svg>
+      <div style="text-align:center; margin-top:0.8rem;">
+        <div style="font-family:var(--font-display);font-weight:300;font-size:1.1rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--text);">Brenda Nunes</div>
+        <div style="font-family:var(--font-body);font-weight:200;font-size:0.55rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--gold);margin-top:0.3rem;">Semijoias</div>
+      </div>
+      <span class="logo-version-label">Versão Principal — Fundo Claro</span>
+    </div>
+
+    <!-- VERSION B: Dark -->
+    <div class="logo-board dark-bg" style="margin-bottom: 1px;">
+      <svg width="90" height="90" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="44" fill="none" stroke="#D4B483" stroke-width="0.7"/>
+        <circle cx="50" cy="50" r="41" fill="none" stroke="#D4B483" stroke-width="0.25" stroke-dasharray="2 4"/>
+        <line x1="22" y1="20" x2="22" y2="80" stroke="#D4B483" stroke-width="1.25" stroke-linecap="square"/>
+        <line x1="18.5" y1="20" x2="26" y2="20" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+        <line x1="18.5" y1="80" x2="26" y2="80" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+        <line x1="22" y1="50" x2="26" y2="50" stroke="#D4B483" stroke-width="0.8" stroke-linecap="square"/>
+        <path d="M 22,20 C 36,20 45,26 45,38 C 45,50 36,50 22,50" fill="none" stroke="#D4B483" stroke-width="1.25" stroke-linecap="round"/>
+        <path d="M 22,50 C 38,50 49,57 49,66 C 49,76 38,80 22,80" fill="none" stroke="#D4B483" stroke-width="1.25" stroke-linecap="round"/>
+        <line x1="53" y1="20" x2="53" y2="80" stroke="#D4B483" stroke-width="1.25" stroke-linecap="square"/>
+        <line x1="49.5" y1="20" x2="57" y2="20" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+        <line x1="49.5" y1="80" x2="57" y2="80" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+        <line x1="75" y1="20" x2="75" y2="80" stroke="#D4B483" stroke-width="1.25" stroke-linecap="square"/>
+        <line x1="71.5" y1="20" x2="78.5" y2="20" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+        <line x1="71.5" y1="80" x2="78.5" y2="80" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+        <line x1="53" y1="20" x2="75" y2="80" stroke="#D4B483" stroke-width="1.25" stroke-linecap="round"/>
+      </svg>
+      <div style="text-align:center; margin-top:0.8rem;">
+        <div style="font-family:var(--font-display);font-weight:300;font-size:1.1rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--off-white);">Brenda Nunes</div>
+        <div style="font-family:var(--font-body);font-weight:200;font-size:0.55rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--gold);margin-top:0.3rem;">Semijoias</div>
+      </div>
+      <span class="logo-version-label">Versão Principal — Fundo Escuro</span>
+    </div>
+
+    <!-- VERSION C: Rose -->
+    <div class="logo-board rose-bg" style="margin-bottom: 1px;">
+      <svg width="90" height="90" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="44" fill="none" stroke="#3A3A3A" stroke-width="0.7"/>
+        <circle cx="50" cy="50" r="41" fill="none" stroke="#3A3A3A" stroke-width="0.25" stroke-dasharray="2 4"/>
+        <line x1="22" y1="20" x2="22" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="square"/>
+        <line x1="18.5" y1="20" x2="26" y2="20" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+        <line x1="18.5" y1="80" x2="26" y2="80" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+        <line x1="22" y1="50" x2="26" y2="50" stroke="#3A3A3A" stroke-width="0.8" stroke-linecap="square"/>
+        <path d="M 22,20 C 36,20 45,26 45,38 C 45,50 36,50 22,50" fill="none" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="round"/>
+        <path d="M 22,50 C 38,50 49,57 49,66 C 49,76 38,80 22,80" fill="none" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="round"/>
+        <line x1="53" y1="20" x2="53" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="square"/>
+        <line x1="49.5" y1="20" x2="57" y2="20" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+        <line x1="49.5" y1="80" x2="57" y2="80" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+        <line x1="75" y1="20" x2="75" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="square"/>
+        <line x1="71.5" y1="20" x2="78.5" y2="20" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+        <line x1="71.5" y1="80" x2="78.5" y2="80" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+        <line x1="53" y1="20" x2="75" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="round"/>
+      </svg>
+      <div style="text-align:center; margin-top:0.8rem;">
+        <div style="font-family:var(--font-display);font-weight:300;font-size:1.1rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--text);">Brenda Nunes</div>
+        <div style="font-family:var(--font-body);font-weight:200;font-size:0.55rem;letter-spacing:0.3em;text-transform:uppercase;color:#8A7F7A;margin-top:0.3rem;">Semijoias</div>
+      </div>
+      <span class="logo-version-label" style="color:rgba(58,58,58,0.4);">Versão Principal — Fundo Rosa</span>
+    </div>
+
+    <div class="divider" style="margin-top: var(--space-lg); margin-bottom: var(--space-lg);"></div>
+
+    <!-- VERSION HORIZONTAL -->
+    <p class="section-label">Versão Horizontal</p>
+    <div class="logo-board" style="margin-bottom:1px;">
+      <div class="logo-horizontal">
+        <svg width="56" height="56" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="44" fill="none" stroke="#3A3A3A" stroke-width="0.7"/>
+          <circle cx="50" cy="50" r="41" fill="none" stroke="#3A3A3A" stroke-width="0.25" stroke-dasharray="2 4"/>
+          <line x1="22" y1="20" x2="22" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="square"/>
+          <line x1="18.5" y1="20" x2="26" y2="20" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="18.5" y1="80" x2="26" y2="80" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="22" y1="50" x2="26" y2="50" stroke="#3A3A3A" stroke-width="0.8" stroke-linecap="square"/>
+          <path d="M 22,20 C 36,20 45,26 45,38 C 45,50 36,50 22,50" fill="none" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="round"/>
+          <path d="M 22,50 C 38,50 49,57 49,66 C 49,76 38,80 22,80" fill="none" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="round"/>
+          <line x1="53" y1="20" x2="53" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="square"/>
+          <line x1="49.5" y1="20" x2="57" y2="20" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="49.5" y1="80" x2="57" y2="80" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="75" y1="20" x2="75" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="square"/>
+          <line x1="71.5" y1="20" x2="78.5" y2="20" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="71.5" y1="80" x2="78.5" y2="80" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="53" y1="20" x2="75" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="round"/>
+        </svg>
+        <div style="width:1px; height:42px; background:rgba(212,180,131,0.4);"></div>
+        <div class="brand-text-block">
+          <div class="brand-name-text" style="font-size:1rem; color:var(--text);">Brenda Nunes</div>
+          <div class="brand-sub-text">Semijoias</div>
+        </div>
+      </div>
+      <span class="logo-version-label">Versão Horizontal — Fundo Claro</span>
+    </div>
+
+    <div class="logo-board dark-bg" style="margin-bottom: 1px;">
+      <div class="logo-horizontal">
+        <svg width="56" height="56" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="44" fill="none" stroke="#D4B483" stroke-width="0.7"/>
+          <circle cx="50" cy="50" r="41" fill="none" stroke="#D4B483" stroke-width="0.25" stroke-dasharray="2 4"/>
+          <line x1="22" y1="20" x2="22" y2="80" stroke="#D4B483" stroke-width="1.25" stroke-linecap="square"/>
+          <line x1="18.5" y1="20" x2="26" y2="20" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+          <line x1="18.5" y1="80" x2="26" y2="80" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+          <line x1="22" y1="50" x2="26" y2="50" stroke="#D4B483" stroke-width="0.8" stroke-linecap="square"/>
+          <path d="M 22,20 C 36,20 45,26 45,38 C 45,50 36,50 22,50" fill="none" stroke="#D4B483" stroke-width="1.25" stroke-linecap="round"/>
+          <path d="M 22,50 C 38,50 49,57 49,66 C 49,76 38,80 22,80" fill="none" stroke="#D4B483" stroke-width="1.25" stroke-linecap="round"/>
+          <line x1="53" y1="20" x2="53" y2="80" stroke="#D4B483" stroke-width="1.25" stroke-linecap="square"/>
+          <line x1="49.5" y1="20" x2="57" y2="20" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+          <line x1="49.5" y1="80" x2="57" y2="80" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+          <line x1="75" y1="20" x2="75" y2="80" stroke="#D4B483" stroke-width="1.25" stroke-linecap="square"/>
+          <line x1="71.5" y1="20" x2="78.5" y2="20" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+          <line x1="71.5" y1="80" x2="78.5" y2="80" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+          <line x1="53" y1="20" x2="75" y2="80" stroke="#D4B483" stroke-width="1.25" stroke-linecap="round"/>
+        </svg>
+        <div style="width:1px; height:42px; background:rgba(212,180,131,0.3);"></div>
+        <div class="brand-text-block">
+          <div class="brand-name-text" style="font-size:1rem; color:var(--off-white);">Brenda Nunes</div>
+          <div class="brand-sub-text">Semijoias</div>
+        </div>
+      </div>
+      <span class="logo-version-label">Versão Horizontal — Fundo Escuro</span>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- VERSION ICON ONLY -->
+    <p class="section-label">Versão Ícone</p>
+    <div style="display:flex; gap:1px; flex-wrap:wrap;">
+      <div class="logo-board" style="flex:1; min-width:160px;">
+        <svg width="70" height="70" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="44" fill="none" stroke="#3A3A3A" stroke-width="0.7"/>
+          <circle cx="50" cy="50" r="41" fill="none" stroke="#3A3A3A" stroke-width="0.25" stroke-dasharray="2 4"/>
+          <line x1="22" y1="20" x2="22" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="square"/>
+          <line x1="18.5" y1="20" x2="26" y2="20" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="18.5" y1="80" x2="26" y2="80" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="22" y1="50" x2="26" y2="50" stroke="#3A3A3A" stroke-width="0.8" stroke-linecap="square"/>
+          <path d="M 22,20 C 36,20 45,26 45,38 C 45,50 36,50 22,50" fill="none" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="round"/>
+          <path d="M 22,50 C 38,50 49,57 49,66 C 49,76 38,80 22,80" fill="none" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="round"/>
+          <line x1="53" y1="20" x2="53" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="square"/>
+          <line x1="49.5" y1="20" x2="57" y2="20" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="49.5" y1="80" x2="57" y2="80" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="75" y1="20" x2="75" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="square"/>
+          <line x1="71.5" y1="20" x2="78.5" y2="20" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="71.5" y1="80" x2="78.5" y2="80" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="53" y1="20" x2="75" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="round"/>
+        </svg>
+        <span class="logo-version-label">Claro</span>
+      </div>
+      <div class="logo-board dark-bg" style="flex:1; min-width:160px;">
+        <svg width="70" height="70" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="44" fill="none" stroke="#D4B483" stroke-width="0.7"/>
+          <circle cx="50" cy="50" r="41" fill="none" stroke="#D4B483" stroke-width="0.25" stroke-dasharray="2 4"/>
+          <line x1="22" y1="20" x2="22" y2="80" stroke="#D4B483" stroke-width="1.25" stroke-linecap="square"/>
+          <line x1="18.5" y1="20" x2="26" y2="20" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+          <line x1="18.5" y1="80" x2="26" y2="80" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+          <line x1="22" y1="50" x2="26" y2="50" stroke="#D4B483" stroke-width="0.8" stroke-linecap="square"/>
+          <path d="M 22,20 C 36,20 45,26 45,38 C 45,50 36,50 22,50" fill="none" stroke="#D4B483" stroke-width="1.25" stroke-linecap="round"/>
+          <path d="M 22,50 C 38,50 49,57 49,66 C 49,76 38,80 22,80" fill="none" stroke="#D4B483" stroke-width="1.25" stroke-linecap="round"/>
+          <line x1="53" y1="20" x2="53" y2="80" stroke="#D4B483" stroke-width="1.25" stroke-linecap="square"/>
+          <line x1="49.5" y1="20" x2="57" y2="20" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+          <line x1="49.5" y1="80" x2="57" y2="80" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+          <line x1="75" y1="20" x2="75" y2="80" stroke="#D4B483" stroke-width="1.25" stroke-linecap="square"/>
+          <line x1="71.5" y1="20" x2="78.5" y2="20" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+          <line x1="71.5" y1="80" x2="78.5" y2="80" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+          <line x1="53" y1="20" x2="75" y2="80" stroke="#D4B483" stroke-width="1.25" stroke-linecap="round"/>
+        </svg>
+        <span class="logo-version-label">Escuro</span>
+      </div>
+      <div class="logo-board rose-bg" style="flex:1; min-width:160px;">
+        <svg width="70" height="70" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="44" fill="none" stroke="#3A3A3A" stroke-width="0.7"/>
+          <circle cx="50" cy="50" r="41" fill="none" stroke="#3A3A3A" stroke-width="0.25" stroke-dasharray="2 4"/>
+          <line x1="22" y1="20" x2="22" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="square"/>
+          <line x1="18.5" y1="20" x2="26" y2="20" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="18.5" y1="80" x2="26" y2="80" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="22" y1="50" x2="26" y2="50" stroke="#3A3A3A" stroke-width="0.8" stroke-linecap="square"/>
+          <path d="M 22,20 C 36,20 45,26 45,38 C 45,50 36,50 22,50" fill="none" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="round"/>
+          <path d="M 22,50 C 38,50 49,57 49,66 C 49,76 38,80 22,80" fill="none" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="round"/>
+          <line x1="53" y1="20" x2="53" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="square"/>
+          <line x1="49.5" y1="20" x2="57" y2="20" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="49.5" y1="80" x2="57" y2="80" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="75" y1="20" x2="75" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="square"/>
+          <line x1="71.5" y1="20" x2="78.5" y2="20" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="71.5" y1="80" x2="78.5" y2="80" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="53" y1="20" x2="75" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="round"/>
+        </svg>
+        <span class="logo-version-label" style="color:rgba(58,58,58,0.4);">Rosa</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     COLOR PALETTE
+══════════════════════════════════════════════════════════ -->
+<div style="padding: var(--space-xl) var(--space-md); background: white;">
+  <div style="max-width:1100px; margin:0 auto;">
+    <p class="section-label">02 — Paleta de Cores</p>
+    <h2 class="section-title">Cores da Marca</h2>
+
+    <div class="swatch-grid">
+      <div class="swatch" style="background:#E8C8D2;">
+        <span class="swatch-name">Rosa Principal</span>
+        <span class="swatch-hex">#E8C8D2</span>
+      </div>
+      <div class="swatch" style="background:#F7F3F1;">
+        <span class="swatch-name">Off-white</span>
+        <span class="swatch-hex">#F7F3F1</span>
+      </div>
+      <div class="swatch" style="background:#D4B483;">
+        <span class="swatch-name">Dourado Champagne</span>
+        <span class="swatch-hex">#D4B483</span>
+      </div>
+      <div class="swatch" style="background:#E8D5B0;">
+        <span class="swatch-name">Dourado Claro</span>
+        <span class="swatch-hex">#E8D5B0</span>
+      </div>
+      <div class="swatch" style="background:#3A3A3A;">
+        <span class="swatch-name" style="color:#F7F3F1;">Cinza Premium</span>
+        <span class="swatch-hex" style="color:rgba(247,243,241,0.5);">#3A3A3A</span>
+      </div>
+      <div class="swatch" style="background:#1A1A1A;">
+        <span class="swatch-name" style="color:#F7F3F1;">Preto Elegante</span>
+        <span class="swatch-hex" style="color:rgba(247,243,241,0.5);">#1A1A1A</span>
+      </div>
+    </div>
+
+    <!-- Usage guidance -->
+    <div style="margin-top:var(--space-lg); display:grid; grid-template-columns: 1fr 1fr 1fr; gap:var(--space-sm);">
+      <div style="padding: 1.2rem; border-left: 2px solid var(--gold); background:var(--off-white);">
+        <div style="font-family:var(--font-body);font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:0.5rem;">Principal</div>
+        <div style="font-family:var(--font-display);font-size:1rem;color:var(--text);">Rosa #E8C8D2</div>
+        <div style="font-family:var(--font-body);font-size:0.7rem;font-weight:300;color:var(--text-light);margin-top:0.4rem;">Fundos, caixas, embalagens, backgrounds de seção.</div>
+      </div>
+      <div style="padding: 1.2rem; border-left: 2px solid var(--gold); background:var(--off-white);">
+        <div style="font-family:var(--font-body);font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:0.5rem;">Destaque</div>
+        <div style="font-family:var(--font-display);font-size:1rem;color:var(--text);">Dourado #D4B483</div>
+        <div style="font-family:var(--font-body);font-size:0.7rem;font-weight:300;color:var(--text-light);margin-top:0.4rem;">Logo, CTA primário, bordas, ícones, preços em destaque.</div>
+      </div>
+      <div style="padding: 1.2rem; border-left: 2px solid var(--gold); background:var(--off-white);">
+        <div style="font-family:var(--font-body);font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:0.5rem;">Texto</div>
+        <div style="font-family:var(--font-display);font-size:1rem;color:var(--text);">Cinza #3A3A3A</div>
+        <div style="font-family:var(--font-body);font-size:0.7rem;font-weight:300;color:var(--text-light);margin-top:0.4rem;">Todo conteúdo textual. Evitar preto puro para sensação premium.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     TYPOGRAPHY
+══════════════════════════════════════════════════════════ -->
+<div style="padding: var(--space-xl) var(--space-md); background:var(--off-white);">
+  <div style="max-width:1100px; margin:0 auto;">
+    <p class="section-label">03 — Tipografia</p>
+    <h2 class="section-title">Sistema Tipográfico</h2>
+
+    <!-- Display -->
+    <div class="type-sample" style="margin-bottom:1px;">
+      <div class="type-meta">Display / Nome da Marca — Cormorant Garamond 300 · 0.3em tracking</div>
+      <div style="font-family:var(--font-display);font-weight:300;font-size:clamp(2rem,6vw,4rem);letter-spacing:0.3em;text-transform:uppercase;color:var(--text);line-height:1.1;">
+        Brenda Nunes
+      </div>
+    </div>
+
+    <!-- H1 -->
+    <div class="type-sample" style="margin-bottom:1px;">
+      <div class="type-meta">Heading 1 — Cormorant Garamond 300 · 2.5rem · 0.1em tracking</div>
+      <div style="font-family:var(--font-display);font-weight:300;font-size:clamp(1.6rem,4vw,2.5rem);letter-spacing:0.1em;color:var(--text);line-height:1.2;">
+        Coleção Primavera 2025
+      </div>
+    </div>
+
+    <!-- H2 -->
+    <div class="type-sample" style="margin-bottom:1px;">
+      <div class="type-meta">Heading 2 — Cormorant Garamond 400 · 1.6rem · 0.05em tracking</div>
+      <div style="font-family:var(--font-display);font-weight:400;font-size:1.6rem;letter-spacing:0.05em;color:var(--text);">
+        Brincos Perolados de Ouro 18k
+      </div>
+    </div>
+
+    <!-- Italic accent -->
+    <div class="type-sample" style="margin-bottom:1px;">
+      <div class="type-meta">Italic Accent — Cormorant Garamond 300 Italic · uso em citações e destaques</div>
+      <div style="font-family:var(--font-display);font-weight:300;font-style:italic;font-size:clamp(1.2rem,3vw,1.8rem);letter-spacing:0.08em;color:var(--text-light);">
+        "Elegância não é ser notada — é ser lembrada."
+      </div>
+    </div>
+
+    <!-- Label -->
+    <div class="type-sample" style="margin-bottom:1px;">
+      <div class="type-meta">Label / Eyebrow — Jost 300 · 0.65rem · 0.25em tracking · uppercase</div>
+      <div style="font-family:var(--font-body);font-weight:300;font-size:0.65rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold);">
+        Nova Coleção · Edição Limitada
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="type-sample" style="margin-bottom:1px;">
+      <div class="type-meta">Body — Jost 300 · 0.9rem · 1.75 line-height</div>
+      <div style="font-family:var(--font-body);font-weight:300;font-size:0.9rem;line-height:1.75;color:var(--text);max-width:560px;">
+        Cada peça da Brenda Nunes é cuidadosamente selecionada para mulheres que apreciam elegância discreta. Nossas semijoias combinam design refinado com materiais de alta qualidade.
+      </div>
+    </div>
+
+    <!-- Price -->
+    <div class="type-sample">
+      <div class="type-meta">Preço em destaque — Cormorant Garamond 300 · 1.4rem</div>
+      <div style="display:flex;align-items:baseline;gap:0.5rem;">
+        <span style="font-family:var(--font-body);font-weight:300;font-size:0.7rem;letter-spacing:0.1em;color:var(--text-light);">R$</span>
+        <span style="font-family:var(--font-display);font-weight:300;font-size:1.4rem;letter-spacing:0.05em;color:var(--text);">289,00</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     DESIGN SYSTEM
+══════════════════════════════════════════════════════════ -->
+<div style="padding: var(--space-xl) var(--space-md); background:white;">
+  <div style="max-width:1100px; margin:0 auto;">
+    <p class="section-label">04 — Design System</p>
+    <h2 class="section-title">Componentes</h2>
+
+    <div style="display:grid; gap:1px;">
+
+      <!-- Buttons -->
+      <div class="ds-panel">
+        <div class="ds-panel-title">Botões</div>
+        <div class="btn-row">
+          <button class="btn btn-primary">Adicionar ao Carrinho</button>
+          <button class="btn btn-gold">Comprar Agora</button>
+          <button class="btn btn-outline">Ver Coleção</button>
+          <button class="btn btn-ghost">Saiba Mais</button>
+        </div>
+        <div class="btn-row" style="margin-top:var(--space-sm);">
+          <button class="btn btn-primary" style="font-size:0.62rem; padding: 0.7rem 1.8rem;">Pequeno</button>
+          <button class="btn btn-outline" style="font-size:0.62rem; padding: 0.7rem 1.8rem;">Pequeno Outline</button>
+        </div>
+      </div>
+
+      <!-- Inputs -->
+      <div class="ds-panel">
+        <div class="ds-panel-title">Formulários</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-md);">
+          <div class="field-group">
+            <label class="field-label">Nome Completo</label>
+            <input class="field-input" type="text" placeholder="Brenda Nunes" />
+          </div>
+          <div class="field-group">
+            <label class="field-label">E-mail</label>
+            <input class="field-input" type="email" placeholder="contato@brendanunes.com.br" />
+          </div>
+          <div class="field-group">
+            <label class="field-label">CEP</label>
+            <input class="field-input" type="text" placeholder="00000-000" />
+          </div>
+          <div class="field-group">
+            <label class="field-label">Cupom de Desconto</label>
+            <input class="field-input" type="text" placeholder="BN2025" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Badges -->
+      <div class="ds-panel">
+        <div class="ds-panel-title">Badges &amp; Etiquetas</div>
+        <div class="btn-row">
+          <span class="badge badge-rose">Novo</span>
+          <span class="badge badge-gold">Exclusivo</span>
+          <span class="badge badge-outline">Edição Limitada</span>
+          <span class="badge badge-outline">Em Estoque</span>
+          <span class="badge" style="background:var(--text);color:var(--off-white);">Esgotado</span>
+        </div>
+      </div>
+
+      <!-- Product Cards -->
+      <div class="ds-panel">
+        <div class="ds-panel-title">Card de Produto</div>
+        <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:var(--space-sm);">
+          <div class="product-card-demo">
+            <div class="product-img-area">
+              <svg width="48" height="48" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="44" fill="none" stroke="#3A3A3A" stroke-width="0.7"/>
+                <line x1="22" y1="20" x2="22" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="square"/>
+                <line x1="18.5" y1="20" x2="26" y2="20" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+                <line x1="18.5" y1="80" x2="26" y2="80" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+                <line x1="22" y1="50" x2="26" y2="50" stroke="#3A3A3A" stroke-width="0.8" stroke-linecap="square"/>
+                <path d="M 22,20 C 36,20 45,26 45,38 C 45,50 36,50 22,50" fill="none" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="round"/>
+                <path d="M 22,50 C 38,50 49,57 49,66 C 49,76 38,80 22,80" fill="none" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="round"/>
+                <line x1="53" y1="20" x2="53" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="square"/>
+                <line x1="49.5" y1="20" x2="57" y2="20" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+                <line x1="49.5" y1="80" x2="57" y2="80" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+                <line x1="75" y1="20" x2="75" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="square"/>
+                <line x1="71.5" y1="20" x2="78.5" y2="20" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+                <line x1="71.5" y1="80" x2="78.5" y2="80" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+                <line x1="53" y1="20" x2="75" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="round"/>
+              </svg>
+              <div class="product-badge-pos"><span class="badge badge-gold">Novo</span></div>
+            </div>
+            <div class="product-info">
+              <div class="product-category">Anéis</div>
+              <div class="product-name">Anel Solitário Pérola</div>
+              <div class="product-price">R$ 189,00</div>
+            </div>
+            <div class="product-actions">
+              <button class="btn btn-outline" style="width:100%;font-size:0.62rem;padding:0.7rem;">Adicionar</button>
+            </div>
+          </div>
+
+          <div class="product-card-demo">
+            <div class="product-img-area" style="background:var(--off-white);">
+              <svg width="48" height="48" viewBox="0 0 100 100" style="opacity:0.25;">
+                <circle cx="50" cy="50" r="44" fill="none" stroke="#3A3A3A" stroke-width="0.7"/>
+                <line x1="22" y1="20" x2="22" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="square"/>
+                <line x1="18.5" y1="20" x2="26" y2="20" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+                <line x1="18.5" y1="80" x2="26" y2="80" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+                <line x1="22" y1="50" x2="26" y2="50" stroke="#3A3A3A" stroke-width="0.8" stroke-linecap="square"/>
+                <path d="M 22,20 C 36,20 45,26 45,38 C 45,50 36,50 22,50" fill="none" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="round"/>
+                <path d="M 22,50 C 38,50 49,57 49,66 C 49,76 38,80 22,80" fill="none" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="round"/>
+                <line x1="53" y1="20" x2="53" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="square"/>
+                <line x1="49.5" y1="20" x2="57" y2="20" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+                <line x1="49.5" y1="80" x2="57" y2="80" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+                <line x1="75" y1="20" x2="75" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="square"/>
+                <line x1="71.5" y1="20" x2="78.5" y2="20" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+                <line x1="71.5" y1="80" x2="78.5" y2="80" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+                <line x1="53" y1="20" x2="75" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="round"/>
+              </svg>
+              <div class="product-badge-pos"><span class="badge badge-outline">Limitado</span></div>
+            </div>
+            <div class="product-info">
+              <div class="product-category">Colares</div>
+              <div class="product-name">Colar Zircônia Oval</div>
+              <div class="product-price">R$ 349,00</div>
+            </div>
+            <div class="product-actions">
+              <button class="btn btn-primary" style="width:100%;font-size:0.62rem;padding:0.7rem;">Adicionar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Spacing -->
+      <div class="ds-panel">
+        <div class="ds-panel-title">Espaçamentos</div>
+        <div class="spacing-row">
+          <div class="spacing-block"><div class="spacing-bar" style="height:8px;"></div><div class="spacing-val">4px<br>xs</div></div>
+          <div class="spacing-block"><div class="spacing-bar" style="height:16px;"></div><div class="spacing-val">8px<br>sm</div></div>
+          <div class="spacing-block"><div class="spacing-bar" style="height:32px;"></div><div class="spacing-val">16px<br>md</div></div>
+          <div class="spacing-block"><div class="spacing-bar" style="height:48px;"></div><div class="spacing-val">24px<br>lg</div></div>
+          <div class="spacing-block"><div class="spacing-bar" style="height:64px;"></div><div class="spacing-val">32px<br>xl</div></div>
+          <div class="spacing-block"><div class="spacing-bar" style="height:96px;"></div><div class="spacing-val">48px<br>2xl</div></div>
+          <div class="spacing-block"><div class="spacing-bar" style="height:128px;"></div><div class="spacing-val">64px<br>3xl</div></div>
+        </div>
+      </div>
+
+      <!-- Border radius + borders -->
+      <div class="ds-panel">
+        <div class="ds-panel-title">Bordas &amp; Raios</div>
+        <div style="display:flex; gap:1.5rem; flex-wrap:wrap; align-items:center;">
+          <div style="text-align:center;">
+            <div style="width:60px;height:60px;background:var(--rose);border-radius:0;margin:0 auto;"></div>
+            <div style="font-size:0.58rem;letter-spacing:0.1em;color:var(--text-light);margin-top:0.4rem;">0px<br>Sharp</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="width:60px;height:60px;background:var(--rose);border-radius:2px;margin:0 auto;"></div>
+            <div style="font-size:0.58rem;letter-spacing:0.1em;color:var(--text-light);margin-top:0.4rem;">2px<br>Badges</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="width:60px;height:60px;background:var(--rose);border-radius:4px;margin:0 auto;"></div>
+            <div style="font-size:0.58rem;letter-spacing:0.1em;color:var(--text-light);margin-top:0.4rem;">4px<br>Botões</div>
+          </div>
+          <div style="width:60px;text-align:center;">
+            <div style="width:60px;height:60px;background:var(--rose);border-radius:50%;margin:0 auto;"></div>
+            <div style="font-size:0.58rem;letter-spacing:0.1em;color:var(--text-light);margin-top:0.4rem;">50%<br>Avatar</div>
+          </div>
+          <div style="flex:1; min-width:200px;">
+            <div style="display:flex;flex-direction:column;gap:0.7rem;">
+              <div style="height:1px; background:var(--gold); opacity:0.8;"></div>
+              <div style="height:1px; background:rgba(58,58,58,0.15);"></div>
+              <div style="height:1px; background:rgba(212,180,131,0.3); border-style:dashed;"></div>
+            </div>
+            <div style="display:flex;gap:3rem;margin-top:0.4rem;">
+              <span style="font-size:0.55rem;color:var(--text-light);">Divisor Gold</span>
+              <span style="font-size:0.55rem;color:var(--text-light);">Divisor Suave</span>
+              <span style="font-size:0.55rem;color:var(--text-light);">Divisor Pontilhado</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /grid -->
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     MOCKUPS
+══════════════════════════════════════════════════════════ -->
+<section class="mockup-section">
+  <div style="max-width:1100px; margin:0 auto; margin-bottom:var(--space-lg);">
+    <p class="section-label">05 — Aplicações</p>
+    <h2 class="section-title">Mockups de Marca</h2>
+  </div>
+
+  <div class="mockup-grid">
+
+    <!-- Caixa -->
+    <div class="mockup-item">
+      <div class="mock-box">
+        <svg width="52" height="52" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="44" fill="none" stroke="#3A3A3A" stroke-width="0.7"/>
+          <circle cx="50" cy="50" r="41" fill="none" stroke="#3A3A3A" stroke-width="0.25" stroke-dasharray="2 4"/>
+          <line x1="22" y1="20" x2="22" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="square"/>
+          <line x1="18.5" y1="20" x2="26" y2="20" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="18.5" y1="80" x2="26" y2="80" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="22" y1="50" x2="26" y2="50" stroke="#3A3A3A" stroke-width="0.8" stroke-linecap="square"/>
+          <path d="M 22,20 C 36,20 45,26 45,38 C 45,50 36,50 22,50" fill="none" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="round"/>
+          <path d="M 22,50 C 38,50 49,57 49,66 C 49,76 38,80 22,80" fill="none" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="round"/>
+          <line x1="53" y1="20" x2="53" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="square"/>
+          <line x1="49.5" y1="20" x2="57" y2="20" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="49.5" y1="80" x2="57" y2="80" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="75" y1="20" x2="75" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="square"/>
+          <line x1="71.5" y1="20" x2="78.5" y2="20" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="71.5" y1="80" x2="78.5" y2="80" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="53" y1="20" x2="75" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <span class="mockup-caption">Caixa de Embalagem</span>
+    </div>
+
+    <!-- Sacola -->
+    <div class="mockup-item">
+      <div class="mock-bag">
+        <svg width="40" height="40" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="44" fill="none" stroke="#3A3A3A" stroke-width="0.8"/>
+          <line x1="22" y1="20" x2="22" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="square"/>
+          <line x1="18.5" y1="20" x2="26" y2="20" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="18.5" y1="80" x2="26" y2="80" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="22" y1="50" x2="26" y2="50" stroke="#3A3A3A" stroke-width="0.8" stroke-linecap="square"/>
+          <path d="M 22,20 C 36,20 45,26 45,38 C 45,50 36,50 22,50" fill="none" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="round"/>
+          <path d="M 22,50 C 38,50 49,57 49,66 C 49,76 38,80 22,80" fill="none" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="round"/>
+          <line x1="53" y1="20" x2="53" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="square"/>
+          <line x1="49.5" y1="20" x2="57" y2="20" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="49.5" y1="80" x2="57" y2="80" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="75" y1="20" x2="75" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="square"/>
+          <line x1="71.5" y1="20" x2="78.5" y2="20" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="71.5" y1="80" x2="78.5" y2="80" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="53" y1="20" x2="75" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="round"/>
+        </svg>
+        <div style="font-family:var(--font-display);font-size:0.45rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--text);margin-top:0.3rem;">Brenda Nunes</div>
+      </div>
+      <span class="mockup-caption">Sacola de Luxo</span>
+    </div>
+
+    <!-- Cartão -->
+    <div class="mockup-item">
+      <div class="mock-card">
+        <div style="width:28px; height:1px; background:var(--gold); opacity:0.7;"></div>
+        <div style="text-align:center;">
+          <div style="font-family:var(--font-display);font-weight:300;font-style:italic;font-size:0.7rem;color:var(--text);letter-spacing:0.08em;">Obrigada pela preferência</div>
+          <div style="font-family:var(--font-body);font-weight:200;font-size:0.42rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-top:0.3rem;">Brenda Nunes · Semijoias</div>
+        </div>
+        <div style="width:28px; height:1px; background:var(--gold); opacity:0.7;"></div>
+      </div>
+      <span class="mockup-caption">Cartão de Agradecimento</span>
+    </div>
+
+    <!-- Instagram -->
+    <div class="mockup-item">
+      <div class="mock-instagram">
+        <svg width="72" height="72" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="44" fill="none" stroke="#3A3A3A" stroke-width="0.8"/>
+          <circle cx="50" cy="50" r="41" fill="none" stroke="#3A3A3A" stroke-width="0.25" stroke-dasharray="2 4"/>
+          <line x1="22" y1="20" x2="22" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="square"/>
+          <line x1="18.5" y1="20" x2="26" y2="20" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="18.5" y1="80" x2="26" y2="80" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="22" y1="50" x2="26" y2="50" stroke="#3A3A3A" stroke-width="0.8" stroke-linecap="square"/>
+          <path d="M 22,20 C 36,20 45,26 45,38 C 45,50 36,50 22,50" fill="none" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="round"/>
+          <path d="M 22,50 C 38,50 49,57 49,66 C 49,76 38,80 22,80" fill="none" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="round"/>
+          <line x1="53" y1="20" x2="53" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="square"/>
+          <line x1="49.5" y1="20" x2="57" y2="20" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="49.5" y1="80" x2="57" y2="80" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="75" y1="20" x2="75" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="square"/>
+          <line x1="71.5" y1="20" x2="78.5" y2="20" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="71.5" y1="80" x2="78.5" y2="80" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+          <line x1="53" y1="20" x2="75" y2="80" stroke="#3A3A3A" stroke-width="1.25" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <span class="mockup-caption">Perfil Instagram</span>
+    </div>
+
+    <!-- Etiqueta -->
+    <div class="mockup-item">
+      <div class="mock-tag">
+        <svg width="32" height="32" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="44" fill="none" stroke="#D4B483" stroke-width="0.9"/>
+          <line x1="22" y1="20" x2="22" y2="80" stroke="#D4B483" stroke-width="1.3" stroke-linecap="square"/>
+          <line x1="18.5" y1="20" x2="26" y2="20" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+          <line x1="18.5" y1="80" x2="26" y2="80" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+          <line x1="22" y1="50" x2="26" y2="50" stroke="#D4B483" stroke-width="0.8" stroke-linecap="square"/>
+          <path d="M 22,20 C 36,20 45,26 45,38 C 45,50 36,50 22,50" fill="none" stroke="#D4B483" stroke-width="1.3" stroke-linecap="round"/>
+          <path d="M 22,50 C 38,50 49,57 49,66 C 49,76 38,80 22,80" fill="none" stroke="#D4B483" stroke-width="1.3" stroke-linecap="round"/>
+          <line x1="53" y1="20" x2="53" y2="80" stroke="#D4B483" stroke-width="1.3" stroke-linecap="square"/>
+          <line x1="49.5" y1="20" x2="57" y2="20" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+          <line x1="49.5" y1="80" x2="57" y2="80" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+          <line x1="75" y1="20" x2="75" y2="80" stroke="#D4B483" stroke-width="1.3" stroke-linecap="square"/>
+          <line x1="71.5" y1="20" x2="78.5" y2="20" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+          <line x1="71.5" y1="80" x2="78.5" y2="80" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+          <line x1="53" y1="20" x2="75" y2="80" stroke="#D4B483" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+        <div class="mock-tag-line"></div>
+        <div class="mock-tag-price">R$ 189</div>
+      </div>
+      <span class="mockup-caption">Etiqueta de Produto</span>
+    </div>
+
+    <!-- Favicon -->
+    <div class="mockup-item">
+      <div style="display:flex; gap:1rem; align-items:flex-end; flex-wrap:wrap; justify-content:center;">
+        <div style="text-align:center;">
+          <div class="mock-favicon-lg">
+            <svg width="32" height="32" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="44" fill="none" stroke="#3A3A3A" stroke-width="0.9"/>
+              <line x1="22" y1="20" x2="22" y2="80" stroke="#3A3A3A" stroke-width="1.4" stroke-linecap="square"/>
+              <line x1="18.5" y1="20" x2="26" y2="20" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+              <line x1="18.5" y1="80" x2="26" y2="80" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+              <line x1="22" y1="50" x2="26" y2="50" stroke="#3A3A3A" stroke-width="0.8" stroke-linecap="square"/>
+              <path d="M 22,20 C 36,20 45,26 45,38 C 45,50 36,50 22,50" fill="none" stroke="#3A3A3A" stroke-width="1.4" stroke-linecap="round"/>
+              <path d="M 22,50 C 38,50 49,57 49,66 C 49,76 38,80 22,80" fill="none" stroke="#3A3A3A" stroke-width="1.4" stroke-linecap="round"/>
+              <line x1="53" y1="20" x2="53" y2="80" stroke="#3A3A3A" stroke-width="1.4" stroke-linecap="square"/>
+              <line x1="49.5" y1="20" x2="57" y2="20" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+              <line x1="49.5" y1="80" x2="57" y2="80" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+              <line x1="75" y1="20" x2="75" y2="80" stroke="#3A3A3A" stroke-width="1.4" stroke-linecap="square"/>
+              <line x1="71.5" y1="20" x2="78.5" y2="20" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+              <line x1="71.5" y1="80" x2="78.5" y2="80" stroke="#3A3A3A" stroke-width="1" stroke-linecap="square"/>
+              <line x1="53" y1="20" x2="75" y2="80" stroke="#3A3A3A" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div style="font-size:0.45rem;color:rgba(247,243,241,0.3);margin-top:0.3rem;">48px</div>
+        </div>
+        <div style="text-align:center;">
+          <div class="mock-favicon">
+            <svg width="18" height="18" viewBox="0 0 100 100">
+              <rect width="100" height="100" fill="#E8C8D2"/>
+              <line x1="22" y1="20" x2="22" y2="80" stroke="#3A3A3A" stroke-width="2" stroke-linecap="square"/>
+              <line x1="18.5" y1="20" x2="26" y2="20" stroke="#3A3A3A" stroke-width="1.5" stroke-linecap="square"/>
+              <line x1="18.5" y1="80" x2="26" y2="80" stroke="#3A3A3A" stroke-width="1.5" stroke-linecap="square"/>
+              <path d="M 22,20 C 36,20 45,26 45,38 C 45,50 36,50 22,50" fill="none" stroke="#3A3A3A" stroke-width="2" stroke-linecap="round"/>
+              <path d="M 22,50 C 38,50 49,57 49,66 C 49,76 38,80 22,80" fill="none" stroke="#3A3A3A" stroke-width="2" stroke-linecap="round"/>
+              <line x1="53" y1="20" x2="53" y2="80" stroke="#3A3A3A" stroke-width="2" stroke-linecap="square"/>
+              <line x1="49.5" y1="20" x2="57" y2="20" stroke="#3A3A3A" stroke-width="1.5" stroke-linecap="square"/>
+              <line x1="49.5" y1="80" x2="57" y2="80" stroke="#3A3A3A" stroke-width="1.5" stroke-linecap="square"/>
+              <line x1="75" y1="20" x2="75" y2="80" stroke="#3A3A3A" stroke-width="2" stroke-linecap="square"/>
+              <line x1="71.5" y1="20" x2="78.5" y2="20" stroke="#3A3A3A" stroke-width="1.5" stroke-linecap="square"/>
+              <line x1="71.5" y1="80" x2="78.5" y2="80" stroke="#3A3A3A" stroke-width="1.5" stroke-linecap="square"/>
+              <line x1="53" y1="20" x2="75" y2="80" stroke="#3A3A3A" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div style="font-size:0.45rem;color:rgba(247,243,241,0.3);margin-top:0.3rem;">32px</div>
+        </div>
+        <div style="text-align:center;">
+          <div class="mock-favicon-sm">
+            <svg width="10" height="10" viewBox="0 0 100 100">
+              <rect width="100" height="100" fill="#E8C8D2"/>
+              <line x1="22" y1="20" x2="22" y2="80" stroke="#3A3A3A" stroke-width="3" stroke-linecap="square"/>
+              <path d="M 22,20 C 36,20 45,26 45,38 C 45,50 36,50 22,50" fill="none" stroke="#3A3A3A" stroke-width="3" stroke-linecap="round"/>
+              <path d="M 22,50 C 38,50 49,57 49,66 C 49,76 38,80 22,80" fill="none" stroke="#3A3A3A" stroke-width="3" stroke-linecap="round"/>
+              <line x1="53" y1="20" x2="53" y2="80" stroke="#3A3A3A" stroke-width="3" stroke-linecap="square"/>
+              <line x1="75" y1="20" x2="75" y2="80" stroke="#3A3A3A" stroke-width="3" stroke-linecap="square"/>
+              <line x1="53" y1="20" x2="75" y2="80" stroke="#3A3A3A" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div style="font-size:0.45rem;color:rgba(247,243,241,0.3);margin-top:0.3rem;">16px</div>
+        </div>
+      </div>
+      <span class="mockup-caption">Favicon · Ícone App</span>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     CSS VARIABLES REFERENCE
+══════════════════════════════════════════════════════════ -->
+<div style="padding: var(--space-xl) var(--space-md); background:var(--off-white);">
+  <div style="max-width:1100px; margin:0 auto;">
+    <p class="section-label">06 — Tokens para Desenvolvedores</p>
+    <h2 class="section-title">CSS Variables</h2>
+
+    <div style="background:var(--black); padding:var(--space-lg); font-family:monospace; font-size:0.75rem; line-height:2; color:#F7F3F1; overflow-x:auto;">
+<span style="color:#8A7F7A;">/* ── Brenda Nunes · Design Tokens ──────────────────────── */</span><br>
+<span style="color:#E8C8D2;">:root</span> {<br>
+&nbsp;&nbsp;<span style="color:#D4B483;">--bn-rose</span>:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#E8C8D2;">#E8C8D2</span>;&nbsp;&nbsp;<span style="color:#8A7F7A;">/* cor principal */</span><br>
+&nbsp;&nbsp;<span style="color:#D4B483;">--bn-rose-deep</span>:&nbsp;&nbsp;<span style="color:#D9B0BF;">#D9B0BF</span>;&nbsp;&nbsp;<span style="color:#8A7F7A;">/* rosa profundo */</span><br>
+&nbsp;&nbsp;<span style="color:#D4B483;">--bn-off-white</span>:&nbsp;&nbsp;<span style="color:#F7F3F1;">#F7F3F1</span>;&nbsp;&nbsp;<span style="color:#8A7F7A;">/* fundo elegante */</span><br>
+&nbsp;&nbsp;<span style="color:#D4B483;">--bn-gold</span>:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#D4B483;">#D4B483</span>;&nbsp;&nbsp;<span style="color:#8A7F7A;">/* dourado champagne */</span><br>
+&nbsp;&nbsp;<span style="color:#D4B483;">--bn-gold-light</span>:&nbsp;<span style="color:#E8D5B0;">#E8D5B0</span>;&nbsp;&nbsp;<span style="color:#8A7F7A;">/* dourado hover */</span><br>
+&nbsp;&nbsp;<span style="color:#D4B483;">--bn-text</span>:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#aaa;">#3A3A3A</span>;&nbsp;&nbsp;<span style="color:#8A7F7A;">/* cinza premium */</span><br>
+&nbsp;&nbsp;<span style="color:#D4B483;">--bn-text-light</span>:&nbsp;<span style="color:#aaa;">#8A7F7A</span>;&nbsp;&nbsp;<span style="color:#8A7F7A;">/* texto secundário */</span><br>
+&nbsp;&nbsp;<span style="color:#D4B483;">--bn-black</span>:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#aaa;">#1A1A1A</span>;&nbsp;&nbsp;<span style="color:#8A7F7A;">/* preto elegante */</span><br>
+<br>
+&nbsp;&nbsp;<span style="color:#D4B483;">--bn-font-display</span>: <span style="color:#E8C8D2;">'Cormorant Garamond'</span>, Georgia, serif;<br>
+&nbsp;&nbsp;<span style="color:#D4B483;">--bn-font-body</span>:&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#E8C8D2;">'Jost'</span>, system-ui, sans-serif;<br>
+<br>
+&nbsp;&nbsp;<span style="color:#D4B483;">--bn-tracking-brand</span>: <span style="color:#E8C8D2;">0.3em</span>;&nbsp;&nbsp;&nbsp;<span style="color:#8A7F7A;">/* nome da marca */</span><br>
+&nbsp;&nbsp;<span style="color:#D4B483;">--bn-tracking-label</span>: <span style="color:#E8C8D2;">0.25em</span>;&nbsp;&nbsp;<span style="color:#8A7F7A;">/* labels, badges */</span><br>
+&nbsp;&nbsp;<span style="color:#D4B483;">--bn-tracking-body</span>:&nbsp;<span style="color:#E8C8D2;">0.03em</span>;&nbsp;&nbsp;<span style="color:#8A7F7A;">/* corpo de texto */</span><br>
+<br>
+&nbsp;&nbsp;<span style="color:#D4B483;">--bn-weight-light</span>:&nbsp;&nbsp;<span style="color:#E8C8D2;">300</span>;<br>
+&nbsp;&nbsp;<span style="color:#D4B483;">--bn-weight-regular</span>: <span style="color:#E8C8D2;">400</span>;<br>
+}
+    </div>
+
+    <div style="margin-top:var(--space-md); padding:var(--space-md); background:white; border:1px solid rgba(212,180,131,0.2);">
+      <div style="font-family:var(--font-body);font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:var(--space-sm);">Google Fonts — Importar</div>
+      <div style="font-family:monospace;font-size:0.72rem;line-height:1.8;color:var(--text);word-break:break-all;">
+        &lt;link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&amp;family=Jost:wght@200;300;400&amp;display=swap" rel="stylesheet" /&gt;
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     FOOTER
+══════════════════════════════════════════════════════════ -->
+<footer class="brand-footer">
+  <svg width="40" height="40" viewBox="0 0 100 100" style="margin:0 auto 1rem;">
+    <circle cx="50" cy="50" r="44" fill="none" stroke="#D4B483" stroke-width="0.7"/>
+    <line x1="22" y1="20" x2="22" y2="80" stroke="#D4B483" stroke-width="1.25" stroke-linecap="square"/>
+    <line x1="18.5" y1="20" x2="26" y2="20" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+    <line x1="18.5" y1="80" x2="26" y2="80" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+    <line x1="22" y1="50" x2="26" y2="50" stroke="#D4B483" stroke-width="0.8" stroke-linecap="square"/>
+    <path d="M 22,20 C 36,20 45,26 45,38 C 45,50 36,50 22,50" fill="none" stroke="#D4B483" stroke-width="1.25" stroke-linecap="round"/>
+    <path d="M 22,50 C 38,50 49,57 49,66 C 49,76 38,80 22,80" fill="none" stroke="#D4B483" stroke-width="1.25" stroke-linecap="round"/>
+    <line x1="53" y1="20" x2="53" y2="80" stroke="#D4B483" stroke-width="1.25" stroke-linecap="square"/>
+    <line x1="49.5" y1="20" x2="57" y2="20" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+    <line x1="49.5" y1="80" x2="57" y2="80" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+    <line x1="75" y1="20" x2="75" y2="80" stroke="#D4B483" stroke-width="1.25" stroke-linecap="square"/>
+    <line x1="71.5" y1="20" x2="78.5" y2="20" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+    <line x1="71.5" y1="80" x2="78.5" y2="80" stroke="#D4B483" stroke-width="1" stroke-linecap="square"/>
+    <line x1="53" y1="20" x2="75" y2="80" stroke="#D4B483" stroke-width="1.25" stroke-linecap="round"/>
+  </svg>
+  <div class="brand-footer-name">Brenda Nunes</div>
+  <div class="brand-footer-sub">Semijoias · Elegância · Exclusividade</div>
+  <div class="brand-footer-copy">Brand Identity System · Desenvolvido com Claude Code</div>
+</footer>
+
+</body>
+</html>
