@@ -6,6 +6,7 @@ import com.project.API.cart.CartStatus;
 import com.project.API.commom.exception.CartInconsistencyException;
 import com.project.API.order.interfaces.QuantityChecks;
 import com.project.API.product.ProductRepository;
+import com.project.API.shipping.ShippingService;
 import com.project.API.user.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,7 @@ class CartOrderFlowTest {
     private OrderRepository orderRepository;
     private CartRepository cartRepository;
     private ProductRepository productRepository;
+    private ShippingService shippingService;
     private OrderServiceImp orderService;
 
     @BeforeEach
@@ -30,7 +32,8 @@ class CartOrderFlowTest {
         orderRepository = Mockito.mock(OrderRepository.class);
         cartRepository = Mockito.mock(CartRepository.class);
         productRepository = Mockito.mock(ProductRepository.class);
-        orderService = new OrderServiceImp(orderRepository, cartRepository, productRepository);
+        shippingService = Mockito.mock(ShippingService.class);
+        orderService = new OrderServiceImp(orderRepository, cartRepository, productRepository, shippingService);
     }
 
     // ── checkout() validation ─────────────────────────────────────────────────

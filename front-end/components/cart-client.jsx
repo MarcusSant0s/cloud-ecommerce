@@ -30,6 +30,7 @@ import {
 import { useCart } from "@/lib/use-cart";
 import { useAuth } from "@/contexts/AuthContext";
 import api from "@/services/api";
+import { toast } from "sonner";
 
 const CURRENCY_FORMATTER = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -56,21 +57,62 @@ export function CartClient({ className }) {
 
   const [isOpen, setIsOpen] = React.useState(false);
   const [isMounted, setIsMounted] = React.useState(false);
+  const [isCheckingOut, setIsCheckingOut] = React.useState(false);
+  const [shipping, setShipping] = React.useState(null); // { region, cost }
+  const [shippingStatus, setShippingStatus] = React.useState("idle"); // idle | loading | ready | no-address | error
   const isDesktop = useMediaQuery("(min-width: 768px)");
-  
+
   React.useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  // Quote region-based shipping (frete) from the user's saved CEP when the cart opens
+  React.useEffect(() => {
+    if (!isOpen || !user || items.length === 0) return;
+    let cancelled = false;
+    setShippingStatus("loading");
+    api.get("/shipping/quote")
+      .then((res) => {
+        if (cancelled) return;
+        setShipping(res.data);
+        setShippingStatus("ready");
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setShipping(null);
+        setShippingStatus(err?.response?.data?.code === "ADDRESS_REQUIRED" ? "no-address" : "error");
+      });
+    return () => { cancelled = true; };
+  }, [isOpen, user, items.length]);
+
+  const freteCost = shippingStatus === "ready" && shipping ? Number(shipping.cost) : 0;
+  const total = subtotal + freteCost;
 
   // Handlers que chamam a API via Context
   const handleUpdateQuantity = (cartItemId, currentQty, isIncrement) => {
     updateQuantity(cartItemId, isIncrement);
   };
 
-  const handleCreateOrder  = async () => {
-    const res = await api.post(`/order/${user.id}`);
-    const checkoutUrl = res.data.checkoutUrl;
-    window.location.href = checkoutUrl; // ← redirects to MP checkout
+  const handleCreateOrder = async () => {
+    if (!user) {
+      toast.error("Faça login para continuar");
+      return;
+    }
+    try {
+      setIsCheckingOut(true);
+      const res = await api.post("/order/checkout");
+      window.location.href = res.data.checkoutUrl;
+    } catch (err) {
+      const code = err?.response?.data?.code;
+      if (code === "INSUFFICIENT_STOCK") {
+        toast.error("Quantidade indisponível em estoque. Atualize seu carrinho.");
+      } else if (code === "ADDRESS_REQUIRED") {
+        toast.error("Cadastre um endereço de entrega antes de finalizar.");
+      } else {
+        toast.error("Erro ao iniciar pagamento. Tente novamente.");
+      }
+      setIsCheckingOut(false);
+    }
   };
 
   const CartTrigger = (
@@ -193,16 +235,34 @@ export function CartClient({ className }) {
 
       {items.length > 0 && (
         <div className="border-t bg-muted/20 px-6 py-6 space-y-4">
-          <div className="flex justify-between text-base font-semibold">
-            <span>Subtotal</span>
-            <span>{CURRENCY_FORMATTER.format(subtotal)}</span>
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Subtotal</span>
+              <span>{CURRENCY_FORMATTER.format(subtotal)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Frete</span>
+              {shippingStatus === "loading" && <span className="text-muted-foreground">Calculando…</span>}
+              {shippingStatus === "ready" && <span>{CURRENCY_FORMATTER.format(freteCost)}</span>}
+              {shippingStatus === "no-address" && (
+                <span className="text-xs text-amber-600">Cadastre um endereço</span>
+              )}
+              {(shippingStatus === "error" || shippingStatus === "idle") && (
+                <span className="text-xs text-muted-foreground">A calcular</span>
+              )}
+            </div>
+            <Separator />
+            <div className="flex justify-between text-base font-semibold">
+              <span>Total</span>
+              <span>{CURRENCY_FORMATTER.format(total)}</span>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <Button variant="outline" onClick={() => clearCart()} className="w-full">
               Limpar
             </Button>
-            <Button className="w-full" size="default" onClick={() => handleCreateOrder()}>
-              Finalizar
+            <Button className="w-full" size="default" onClick={handleCreateOrder} disabled={isCheckingOut}>
+              {isCheckingOut ? <Loader2 className="h-4 w-4 animate-spin" /> : "Finalizar"}
             </Button>
           </div>
         </div>

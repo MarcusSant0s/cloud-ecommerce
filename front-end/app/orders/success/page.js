@@ -1,20 +1,13 @@
 "use client";
-import { Suspense, useEffect } from "react";
+import { Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
-import api from "@/services/api";
 
 function OrderSuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const paymentId = searchParams.get("payment_id");
   const orderId = searchParams.get("external_reference");
-
-  useEffect(() => {
-    if (!orderId) return;
-    api.patch(`/order/${orderId}/confirm`, { paymentId }).catch(console.error);
-  }, [orderId]);
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4">

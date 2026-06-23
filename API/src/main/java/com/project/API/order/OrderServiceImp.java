@@ -5,6 +5,7 @@ import com.mercadopago.client.preference.PreferenceBackUrlsRequest;
 import com.mercadopago.client.preference.PreferenceClient;
 import com.mercadopago.client.preference.PreferenceItemRequest;
 import com.mercadopago.client.preference.PreferenceRequest;
+import com.mercadopago.client.preference.PreferenceShipmentsRequest;
 import com.mercadopago.exceptions.MPApiException;
 import com.mercadopago.exceptions.MPException;
 import com.mercadopago.resources.payment.Payment;
@@ -16,12 +17,18 @@ import com.project.API.cart.CartRepository;
 import com.project.API.cart.exception.InsufficientStockException;
 import com.project.API.commom.exception.CartInconsistencyException;
 import com.project.API.commom.exception.ResourceNotFoundException;
+import com.project.API.commom.exception.ShippingAddressRequiredException;
+import com.project.API.order.DTO.AdminOrderResponse;
 import com.project.API.order.DTO.MissingProducts;
 import com.project.API.order.DTO.OrderResponse;
 import com.project.API.order.interfaces.QuantityChecks;
 import com.project.API.product.ProductRepository;
+import com.project.API.shipping.ShippingService;
+import com.project.API.user.User;
+import com.project.API.user.UserAdress;
 
 import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -41,11 +48,19 @@ public class OrderServiceImp implements OrderService {
     private final OrderRepository orderRepository;
     private final CartRepository cartRepository;
     private final ProductRepository productRepository;
+    private final ShippingService shippingService;
 
-    public OrderServiceImp(OrderRepository orderRepository, CartRepository cartRepository, ProductRepository productRepository){
+    @Value("${mercadopago.notification.url}")
+    private String notificationUrl;
+
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
+
+    public OrderServiceImp(OrderRepository orderRepository, CartRepository cartRepository, ProductRepository productRepository, ShippingService shippingService){
         this.orderRepository = orderRepository;
         this.cartRepository = cartRepository;
         this.productRepository = productRepository;
+        this.shippingService = shippingService;
     }
 
 
@@ -121,13 +136,25 @@ public class OrderServiceImp implements OrderService {
 
         order.setStatus(OrderStatus.PENDING);
         order.setUser(cart.getUser());
-        order.setTotal(
-                cartItems.stream()
-                        .map(i -> i.getProduct().getFinalPrice().multiply(BigDecimal.valueOf(i.getQuantity())))
-                        .reduce(BigDecimal.ZERO, BigDecimal::add)
-        );
+
+        BigDecimal subtotal = cartItems.stream()
+                .map(i -> i.getProduct().getFinalPrice().multiply(BigDecimal.valueOf(i.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal shippingCost = resolveShippingCost(cart.getUser());
+        order.setShippingCost(shippingCost);
+        order.setTotal(subtotal.add(shippingCost));
 
        return orderRepository.save(order);
+    }
+
+    private BigDecimal resolveShippingCost(User user) {
+        UserAdress address = user == null ? null : user.getUserAdress();
+        if (address == null || address.getCep() == null || address.getCep().isBlank()) {
+            throw new ShippingAddressRequiredException(
+                    "Cadastre um endereço de entrega antes de finalizar a compra.");
+        }
+        return shippingService.calculate(address.getCep());
     }
 
 
@@ -148,16 +175,23 @@ public class OrderServiceImp implements OrderService {
                  ).toList();
 
          PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
-                 .success("http://localhost:3000/orders/success")
-                 .failure("http://localhost:3000/orders/failure")
-                 .pending("http://localhost:3000/orders/pending")
+                 .success(frontendUrl + "/orders/success")
+                 .failure(frontendUrl + "/orders/failed")
+                 .pending(frontendUrl + "/orders/pending")
+                 .build();
+
+         BigDecimal shippingCost = order.getShippingCost() == null ? BigDecimal.ZERO : order.getShippingCost();
+         PreferenceShipmentsRequest shipments = PreferenceShipmentsRequest.builder()
+                 .cost(shippingCost)
+                 .mode("not_specified")
                  .build();
 
          PreferenceRequest preferenceRequest = PreferenceRequest.builder()
                  .items(items)
                  .backUrls(backUrls)
-//                 .autoReturn("approved")
-                 .notificationUrl("https://6da7-187-32-129-217.ngrok-free.app/order/webhook") // ← add this
+                 .autoReturn("approved")
+                 .shipments(shipments)
+                 .notificationUrl(notificationUrl)
                  .externalReference(order.getId().toString())
                  .build();
 
@@ -242,6 +276,12 @@ public class OrderServiceImp implements OrderService {
     public Page<OrderResponse> getOrdersByUser(Long userId, Pageable pageable) {
         return orderRepository.findByUserId(userId, pageable)
                 .map(OrderResponse::fromEntity);
+    }
+
+    @Override
+    public Page<AdminOrderResponse> getAllOrders(Pageable pageable) {
+        return orderRepository.findAll(pageable)
+                .map(AdminOrderResponse::fromEntity);
     }
 
 

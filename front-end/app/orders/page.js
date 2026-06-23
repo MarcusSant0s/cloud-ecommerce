@@ -3,20 +3,21 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Package, CheckCircle2, Clock, XCircle, ChevronRight, ArrowLeft } from "lucide-react";
+import { Package, CheckCircle2, Clock, XCircle, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import api from "@/services/api";
 import { useAuth } from "@/contexts/AuthContext";
 
 const CURRENCY = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+const DATE_FORMAT = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
 
 const STATUS_CONFIG = {
-  paid: { label: "Pago", icon: CheckCircle2, className: "text-emerald-600 bg-emerald-50 border-emerald-200" },
-  pending: { label: "Pendente", icon: Clock, className: "text-amber-600 bg-amber-50 border-amber-200" },
-  cancelled: { label: "Cancelado", icon: XCircle, className: "text-red-500 bg-red-50 border-red-200" },
+  PAID: { label: "Pago", icon: CheckCircle2, className: "text-emerald-600 bg-emerald-50 border-emerald-200" },
+  PENDING: { label: "Pendente", icon: Clock, className: "text-amber-600 bg-amber-50 border-amber-200" },
+  CANCELLED: { label: "Cancelado", icon: XCircle, className: "text-red-500 bg-red-50 border-red-200" },
 };
 
 function StatusBadge({ status }) {
-  const config = STATUS_CONFIG[status] ?? STATUS_CONFIG.pending;
+  const config = STATUS_CONFIG[status?.toUpperCase()] ?? STATUS_CONFIG.PENDING;
   const Icon = config.icon;
   return (
     <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold ${config.className}`}>
@@ -61,11 +62,12 @@ function SectionSkeleton({ count = 3 }) {
 }
 
 function OrderCard({ order }) {
-  const firstItem = order.items[0];
-  const extraCount = order.items.length - 1;
+  const firstItem = order.items?.[0];
+  const extraCount = (order.items?.length ?? 0) - 1;
+  const date = order.createdAt ? DATE_FORMAT.format(new Date(order.createdAt)) : null;
 
   return (
-    <div className="group relative flex flex-col gap-4 rounded-2xl border bg-card p-4 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 sm:flex-row sm:items-center sm:p-5">
+    <div className="flex flex-col gap-4 rounded-2xl border bg-card p-4 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 sm:flex-row sm:items-center sm:p-5">
       <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl border bg-muted sm:h-20 sm:w-20">
         {firstItem?.url ? (
           <Image src={firstItem.url} alt={firstItem.productName} fill className="object-cover" />
@@ -90,19 +92,16 @@ function OrderCard({ order }) {
                 <span className="ml-1 text-muted-foreground font-normal text-sm">e mais {extraCount}</span>
               )}
             </p>
-            <p className="text-xs text-muted-foreground mt-0.5">Pedido #{firstItem?.id}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Pedido #{order.id}
+              {date && <span className="ml-2">· {date}</span>}
+            </p>
           </div>
           <StatusBadge status={order.status} />
         </div>
 
         <div className="flex items-center justify-between mt-2">
           <p className="text-lg font-bold text-primary">{CURRENCY.format(order.total)}</p>
-          <Link
-            href={`/orders/${firstItem?.id}`}
-            className="flex items-center gap-1 text-xs font-medium text-muted-foreground transition hover:text-primary"
-          >
-            Detalhes <ChevronRight className="h-3.5 w-3.5" />
-          </Link>
         </div>
       </div>
     </div>
@@ -147,19 +146,51 @@ function ErrorState({ onRetry }) {
   );
 }
 
+function Pagination({ page, totalPages, onPageChange }) {
+  if (totalPages <= 1) return null;
+  return (
+    <div className="flex items-center justify-center gap-3 pt-2">
+      <button
+        onClick={() => onPageChange(page - 1)}
+        disabled={page === 0}
+        className="flex h-8 w-8 items-center justify-center rounded-full border bg-background transition hover:bg-accent disabled:opacity-40"
+        aria-label="Página anterior"
+      >
+        <ChevronLeft className="h-4 w-4" />
+      </button>
+      <span className="text-sm text-muted-foreground">
+        {page + 1} de {totalPages}
+      </span>
+      <button
+        onClick={() => onPageChange(page + 1)}
+        disabled={page >= totalPages - 1}
+        className="flex h-8 w-8 items-center justify-center rounded-full border bg-background transition hover:bg-accent disabled:opacity-40"
+        aria-label="Próxima página"
+      >
+        <ChevronRight className="h-4 w-4" />
+      </button>
+    </div>
+  );
+}
+
 export default function OrdersPage() {
   const { user, loading: authLoading } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (pageNum = 0) => {
     if (!user?.id) return;
     try {
       setLoading(true);
       setError(false);
-      const res = await api.get(`/order`);
+      const res = await api.get(`/order?page=${pageNum}&size=10`);
       setOrders(res.data.content ?? []);
+      setTotalPages(res.data.totalPages ?? 0);
+      setTotalElements(res.data.totalElements ?? 0);
     } catch {
       setError(true);
     } finally {
@@ -168,11 +199,16 @@ export default function OrdersPage() {
   };
 
   useEffect(() => {
-    if (!authLoading) fetchOrders();
-  }, [user?.id, authLoading]);
+    if (!authLoading) fetchOrders(page);
+  }, [user?.id, authLoading, page]);
 
-  const pending = orders.filter(o => o.status === "pending");
-  const others = orders.filter(o => o.status !== "pending");
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const pending = orders.filter(o => o.status?.toUpperCase() === "PENDING");
+  const others = orders.filter(o => o.status?.toUpperCase() !== "PENDING");
 
   return (
     <div className="min-h-screen bg-background">
@@ -189,9 +225,9 @@ export default function OrdersPage() {
             <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Meus Pedidos</h1>
             {!loading && !error && (
               <p className="mt-0.5 text-sm text-muted-foreground">
-                {orders.length === 0
+                {totalElements === 0
                   ? "Você ainda não fez nenhum pedido."
-                  : `${orders.length} pedido${orders.length > 1 ? "s" : ""} no total`}
+                  : `${totalElements} pedido${totalElements > 1 ? "s" : ""} no total`}
               </p>
             )}
           </div>
@@ -204,7 +240,7 @@ export default function OrdersPage() {
           </div>
         )}
 
-        {!loading && error && <ErrorState onRetry={fetchOrders} />}
+        {!loading && error && <ErrorState onRetry={() => fetchOrders(page)} />}
         {!loading && !error && orders.length === 0 && <EmptyState />}
 
         {!loading && !error && orders.length > 0 && (
@@ -215,7 +251,7 @@ export default function OrdersPage() {
                   Aguardando Pagamento
                 </h2>
                 <div className="flex flex-col gap-3">
-                  {pending.map((order, i) => <OrderCard key={i} order={order} />)}
+                  {pending.map((order) => <OrderCard key={order.id} order={order} />)}
                 </div>
               </section>
             )}
@@ -225,10 +261,11 @@ export default function OrdersPage() {
                   Pedidos Anteriores
                 </h2>
                 <div className="flex flex-col gap-3">
-                  {others.map((order, i) => <OrderCard key={i} order={order} />)}
+                  {others.map((order) => <OrderCard key={order.id} order={order} />)}
                 </div>
               </section>
             )}
+            <Pagination page={page} totalPages={totalPages} onPageChange={handlePageChange} />
           </div>
         )}
 

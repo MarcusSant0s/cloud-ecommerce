@@ -29,6 +29,9 @@ public class Order {
    @Column(nullable = false)
     private BigDecimal total;
 
+   @Column(name = "shipping_cost")
+   private BigDecimal shippingCost;
+
    @Enumerated(EnumType.STRING)
    private OrderStatus status;
 
@@ -83,6 +86,14 @@ public class Order {
 
     public void setTotal(BigDecimal total) {
         this.total = total;
+    }
+
+    public BigDecimal getShippingCost() {
+        return shippingCost;
+    }
+
+    public void setShippingCost(BigDecimal shippingCost) {
+        this.shippingCost = shippingCost;
     }
 
     public OrderStatus getStatus() {

@@ -5,18 +5,25 @@ import com.project.API.order.OrderItem;
 import com.project.API.order.OrderStatus;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public record OrderResponse(
+         Long id,
          List<OrderItem> items,
          BigDecimal total,
-         OrderStatus status
+         BigDecimal shippingCost,
+         OrderStatus status,
+         LocalDateTime createdAt
         ) {
     public static OrderResponse fromEntity(Order order){
         return new OrderResponse(
+                order.getId(),
                 order.getItems(),
                 order.getTotal(),
-                order.getStatus()
+                order.getShippingCost(),
+                order.getStatus(),
+                order.getCreatedAt()
         );
     }
 }

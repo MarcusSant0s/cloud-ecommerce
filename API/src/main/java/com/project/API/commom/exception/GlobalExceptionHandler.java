@@ -65,4 +65,10 @@ public class GlobalExceptionHandler {
                 .body(new ApiError(409, "INSUFFICIENT_STOCK", "Product missing on stock", ex.getProducts()));
     }
 
+    @ExceptionHandler(ShippingAddressRequiredException.class)
+    public ResponseEntity<ApiError> handleShippingAddress(ShippingAddressRequiredException ex){
+        return ResponseEntity.badRequest()
+                .body(new ApiError(400, "ADDRESS_REQUIRED", ex.getMessage(), null));
+    }
+
 }

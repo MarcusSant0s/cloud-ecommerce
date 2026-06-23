@@ -4,6 +4,7 @@ package com.project.API.order;
 import com.mercadopago.exceptions.MPApiException;
 import com.mercadopago.exceptions.MPException;
 import com.project.API.cart.Cart;
+import com.project.API.order.DTO.AdminOrderResponse;
 import com.project.API.order.DTO.OrderResponse;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
@@ -14,6 +15,8 @@ import org.springframework.data.domain.Pageable;
 public interface OrderService {
 
      Page<OrderResponse> getOrdersByUser(Long userId, Pageable pageable);
+
+     Page<AdminOrderResponse> getAllOrders(Pageable pageable);
 
      String checkout(Long userId) throws MPException, MPApiException;
 

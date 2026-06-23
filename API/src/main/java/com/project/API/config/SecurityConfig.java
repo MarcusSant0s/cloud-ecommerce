@@ -34,6 +34,7 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
                             .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/order/webhook").permitAll()
                         .requestMatchers(HttpMethod.GET, "/product").permitAll()
                         .requestMatchers(HttpMethod.GET, "/product/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/category").permitAll()                        .requestMatchers(HttpMethod.GET, "/product/**").permitAll()

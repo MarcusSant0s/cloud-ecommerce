@@ -8,14 +8,13 @@ import { Button } from "@/primitives/button";
 import { Badge } from "@/primitives/badge";
 import { Skeleton } from "@/primitives/skeleton";
 
-const STATUSES = ["PENDING", "CONFIRMED", "SHIPPED", "DELIVERED", "CANCELLED"];
+const STATUSES = ["PENDING", "PAID", "CANCELLED", "REFUNDED"];
 
 const STATUS_VARIANT = {
   PENDING: "secondary",
-  CONFIRMED: "default",
-  SHIPPED: "default",
-  DELIVERED: "default",
+  PAID: "default",
   CANCELLED: "destructive",
+  REFUNDED: "outline",
 };
 
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
@@ -38,7 +37,7 @@ export default function AdminOrders() {
   const fetchOrders = useCallback(async (p = 0) => {
     setLoading(true);
     try {
-      const res = await api.get("/order", { params: { page: p, size: 15 } });
+      const res = await api.get("/order/all", { params: { page: p, size: 15 } });
       setOrders(res.data.content ?? res.data);
       setTotalPages(res.data.totalPages ?? 1);
     } catch {
@@ -57,7 +56,7 @@ export default function AdminOrders() {
     if (!status) return;
     setUpdatingId(orderId);
     try {
-      await api.patch("/order", null, { params: { orderId, orderStatus: status } });
+      await api.patch(`/order/${orderId}/status`, null, { params: { orderStatus: status } });
       toast.success("Order status updated.");
       setOrders(prev =>
         prev.map(o => (o.id === orderId ? { ...o, status } : o))
@@ -104,14 +103,14 @@ export default function AdminOrders() {
             </thead>
             <tbody className="divide-y">
               {orders.map(order => {
-                const currentStatus = order.status;
+                const currentStatus = (order.status ?? "").toUpperCase();
                 const selected = pendingStatus[order.id] ?? currentStatus;
                 const changed = selected !== currentStatus;
                 const isUpdating = updatingId === order.id;
                 const customerName =
-                  order.user
-                    ? `${order.user.firstName ?? ""} ${order.user.lastName ?? ""}`.trim()
-                    : order.userId ?? "—";
+                  order.customer
+                    ? `${order.customer.firstName ?? ""} ${order.customer.lastName ?? ""}`.trim() || order.customer.email
+                    : "—";
                 const total =
                   order.total ?? order.totalAmount ?? order.totalPrice ?? 0;
 
