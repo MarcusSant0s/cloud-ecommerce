@@ -56,6 +56,11 @@ public class OrderServiceImp implements OrderService {
     @Value("${app.frontend.url}")
     private String frontendUrl;
 
+    // Portfolio/demo deploys have no real payment provider — when true, checkout
+    // skips Mercado Pago and simulates an approved payment.
+    @Value("${app.payments.demo-mode:false}")
+    private boolean paymentsDemoMode;
+
     public OrderServiceImp(OrderRepository orderRepository, CartRepository cartRepository, ProductRepository productRepository, ShippingService shippingService){
         this.orderRepository = orderRepository;
         this.cartRepository = cartRepository;
@@ -64,6 +69,7 @@ public class OrderServiceImp implements OrderService {
     }
 
 
+    @Transactional
     public String checkout(Long userId) throws MPException, MPApiException {
         Cart cart = cartRepository.findByUserIdAndStatus(userId, CartStatus.ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
@@ -97,12 +103,35 @@ public class OrderServiceImp implements OrderService {
 
         Order order = createOrder(userId, cart);
 
+        if (paymentsDemoMode) {
+            return completeDemoCheckout(order, cart);
+        }
+
         if (order.getMercadoPagoPreferenceId() != null) {
             return "https://sandbox.mercadopago.com.br/checkout/v1/redirect?pref_id="
                     + order.getMercadoPagoPreferenceId();
         }
 
         return createCheckout(order, cart);
+    }
+
+    /**
+     * Simulates an approved payment for demo deploys: marks the order PAID,
+     * decrements stock and clears the cart — the same effect the Mercado Pago
+     * "approved" webhook would have — then sends the user to the success page.
+     */
+    private String completeDemoCheckout(Order order, Cart cart) {
+        order.setStatus(OrderStatus.PAID);
+        order.setPaidAt(LocalDateTime.now());
+        order.setMercadoPagoPreferenceId("demo-pref-" + order.getId());
+        order.setMercadoPagoPaymentId("demo-pay-" + order.getId());
+        order.getItems().forEach(item ->
+                productRepository.decrementStock(item.getProductId(), item.getQuantity()));
+        orderRepository.save(order);
+
+        cartRepository.delete(cart);
+
+        return frontendUrl + "/orders/success?external_reference=" + order.getId();
     }
 
 

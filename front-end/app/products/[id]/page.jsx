@@ -63,13 +63,16 @@ export default function ProductDetailPage() {
     return main?.url;
   }, [product]);
 
-  const price = product?.priceDiscount || product?.priceOriginal || 0;
-  const originalPrice = product?.priceDiscount ? product?.priceOriginal : null;
+  // priceDiscount is a fraction (e.g. 0.10 = 10% off), not an absolute price.
+  // finalPrice is the discounted price (null when there's no discount).
+  const hasDiscount =
+    typeof product?.priceDiscount === "number" && product.priceDiscount > 0;
+  const price = product?.finalPrice ?? product?.priceOriginal ?? 0;
+  const originalPrice = hasDiscount ? product?.priceOriginal : null;
 
-  const discountPercentage = useMemo(() => {
-    if (!originalPrice || !price) return 0;
-    return Math.round(((originalPrice - price) / originalPrice) * 100);
-  }, [price, originalPrice]);
+  const discountPercentage = hasDiscount
+    ? Math.round(product.priceDiscount * 100)
+    : 0;
 
   const handleQuantityChange = (newQty) => {
     setQuantity(newQty >= 1 ? newQty : 1);

@@ -43,7 +43,7 @@ public class Product {
     @Column(nullable  = true)
     private BigDecimal priceDiscount;
 
-    @Formula("price_original * (1 - price_discount)")
+    @Formula("price_original * (1 - COALESCE(price_discount, 0))")
     private BigDecimal finalPrice;
 
     @ManyToMany()

@@ -15,7 +15,7 @@ import com.project.API.user.UserAdress;
 import com.project.API.user.UserAdressRepository;
 import com.project.API.user.UserRepository;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Profile;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -24,7 +24,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
-@Profile("local")
+@ConditionalOnProperty(name = "app.seed-demo-data", havingValue = "true")
 public class DataSeeder implements CommandLineRunner {
 
     private final CategoryRepository categoryRepository;

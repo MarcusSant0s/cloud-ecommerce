@@ -116,6 +116,9 @@ Defined in the root `.env` and consumed by `docker-compose.yml`:
 | `AWS_ACCESS_KEY_ID` / `AWS_SECRET_KEY` | AWS credentials for S3 (region `sa-east-1`) |
 | `EMAIL_ADMIN` / `PASSWORD_ADMIN` | Credentials for the auto-seeded admin user |
 | `EC2_PUBLIC_IP` | Public host used to build the frontend's `NEXT_PUBLIC_API_URL` |
+| `APP_SEED_DEMO_DATA` | `true` to seed the demo dataset (products, users, orders) on startup. Default `false`. Idempotent — skips if products already exist. |
+| `DDL_AUTO` | Hibernate `ddl-auto` for prod. Default `validate`; use `update` on a fresh demo DB so the schema is created before seeding. |
+| `PAYMENTS_DEMO_MODE` | `true` to skip Mercado Pago at checkout and simulate an approved payment (order marked PAID, stock decremented, cart cleared). Default `false`. Use on demos without a real MP token. |
 
 > **Note:** never commit real secrets. Keep `.env` out of version control.
 

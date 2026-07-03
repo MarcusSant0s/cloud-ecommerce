@@ -7,10 +7,11 @@ import { Label } from "@/primitives/label";
 import { Separator } from "@/primitives/separator";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import { sanitizeRedirect } from "@/lib/utils";
 
 export default function SignInPageClient() {
   const router = useRouter();
@@ -20,6 +21,13 @@ export default function SignInPageClient() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [redirectQs, setRedirectQs] = useState("");
+
+  // Preserve the ?redirect= target so the "Cadastre-se" link keeps it too.
+  useEffect(() => {
+    const redirect = new URLSearchParams(window.location.search).get("redirect");
+    if (redirect) setRedirectQs(`?redirect=${encodeURIComponent(redirect)}`);
+  }, []);
 
   const handleEmailLogin = async (e) => {
     e.preventDefault();
@@ -27,7 +35,8 @@ export default function SignInPageClient() {
     setLoading(true);
     try {
       await login(email, password);
-      router.push("/");
+      const redirect = new URLSearchParams(window.location.search).get("redirect");
+      router.push(sanitizeRedirect(redirect));
     } catch (err) {
       setError("E-mail ou senha inválidos");
       console.error(err);
@@ -121,7 +130,7 @@ export default function SignInPageClient() {
                 Não tem uma conta?{" "}
                 <Link
                   className="text-primary underline-offset-4 hover:underline"
-                  href="/auth/sign-up"
+                  href={`/auth/sign-up${redirectQs}`}
                 >
                   Cadastre-se
                 </Link>

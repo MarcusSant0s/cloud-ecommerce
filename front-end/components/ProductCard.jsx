@@ -24,14 +24,14 @@ const ProductCard = ({ product }) => {
 
   const inStock = stockQuantity > 0;
 
-  const hasDiscount =
-    typeof discountPrice === "number" &&
-    discountPrice > 0 &&
-    discountPrice < originalPrice;
+  // priceDiscount is a fraction (e.g. 0.10 = 10% off), not an absolute price
+  const hasDiscount = typeof discountPrice === "number" && discountPrice > 0;
 
-  const discountPercent = hasDiscount
-    ? Math.round(((originalPrice - discountPrice) / originalPrice) * 100)
-    : 0;
+  const discountPercent = hasDiscount ? Math.round(discountPrice * 100) : 0;
+
+  // finalPrice is null for products without a discount — fall back to the
+  // original price so it never renders as R$ 0,00
+  const displayPrice = finalPrice ?? originalPrice;
 
   const handleAddToCart = async (e) => {
     e.preventDefault();
@@ -94,7 +94,7 @@ const ProductCard = ({ product }) => {
             {hasDiscount ? (
               <>
                 <span className="text-sm font-bold text-primary sm:text-base">
-                  R$ {finalPrice.toFixed(2)}
+                  R$ {displayPrice.toFixed(2)}
                 </span>
                 <span className="text-[10px] line-through text-muted-foreground sm:text-xs">
                   R$ {originalPrice.toFixed(2)}
@@ -102,7 +102,7 @@ const ProductCard = ({ product }) => {
               </>
             ) : (
               <span className="text-sm font-bold sm:text-base">
-                R$ {finalPrice?.toFixed(2) ?? "0.00"}
+                R$ {displayPrice.toFixed(2)}
               </span>
             )}
           </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import api from "@/services/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -9,6 +10,7 @@ const CartContext = React.createContext(undefined);
 
 export function CartProvider({ children }) {
   const { user } = useAuth();
+  const router = useRouter();
   const [items, setItems] = React.useState([]);
   const [isLoading, setIsLoading] = React.useState(true);
 
@@ -53,8 +55,13 @@ export function CartProvider({ children }) {
   /* ----------------------------- Actions -------------------------------- */
 
   const addItem = React.useCallback(async (product, qty = 1) => {
-    if (!user?.id) return ;
-// router.push('/auth/sign-in')
+    if (!user?.id) {
+      toast.error("Faça login para adicionar itens ao carrinho");
+      const current = window.location.pathname + window.location.search;
+      router.push(`/auth/sign-in?redirect=${encodeURIComponent(current)}`);
+      return;
+    }
+
     try {
       await api.post(`/cart/${user.id}/add`, null, {
         params: { productId: product.id, quantity: qty }
@@ -68,10 +75,10 @@ export function CartProvider({ children }) {
         return toast.error("Estoque Insuficiente")
       } else{
       return toast.error("Erro ao adicionar item");
-        
+
       }
     }
-  }, [user?.id, fetchCart]);
+  }, [user?.id, fetchCart, router]);
 
   const updateQuantity = React.useCallback(async (cartItemId, isIncrement) => {
     if (!user?.id) return;

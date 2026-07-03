@@ -3,10 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { sanitizeRedirect } from "@/lib/utils";
 import { Button } from "@/primitives/button";
 import { Card, CardContent } from "@/primitives/card";
 import { Input } from "@/primitives/input";
@@ -30,6 +31,13 @@ export default function SignUpPageClient() {
   const [loading, setLoading] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
   const [cepError, setCepError] = useState("");
+  const [redirectQs, setRedirectQs] = useState("");
+
+  // Preserve the ?redirect= target so the "Entrar" link keeps it too.
+  useEffect(() => {
+    const redirect = new URLSearchParams(window.location.search).get("redirect");
+    if (redirect) setRedirectQs(`?redirect=${encodeURIComponent(redirect)}`);
+  }, []);
 
   const handleCepChange = async (e) => {
     const value = e.target.value.replace(/\D/g, "");
@@ -62,7 +70,8 @@ export default function SignUpPageClient() {
     setLoading(true);
     try {
       await register(firstName, lastName, email, password, street, city, cep, numberAddress);
-      router.push("/");
+      const redirect = new URLSearchParams(window.location.search).get("redirect");
+      router.push(sanitizeRedirect(redirect));
     } catch (err) {
       setError("Falha no cadastro. Tente novamente.");
       console.error(err);
@@ -236,7 +245,7 @@ export default function SignUpPageClient() {
 
               <div className="mt-6 text-center text-sm text-muted-foreground">
                 Já tem uma conta?{" "}
-                <Link href="/auth/sign-in" className="text-primary underline-offset-4 hover:underline">
+                <Link href={`/auth/sign-in${redirectQs}`} className="text-primary underline-offset-4 hover:underline">
                   Entrar
                 </Link>
               </div>
