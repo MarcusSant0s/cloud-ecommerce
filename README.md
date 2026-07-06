@@ -113,9 +113,10 @@ Defined in the root `.env` and consumed by `docker-compose.yml`:
 | `DB_NAME` / `DB_USER` / `DB_PASSWORD` / `DB_HOST` | PostgreSQL connection settings |
 | `JWT_SECRET_KEY` | Secret used to sign JWT tokens |
 | `MP_ACCESS_TOKEN` | Mercado Pago access token |
+| `MP_WEBHOOK_SECRET` | Mercado Pago webhook signing secret ("assinatura secreta") used to verify `POST /order/webhook`. Blank => signature check skipped (logs a warning). Required in prod for real payments. |
 | `AWS_ACCESS_KEY_ID` / `AWS_SECRET_KEY` | AWS credentials for S3 (region `sa-east-1`) |
 | `EMAIL_ADMIN` / `PASSWORD_ADMIN` | Credentials for the auto-seeded admin user |
-| `EC2_PUBLIC_IP` | Public host used to build the frontend's `NEXT_PUBLIC_API_URL` |
+| `APP_BASE_URL` | Public HTTPS base URL (scheme + host, e.g. `https://ecommerce-marcus.duckdns.org`). Builds the frontend's `NEXT_PUBLIC_API_URL`, the MP webhook notification URL, and the MP back URLs. |
 | `APP_SEED_DEMO_DATA` | `true` to seed the demo dataset (products, users, orders) on startup. Default `false`. Idempotent — skips if products already exist. |
 | `DDL_AUTO` | Hibernate `ddl-auto` for prod. Default `validate`; use `update` on a fresh demo DB so the schema is created before seeding. |
 | `PAYMENTS_DEMO_MODE` | `true` to skip Mercado Pago at checkout and simulate an approved payment (order marked PAID, stock decremented, cart cleared). Default `false`. Use on demos without a real MP token. |

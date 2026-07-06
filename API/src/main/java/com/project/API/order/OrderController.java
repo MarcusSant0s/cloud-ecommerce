@@ -20,9 +20,11 @@ import java.util.Map;
 public class OrderController {
 
     private final OrderService orderService;
+    private final MercadoPagoWebhookValidator webhookValidator;
 
-    public OrderController(OrderService orderService){
+    public OrderController(OrderService orderService, MercadoPagoWebhookValidator webhookValidator){
         this.orderService = orderService;
+        this.webhookValidator = webhookValidator;
     }
 
 
@@ -59,17 +61,28 @@ public class OrderController {
     }
 
     @PostMapping("/webhook")
-    public ResponseEntity<Void> webhook(@RequestBody Map<String, Object> payload)
-            throws MPException, MPApiException {
-        String topic = (String) payload.get("type");
+    public ResponseEntity<Void> webhook(
+            @RequestBody Map<String, Object> payload,
+            @RequestParam(name = "data.id", required = false) String dataIdParam,
+            @RequestHeader(name = "x-signature", required = false) String signature,
+            @RequestHeader(name = "x-request-id", required = false) String requestId
+    ) throws MPException, MPApiException {
 
+        Map<String, Object> data = (Map<String, Object>) payload.get("data");
+        String bodyPaymentId = (data != null && data.get("id") != null)
+                ? data.get("id").toString()
+                : null;
+
+        // MP signs the `data.id` query parameter; fall back to the body id if absent.
+        String signedId = (dataIdParam != null && !dataIdParam.isBlank()) ? dataIdParam : bodyPaymentId;
+        webhookValidator.validate(signature, requestId, signedId);
+
+        String topic = (String) payload.get("type");
         if(!"payment".equals(topic)) {
             return ResponseEntity.ok().build();
         }
 
-        Map<String, Object> data = (Map<String, Object>) payload.get("data");
-        String paymentId = data.get("id").toString();
-        orderService.processPayment(paymentId);
+        orderService.processPayment(bodyPaymentId);
 
         return ResponseEntity.ok().build();
     }

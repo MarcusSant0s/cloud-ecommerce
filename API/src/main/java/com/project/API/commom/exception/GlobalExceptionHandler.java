@@ -71,4 +71,10 @@ public class GlobalExceptionHandler {
                 .body(new ApiError(400, "ADDRESS_REQUIRED", ex.getMessage(), null));
     }
 
+    @ExceptionHandler(InvalidWebhookSignatureException.class)
+    public ResponseEntity<ApiError> handleInvalidWebhookSignature(InvalidWebhookSignatureException ex){
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ApiError(401, "INVALID_WEBHOOK_SIGNATURE", ex.getMessage(), null));
+    }
+
 }
