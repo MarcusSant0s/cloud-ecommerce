@@ -63,7 +63,8 @@ export default function AdminUsers() {
         <p className="text-sm text-muted-foreground">No users found.</p>
       ) : (
         <div className="border rounded-lg overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[560px] text-sm">
             <thead className="bg-muted/50 text-muted-foreground">
               <tr>
                 <th className="text-left px-4 py-3 font-medium">User</th>
@@ -131,6 +132,7 @@ export default function AdminUsers() {
               })}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

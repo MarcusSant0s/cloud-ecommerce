@@ -29,8 +29,8 @@ export default async function Categories(){
               <Link
                 aria-label={`Ver produtos de ${category.name}`}
                 className="group relative flex flex-col space-y-4 overflow-hidden rounded-2xl border bg-card shadow transition-all duration-300 hover:shadow-lg"
-                href={`/products?category=${category.name.toLowerCase()}`}
-                key={category.name}
+                href={`/products?categoryId=${category.id}`}
+                key={category.id}
               >
                 <div className="relative aspect-[4/3] overflow-hidden">
                   <div className="absolute inset-0 z-10 bg-gradient-to-t from-background/80 to-transparent" />

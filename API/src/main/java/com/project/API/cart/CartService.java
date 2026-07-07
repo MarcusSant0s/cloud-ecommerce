@@ -142,6 +142,7 @@ public class CartService {
 
         //If cart items IS empty
         if(cart.getCartItem().isEmpty()){
+            return null;
 
         }
         List<CartResponseDTO.CartItemDTO> itemDTOs = cart.getCartItem().stream()

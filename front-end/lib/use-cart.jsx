@@ -24,7 +24,7 @@ export function CartProvider({ children }) {
     try {
       setIsLoading(true);
       const res = await api.get(`/cart/${user.id}`);
-      
+      console.log(res)
       // Ajustado para ler o seu DTO achatado (CartResponseDTO)
       if (res.data && res.data.items) {
         const formattedItems = res.data.items.map(item => ({

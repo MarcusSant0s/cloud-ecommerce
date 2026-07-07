@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, Fragment } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
 import {
-  Plus, Pencil, Trash2, Images, Star, Upload, ChevronLeft, ChevronRight, Loader2, Search, X,
+  Plus, Pencil, Trash2, Images, Star, Upload, ChevronLeft, ChevronRight, Loader2, Search, X, Check,
 } from "lucide-react";
 import api from "@/services/api";
 import { Button } from "@/primitives/button";
@@ -66,6 +66,14 @@ export default function AdminProducts() {
 
   const [errors, setErrors] = useState(EMPTY_ERRORS);
   const [shaking, setShaking] = useState({});
+  const [dragActive, setDragActive] = useState(false);
+
+  function addFiles(fileList) {
+    const picked = Array.from(fileList ?? []).filter(f => f.type.startsWith("image/"));
+    if (picked.length === 0) return;
+    setForm(prev => ({ ...prev, files: [...prev.files, ...picked] }));
+    clearError("files");
+  }
 
   function triggerShake(fields) {
     const s = {};
@@ -270,6 +278,12 @@ export default function AdminProducts() {
     }));
   }
 
+  const priceNum = parseFloat(form.priceOriginal);
+  const discNum = parseFloat(form.priceDiscount);
+  const hasPrice = !isNaN(priceNum) && priceNum >= 0;
+  const hasDiscount = !isNaN(discNum) && discNum > 0 && discNum <= 1;
+  const finalPrice = hasPrice ? (hasDiscount ? priceNum * (1 - discNum) : priceNum) : null;
+
   return (
     <div>
       <style>{`
@@ -333,7 +347,8 @@ export default function AdminProducts() {
         <p className="text-sm text-muted-foreground">No products found.</p>
       ) : (
         <div className="border rounded-lg overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[560px] text-sm">
             <thead className="bg-muted/50 text-muted-foreground">
               <tr>
                 <th className="text-left px-4 py-3 font-medium">Product</th>
@@ -394,7 +409,7 @@ export default function AdminProducts() {
                   {confirmId === product.id && (
                     <tr className="bg-destructive/5">
                       <td colSpan={5} className="px-4 py-3">
-                        <div className="flex items-center gap-3 text-sm">
+                        <div className="flex flex-wrap items-center gap-3 text-sm">
                           <span className="text-destructive font-medium">
                             Delete &ldquo;{product.name}&rdquo;? This cannot be undone.
                           </span>
@@ -412,6 +427,7 @@ export default function AdminProducts() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
@@ -439,139 +455,187 @@ export default function AdminProducts() {
             </p>
           </SheetHeader>
 
-          <form id="product-form" onSubmit={handleSubmit} className="flex flex-col gap-5 p-4">
-            <div className="grid gap-2">
-              <Label htmlFor="p-name">Name <span className="text-destructive">*</span></Label>
-              <div className={shaking.name ? "shake" : ""}>
-                <Input
-                  id="p-name"
-                  value={form.name}
-                  onChange={e => {
-                    setForm(prev => ({ ...prev, name: e.target.value }));
-                    if (e.target.value.trim()) clearError("name");
-                  }}
-                  className={errors.name ? "border-destructive focus-visible:ring-destructive/30" : ""}
-                  placeholder="Product name"
+          <form id="product-form" onSubmit={handleSubmit} className="flex flex-col gap-7 p-4">
+
+            {/* ── Details ─────────────────────────────────────────── */}
+            <section className="grid gap-4">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Details</h3>
+
+              <div className="grid gap-2">
+                <Label htmlFor="p-name">Name <span className="text-destructive">*</span></Label>
+                <div className={shaking.name ? "shake" : ""}>
+                  <Input
+                    id="p-name"
+                    value={form.name}
+                    onChange={e => {
+                      setForm(prev => ({ ...prev, name: e.target.value }));
+                      if (e.target.value.trim()) clearError("name");
+                    }}
+                    className={errors.name ? "border-destructive focus-visible:ring-destructive/30" : ""}
+                    placeholder="Product name"
+                  />
+                </div>
+                {errors.name && <p className="text-xs text-destructive">Name is required.</p>}
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="p-desc">Description</Label>
+                <textarea
+                  id="p-desc"
+                  value={form.description}
+                  onChange={e => setForm(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Product description"
+                  rows={3}
+                  className="flex w-full rounded-md border bg-transparent px-3 py-2 text-sm
+                    placeholder:text-muted-foreground focus-visible:outline-none
+                    focus-visible:ring-3 focus-visible:ring-ring/50 resize-none"
                 />
               </div>
-              {errors.name && <p className="text-xs text-destructive">Name is required.</p>}
-            </div>
+            </section>
 
-            <div className="grid gap-2">
-              <Label htmlFor="p-desc">Description</Label>
-              <textarea
-                id="p-desc"
-                value={form.description}
-                onChange={e => setForm(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Product description"
-                rows={3}
-                className="flex w-full rounded-md border bg-transparent px-3 py-2 text-sm
-                  placeholder:text-muted-foreground focus-visible:outline-none
-                  focus-visible:ring-3 focus-visible:ring-ring/50 resize-none"
-              />
-            </div>
+            {/* ── Pricing & stock ─────────────────────────────────── */}
+            <section className="grid gap-4 border-t pt-6">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Pricing &amp; stock</h3>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="p-price">Price (R$) <span className="text-destructive">*</span></Label>
-                <div className={shaking.priceOriginal ? "shake" : ""}>
-                  <Input
-                    id="p-price"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={form.priceOriginal}
-                    onChange={e => {
-                      setForm(prev => ({ ...prev, priceOriginal: e.target.value }));
-                      const v = parseFloat(e.target.value);
-                      if (!isNaN(v) && v >= 0) clearError("priceOriginal");
-                    }}
-                    className={errors.priceOriginal ? "border-destructive focus-visible:ring-destructive/30" : ""}
-                    placeholder="0.00"
-                  />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="p-price">Price (R$) <span className="text-destructive">*</span></Label>
+                  <div className={shaking.priceOriginal ? "shake" : ""}>
+                    <Input
+                      id="p-price"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={form.priceOriginal}
+                      onChange={e => {
+                        setForm(prev => ({ ...prev, priceOriginal: e.target.value }));
+                        const v = parseFloat(e.target.value);
+                        if (!isNaN(v) && v >= 0) clearError("priceOriginal");
+                      }}
+                      className={errors.priceOriginal ? "border-destructive focus-visible:ring-destructive/30" : ""}
+                      placeholder="0.00"
+                    />
+                  </div>
+                  {errors.priceOriginal && <p className="text-xs text-destructive">Valid price required.</p>}
                 </div>
-                {errors.priceOriginal && <p className="text-xs text-destructive">Valid price required.</p>}
+
+                <div className="grid gap-2">
+                  <Label htmlFor="p-discount">Discount</Label>
+                  <div className={`relative ${shaking.priceDiscount ? "shake" : ""}`}>
+                    <Input
+                      id="p-discount"
+                      type="number"
+                      min="0"
+                      max="1"
+                      step="0.01"
+                      value={form.priceDiscount}
+                      onChange={e => {
+                        setForm(prev => ({ ...prev, priceDiscount: e.target.value }));
+                        const v = parseFloat(e.target.value);
+                        if (e.target.value === "" || (!isNaN(v) && v >= 0 && v <= 1)) clearError("priceDiscount");
+                      }}
+                      onBlur={e => {
+                        const v = parseFloat(e.target.value);
+                        if (!isNaN(v)) setForm(prev => ({ ...prev, priceDiscount: v.toFixed(2) }));
+                      }}
+                      className={errors.priceDiscount ? "border-destructive focus-visible:ring-destructive/30" : ""}
+                      placeholder="0.00"
+                    />
+                  </div>
+                  {errors.priceDiscount
+                    ? <p className="text-xs text-destructive">Must be between 0.00 and 1.00.</p>
+                    : <p className="text-xs text-muted-foreground">Fraction off — 0.10 means 10% off.</p>}
+                </div>
               </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="p-discount">Discount (0.10 = 10%)</Label>
-                <div className={shaking.priceDiscount ? "shake" : ""}>
-                  <Input
-                    id="p-discount"
-                    type="number"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    value={form.priceDiscount}
-                    onChange={e => {
-                      setForm(prev => ({ ...prev, priceDiscount: e.target.value }));
-                      const v = parseFloat(e.target.value);
-                      if (e.target.value === "" || (!isNaN(v) && v >= 0 && v <= 1)) clearError("priceDiscount");
-                    }}
-                    onBlur={e => {
-                      const v = parseFloat(e.target.value);
-                      if (!isNaN(v)) setForm(prev => ({ ...prev, priceDiscount: v.toFixed(2) }));
-                    }}
-                    className={errors.priceDiscount ? "border-destructive focus-visible:ring-destructive/30" : ""}
-                    placeholder="0.00"
-                  />
+              <div className="grid grid-cols-1 gap-4 items-start sm:grid-cols-2">
+                <div className="grid gap-2">
+                  <Label htmlFor="p-qty">Stock <span className="text-destructive">*</span></Label>
+                  <div className={shaking.quantity ? "shake" : ""}>
+                    <Input
+                      id="p-qty"
+                      type="number"
+                      min="0"
+                      value={form.quantity}
+                      onChange={e => {
+                        setForm(prev => ({ ...prev, quantity: e.target.value }));
+                        const v = parseInt(e.target.value, 10);
+                        if (!isNaN(v) && v >= 0) clearError("quantity");
+                      }}
+                      className={errors.quantity ? "border-destructive focus-visible:ring-destructive/30" : ""}
+                      placeholder="0"
+                    />
+                  </div>
+                  {errors.quantity && <p className="text-xs text-destructive">Valid stock quantity required.</p>}
                 </div>
-                {errors.priceDiscount && <p className="text-xs text-destructive">Must be between 0.00 and 1.00.</p>}
-              </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="p-qty">Stock <span className="text-destructive">*</span></Label>
-                <div className={shaking.quantity ? "shake" : ""}>
-                  <Input
-                    id="p-qty"
-                    type="number"
-                    min="0"
-                    value={form.quantity}
-                    onChange={e => {
-                      setForm(prev => ({ ...prev, quantity: e.target.value }));
-                      const v = parseInt(e.target.value, 10);
-                      if (!isNaN(v) && v >= 0) clearError("quantity");
-                    }}
-                    className={errors.quantity ? "border-destructive focus-visible:ring-destructive/30" : ""}
-                    placeholder="0"
-                  />
+                {/* Live final-price preview */}
+                <div className="grid gap-2">
+                  <Label>Customer pays</Label>
+                  <div className="flex h-9 items-center gap-2 rounded-md border bg-muted/40 px-3">
+                    {finalPrice === null ? (
+                      <span className="text-sm text-muted-foreground">—</span>
+                    ) : (
+                      <>
+                        <span className="text-sm font-semibold text-foreground">{BRL.format(finalPrice)}</span>
+                        {hasDiscount && (
+                          <>
+                            <span className="text-xs text-muted-foreground line-through">{BRL.format(priceNum)}</span>
+                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">-{Math.round(discNum * 100)}%</Badge>
+                          </>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
-                {errors.quantity && <p className="text-xs text-destructive">Valid stock quantity required.</p>}
               </div>
-            </div>
+            </section>
 
-            <div className="grid gap-2">
-              <Label>
-                Images {!editingId && <span className="text-destructive">*</span>}
-                {editingId && <span className="text-muted-foreground font-normal"> (optional — adds to existing)</span>}
-              </Label>
+            {/* ── Images ──────────────────────────────────────────── */}
+            <section className="grid gap-3 border-t pt-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Images {!editingId && <span className="text-destructive">*</span>}
+                </h3>
+                {form.files.length > 0 && (
+                  <span className="text-xs text-muted-foreground">{form.files.length} selected</span>
+                )}
+              </div>
+              {editingId && (
+                <p className="-mt-1 text-xs text-muted-foreground">Optional — new images are added to the existing ones.</p>
+              )}
+
               <div className={shaking.files ? "shake" : ""}>
                 <label
-                  className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-lg p-5 cursor-pointer
-                    text-muted-foreground text-sm hover:bg-accent/50 transition-colors
-                    ${errors.files ? "border-destructive text-destructive" : ""}`}
+                  onDragOver={e => { e.preventDefault(); setDragActive(true); }}
+                  onDragLeave={e => { e.preventDefault(); setDragActive(false); }}
+                  onDrop={e => { e.preventDefault(); setDragActive(false); addFiles(e.dataTransfer.files); }}
+                  className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-xl p-7 cursor-pointer
+                    text-sm transition-colors
+                    ${dragActive ? "border-primary bg-primary/5 text-primary"
+                      : errors.files ? "border-destructive text-destructive"
+                      : "border-border text-muted-foreground hover:bg-accent/50"}`}
                 >
-                  <Upload size={20} />
-                  <span>Click to select images</span>
+                  <Upload size={22} />
+                  <span className="font-medium">
+                    {dragActive ? "Drop images here" : "Drag & drop or click to upload"}
+                  </span>
+                  <span className="text-xs text-muted-foreground">PNG, JPG — the first image is the main one</span>
                   <input
                     type="file"
                     accept="image/*"
                     multiple
                     className="sr-only"
-                    onChange={e => {
-                      const picked = Array.from(e.target.files ?? []);
-                      setForm(prev => ({ ...prev, files: [...prev.files, ...picked] }));
-                      if (picked.length > 0) clearError("files");
-                      e.target.value = "";
-                    }}
+                    onChange={e => { addFiles(e.target.files); e.target.value = ""; }}
                   />
                 </label>
               </div>
               {errors.files && <p className="text-xs text-destructive">At least one image is required.</p>}
+
               {form.files.length > 0 && (
                 <div className="grid grid-cols-3 gap-2 mt-1">
                   {form.files.map((file, i) => (
-                    <div key={i} className="relative rounded-md overflow-hidden border aspect-square group">
+                    <div key={i} className="relative rounded-lg overflow-hidden border aspect-square group">
                       <img
                         src={URL.createObjectURL(file)}
                         alt={file.name}
@@ -587,7 +651,7 @@ export default function AdminProducts() {
                       <button
                         type="button"
                         onClick={() => setForm(prev => ({ ...prev, files: prev.files.filter((_, j) => j !== i) }))}
-                        className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                         aria-label="Remove"
                       >
                         <Trash2 size={12} />
@@ -596,32 +660,44 @@ export default function AdminProducts() {
                   ))}
                 </div>
               )}
-            </div>
+            </section>
 
+            {/* ── Categories ──────────────────────────────────────── */}
             {categories.length > 0 && (
-              <div className="grid gap-2">
-                <Label>Categories</Label>
+              <section className="grid gap-3 border-t pt-6">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Categories
+                  {form.categoryIds.length > 0 && (
+                    <span className="ml-1.5 font-normal normal-case text-muted-foreground">
+                      ({form.categoryIds.length} selected)
+                    </span>
+                  )}
+                </h3>
                 <div className="flex flex-wrap gap-2">
-                  {categories.map(cat => (
-                    <label
-                      key={cat.id}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-sm cursor-pointer transition-colors select-none
-                        ${form.categoryIds.includes(cat.id)
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : "bg-background hover:bg-accent"
-                        }`}
-                    >
-                      <input
-                        type="checkbox"
-                        className="sr-only"
-                        checked={form.categoryIds.includes(cat.id)}
-                        onChange={() => toggleCategory(cat.id)}
-                      />
-                      {cat.name}
-                    </label>
-                  ))}
+                  {categories.map(cat => {
+                    const active = form.categoryIds.includes(cat.id);
+                    return (
+                      <label
+                        key={cat.id}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm cursor-pointer transition-colors select-none
+                          ${active
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-background hover:bg-accent"
+                          }`}
+                      >
+                        <input
+                          type="checkbox"
+                          className="sr-only"
+                          checked={active}
+                          onChange={() => toggleCategory(cat.id)}
+                        />
+                        {active && <Check size={13} />}
+                        {cat.name}
+                      </label>
+                    );
+                  })}
                 </div>
-              </div>
+              </section>
             )}
           </form>
 

@@ -1,7 +1,7 @@
 import { Geist, Geist_Mono, Cormorant_Garamond, Jost } from "next/font/google";
 import "./globals.css";
 
-import Navbar from '../components/Headers/Navbar'
+import NavbarContainer from '../components/Headers/NavbarContainer'
 import Footer from "@/components/Footer";
 
 import { Toaster } from "sonner";
@@ -77,7 +77,7 @@ export default function RootLayout({ children }) {
       >
         <AuthProvider>
         <CartProvider>
-        <Navbar> </Navbar> 
+        <NavbarContainer />
         {children}
         </CartProvider>
         </AuthProvider>

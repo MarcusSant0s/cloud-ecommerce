@@ -90,7 +90,8 @@ export default function AdminOrders() {
         <p className="text-sm text-muted-foreground">No orders found.</p>
       ) : (
         <div className="border rounded-lg overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[560px] text-sm">
             <thead className="bg-muted/50 text-muted-foreground">
               <tr>
                 <th className="text-left px-4 py-3 font-medium">Order</th>
@@ -161,6 +162,7 @@ export default function AdminOrders() {
               })}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
