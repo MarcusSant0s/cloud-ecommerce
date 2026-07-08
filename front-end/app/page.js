@@ -19,26 +19,21 @@ export default  function Home() {
 
 
   return (
-    <div className="">
-      <main className="
-      flex min-h-screen flex-col gap-y-16
-       bg-gradient-to-b from-muted/50
-          via-muted/25 to-background
-          ">
+    <div>
+      <main className="flex min-h-screen flex-col bg-background">
 
         <HeroBanner />
 
-        <Categories/>
+        <Categories />
 
-         <ProductSection />
+        <ProductSection />
 
-         <Testimonial
-          className="py-0"
+        <Testimonial
           description="Não acredite só em nós — ouça o que nossos clientes têm a dizer"
           testimonials={testimonials}
           title="O que nossos clientes dizem"
-         ></Testimonial>
-         
+        />
+
       </main>
     </div>
   );

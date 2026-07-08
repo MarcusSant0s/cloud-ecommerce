@@ -12,43 +12,76 @@ async function getCategories() {
   }
 }
 
+const colHead = "mb-4 text-[0.6rem] font-medium uppercase tracking-[0.25em] text-muted-foreground"
+const colLink = "text-sm text-muted-foreground transition-colors hover:text-foreground"
+
 const Footer = async () => {
   const categories = await getCategories();
 
   return (
-    <footer className="border-t bg-background">
-      <div className="container mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
-          <div className="space-y-4">
-            <Link className="flex items-center gap-2" href="/">
-              <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-xl font-bold tracking-tight text-transparent">
+    <footer className="border-t border-border/60 bg-background">
+      <div className="container mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-2 gap-10 md:grid-cols-4 md:gap-8">
+          {/* Brand */}
+          <div className="col-span-2 space-y-4 md:col-span-1">
+            <Link href="/" className="inline-block">
+              <span className="font-display text-2xl font-normal uppercase tracking-[0.3em] text-foreground">
                 Loja
               </span>
             </Link>
-            <p className="text-sm text-muted-foreground">
-              Sua loja completa de tecnologia. Produtos premium com preços competitivos e entrega rápida.
+            <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">
+              Peças selecionadas com curadoria. Elegância não é ser notada — é ser lembrada.
             </p>
           </div>
 
+          {/* Coleções */}
           <div>
-            <h3 className="mb-4 text-sm font-semibold">Loja</h3>
-            <ul className="space-y-2 text-sm">
-              <li><Link className="text-muted-foreground hover:text-foreground" href="/products">Todos os Produtos</Link></li>
+            <h3 className={colHead}>Coleções</h3>
+            <ul className="space-y-3">
+              <li><Link className={colLink} href="/products">Todos os Produtos</Link></li>
               {categories.map((category) => (
                 <li key={category.id}>
-                  <Link className="text-muted-foreground hover:text-foreground" href={`/products?categoryId=${category.id}`}>
+                  <Link className={`${colLink} capitalize`} href={`/products?categoryId=${category.id}`}>
                     {category.name}
                   </Link>
                 </li>
               ))}
             </ul>
           </div>
+
+          {/* Conta */}
+          <div>
+            <h3 className={colHead}>Conta</h3>
+            <ul className="space-y-3">
+              <li><Link className={colLink} href="/auth/sign-in">Entrar</Link></li>
+              <li><Link className={colLink} href="/auth/sign-up">Cadastrar</Link></li>
+              <li><Link className={colLink} href="/orders">Meus Pedidos</Link></li>
+              <li><Link className={colLink} href="/account-user">Minha Conta</Link></li>
+            </ul>
+          </div>
+
+          {/* Suporte */}
+          <div>
+            <h3 className={colHead}>Suporte</h3>
+            <ul className="space-y-3">
+              <li><Link className={colLink} href="/products">Central de Ajuda</Link></li>
+              <li><Link className={colLink} href="/products">Entrega e Frete</Link></li>
+              <li><Link className={colLink} href="/products">Trocas e Devoluções</Link></li>
+              <li><Link className={colLink} href="/products">Fale Conosco</Link></li>
+            </ul>
+          </div>
         </div>
 
-        <div className="mt-10 border-t pt-6">
-          <p className="text-center text-sm text-muted-foreground">
+        {/* Legal band */}
+        <div className="mt-14 flex flex-col items-center justify-between gap-4 border-t border-border/60 pt-6 sm:flex-row">
+          <p className="text-xs text-muted-foreground">
             © {new Date().getFullYear()} Loja. Todos os direitos reservados.
           </p>
+          <div className="flex items-center gap-6 text-xs uppercase tracking-[0.15em] text-muted-foreground">
+            <Link className="transition-colors hover:text-foreground" href="/products">Privacidade</Link>
+            <Link className="transition-colors hover:text-foreground" href="/products">Termos</Link>
+            <span>PT-BR · BRL</span>
+          </div>
         </div>
       </div>
     </footer>

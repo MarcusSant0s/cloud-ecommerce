@@ -43,16 +43,19 @@ export default function ProductPageClient({ categories, products, totalPages, cu
           {/* Heading & filters */}
           <div className="mb-6 flex flex-col gap-4">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Produtos</h1>
-              <p className="mt-1 text-sm text-muted-foreground md:text-base">
-                Explore nossos produtos e encontre algo que você vai amar.
+              <span className="text-[0.65rem] font-medium uppercase tracking-[0.25em] text-muted-foreground">
+                Catálogo
+              </span>
+              <h1 className="mt-2 font-display text-3xl font-normal uppercase tracking-[0.12em] md:text-4xl">Produtos</h1>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Explore nossas coleções e encontre algo que você vai amar.
               </p>
             </div>
 
             {/* Category pills — horizontally scrollable on mobile */}
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
               <Button
-                className="rounded-full shrink-0"
+                className="rounded-sm shrink-0 text-[0.7rem] uppercase tracking-[0.12em]"
                 size="sm"
                 variant={!selectedCategoryId ? "default" : "outline"}
                 onClick={() => updateParam("categoryId", null)}
@@ -62,7 +65,7 @@ export default function ProductPageClient({ categories, products, totalPages, cu
               {categories.map((category) => (
                 <Button
                   aria-pressed={category.id === Number(selectedCategoryId)}
-                  className="rounded-full shrink-0"
+                  className="rounded-sm shrink-0 text-[0.7rem] uppercase tracking-[0.12em]"
                   key={category.id}
                   onClick={() => updateParam("categoryId", category.id)}
                   size="sm"

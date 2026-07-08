@@ -118,14 +118,14 @@ export function CartClient({ className }) {
   const CartTrigger = (
     <Button
       aria-label="Open cart"
-      className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border bg-background shadow-sm transition-all hover:bg-accent"
+      className="relative inline-flex h-9 w-9 items-center justify-center rounded-sm border border-border bg-background transition-colors hover:bg-accent"
       size="icon"
       variant="outline"
     >
       <ShoppingCart className="h-4 w-4" />
       {isMounted && itemCount > 0 && (
-        <Badge 
-          className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground"
+        <Badge
+          className="absolute -top-1.5 -right-1.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-foreground text-[10px] font-medium text-background"
         >
           {itemCount}
         </Badge>
@@ -135,10 +135,10 @@ export function CartClient({ className }) {
 
   const CartContent = (
     <div className="flex flex-col h-full max-h-[100vh]">
-      <div className="flex items-center justify-between border-b px-6 py-4">
+      <div className="flex items-center justify-between border-b border-border/60 px-6 py-5">
         <div>
-          <div className="text-xl font-semibold">Seu Carrinho</div>
-          <div className="text-sm text-muted-foreground">
+          <div className="font-display text-lg font-normal uppercase tracking-[0.15em]">Seu Carrinho</div>
+          <div className="mt-0.5 text-[0.65rem] uppercase tracking-[0.15em] text-muted-foreground">
             {isLoading ? "Carregando..." : `${itemCount} item(s)`}
           </div>
         </div>
@@ -152,16 +152,16 @@ export function CartClient({ className }) {
               animate={{ opacity: 1 }}
               className="flex flex-col items-center justify-center py-12 text-center"
             >
-              <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-muted">
-                <ShoppingCart className="h-10 w-10 text-muted-foreground" />
+              <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-sm bg-muted">
+                <ShoppingCart className="h-9 w-9 text-muted-foreground" />
               </div>
-              <h3 className="mb-2 text-lg font-medium">Carrinho vazio</h3>
+              <h3 className="mb-2 font-display text-lg font-normal uppercase tracking-[0.12em]">Carrinho vazio</h3>
               <p className="mb-6 text-sm text-muted-foreground">
                 Você ainda não adicionou produtos.
               </p>
               <SheetClose asChild>
                 <Link href="/products">
-                  <Button onClick={() => setIsOpen(false)}>Ver Produtos</Button>
+                  <Button className="rounded-sm text-[0.7rem] uppercase tracking-[0.15em]" onClick={() => setIsOpen(false)}>Ver Produtos</Button>
                 </Link>
               </SheetClose>
             </motion.div>
@@ -174,9 +174,9 @@ export function CartClient({ className }) {
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className="group relative flex gap-4 rounded-lg border bg-card p-3 shadow-sm"
+                  className="group relative flex gap-4 rounded-sm border border-border/60 bg-card p-3"
                 >
-                  <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-md border">
+                  <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-sm border border-border/60">
                     <Image
                       alt={item.name}
                       fill
@@ -190,7 +190,7 @@ export function CartClient({ className }) {
                       <Link
                         href={`/products/${item.productId}`}
                         onClick={() => setIsOpen(false)}
-                        className="line-clamp-2 text-sm font-medium hover:text-primary transition-colors"
+                        className="line-clamp-2 font-display text-sm leading-snug tracking-[0.02em] transition-colors hover:text-muted-foreground"
                       >
                         {item.name}
                       </Link>
@@ -203,7 +203,7 @@ export function CartClient({ className }) {
                     </div>
 
                     <div className="mt-2 flex items-center justify-between">
-                      <div className="flex items-center rounded-md border bg-background">
+                      <div className="flex items-center rounded-sm border border-border bg-background">
                         <button
                           onClick={() => handleUpdateQuantity(item.cartItemId, item.quantity, false)}
                           disabled={item.quantity <= 1}
@@ -211,7 +211,7 @@ export function CartClient({ className }) {
                         >
                           <Minus className="h-3 w-3" />
                         </button>
-                        <span className="w-8 text-center text-xs font-semibold">
+                        <span className="w-8 text-center text-xs font-medium">
                           {item.quantity}
                         </span>
                         <button
@@ -221,7 +221,7 @@ export function CartClient({ className }) {
                           <Plus className="h-3 w-3" />
                         </button>
                       </div>
-                      <div className="text-sm font-bold text-primary">
+                      <div className="text-sm font-medium tracking-[0.03em] text-foreground">
                         {CURRENCY_FORMATTER.format(item.price * item.quantity)}
                       </div>
                     </div>
@@ -234,11 +234,11 @@ export function CartClient({ className }) {
       </div>
 
       {items.length > 0 && (
-        <div className="border-t bg-muted/20 px-6 py-6 space-y-4">
+        <div className="border-t border-border/60 bg-muted/20 px-6 py-6 space-y-4">
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Subtotal</span>
-              <span>{CURRENCY_FORMATTER.format(subtotal)}</span>
+              <span className="tracking-[0.03em]">{CURRENCY_FORMATTER.format(subtotal)}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Frete</span>
@@ -252,16 +252,16 @@ export function CartClient({ className }) {
               )}
             </div>
             <Separator />
-            <div className="flex justify-between text-base font-semibold">
-              <span>Total</span>
-              <span>{CURRENCY_FORMATTER.format(total)}</span>
+            <div className="flex items-baseline justify-between">
+              <span className="text-[0.65rem] font-medium uppercase tracking-[0.2em] text-muted-foreground">Total</span>
+              <span className="text-lg font-medium tracking-[0.03em] text-foreground">{CURRENCY_FORMATTER.format(total)}</span>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <Button variant="outline" onClick={() => clearCart()} className="w-full">
+            <Button variant="outline" onClick={() => clearCart()} className="w-full rounded-sm text-[0.7rem] uppercase tracking-[0.15em]">
               Limpar
             </Button>
-            <Button className="w-full" size="default" onClick={handleCreateOrder} disabled={isCheckingOut}>
+            <Button className="w-full rounded-sm text-[0.7rem] uppercase tracking-[0.15em]" size="default" onClick={handleCreateOrder} disabled={isCheckingOut}>
               {isCheckingOut ? <Loader2 className="h-4 w-4 animate-spin" /> : "Finalizar"}
             </Button>
           </div>

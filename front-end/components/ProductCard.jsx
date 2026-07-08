@@ -3,12 +3,11 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ShoppingCart, Loader2 } from "lucide-react";
+import { ShoppingBag, Loader2 } from "lucide-react";
 import { useCart } from "@/lib/use-cart";
 import { toast } from "sonner";
 
 const ProductCard = ({ product }) => {
-  const [isHovered, setIsHovered] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const { addItem } = useCart();
 
@@ -47,92 +46,68 @@ const ProductCard = ({ product }) => {
   };
 
   return (
-    <Link href={`/products/${id}`} className="group">
-      <div
-        className={`
-          relative flex h-full flex-col overflow-hidden rounded-lg border
-          bg-card shadow-sm transition-all duration-200
-          hover:shadow-md
-          ${isHovered ? "ring-1 ring-primary/20" : ""}
-        `}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
+    <Link href={`/products/${id}`} className="group block">
+      <div className="relative flex h-full flex-col overflow-hidden rounded-sm border border-border/60 bg-card transition-colors duration-300 hover:border-foreground/30">
         {/* Image */}
-        <div className="relative aspect-square overflow-hidden bg-muted">
+        <div className="relative aspect-[4/5] overflow-hidden bg-muted">
           {image ? (
             <Image
               src={image}
               alt={name}
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              className={`
-                object-cover transition-transform duration-300
-                ${isHovered ? "scale-105" : ""}
-              `}
+              className="object-cover transition-transform duration-[600ms] ease-out group-hover:scale-105"
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-muted-foreground text-xs">
+            <div className="flex h-full items-center justify-center text-[0.6rem] uppercase tracking-[0.2em] text-muted-foreground">
               Sem Imagem
             </div>
           )}
 
-          {hasDiscount && (
-            <span className="absolute right-2 top-2 z-10 rounded bg-destructive px-1.5 py-0.5 text-[10px] font-bold text-destructive-foreground sm:px-2 sm:text-xs">
-              -{discountPercent}% OFF
+          {hasDiscount && inStock && (
+            <span className="absolute left-3 top-3 z-10 bg-foreground px-2 py-0.5 text-[0.6rem] font-medium uppercase tracking-[0.12em] text-background">
+              -{discountPercent}%
             </span>
           )}
         </div>
 
         {/* Content */}
-        <div className="p-2.5 flex-grow sm:p-4">
-          <h3 className="line-clamp-2 text-xs font-medium transition-colors group-hover:text-primary sm:text-sm">
+        <div className="flex flex-grow flex-col p-3 sm:p-4">
+          <h3 className="line-clamp-2 font-display text-sm leading-snug tracking-[0.02em] text-foreground sm:text-base">
             {name}
           </h3>
 
-          <div className="mt-1.5 flex items-center gap-1.5 sm:mt-2 sm:gap-2">
-            {hasDiscount ? (
-              <>
-                <span className="text-sm font-bold text-primary sm:text-base">
-                  R$ {displayPrice.toFixed(2)}
-                </span>
-                <span className="text-[10px] line-through text-muted-foreground sm:text-xs">
-                  R$ {originalPrice.toFixed(2)}
-                </span>
-              </>
-            ) : (
-              <span className="text-sm font-bold sm:text-base">
-                R$ {displayPrice.toFixed(2)}
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-sm font-medium tracking-[0.03em] text-foreground sm:text-base">
+              R$ {displayPrice.toFixed(2)}
+            </span>
+            {hasDiscount && (
+              <span className="text-xs text-muted-foreground line-through">
+                R$ {originalPrice.toFixed(2)}
               </span>
             )}
           </div>
         </div>
 
         {/* Footer */}
-        <div className="p-2.5 pt-0 sm:p-4 sm:pt-0">
+        <div className="p-3 pt-0 sm:p-4 sm:pt-0">
           <button
             onClick={handleAddToCart}
             disabled={isAdding || !inStock}
-            className="
-              flex w-full items-center justify-center gap-1.5
-              rounded-md bg-primary px-2 py-2 text-xs font-medium
-              text-primary-foreground transition
-              hover:bg-primary/90 disabled:opacity-70
-              sm:gap-2 sm:px-4 sm:text-sm
-            "
+            className="flex w-full items-center justify-center gap-2 rounded-sm bg-foreground px-3 py-2.5 text-[0.65rem] font-medium uppercase tracking-[0.15em] text-background transition hover:bg-foreground/90 disabled:opacity-60"
           >
             {isAdding ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
             ) : (
-              <ShoppingCart className="h-3.5 w-3.5" />
+              inStock && <ShoppingBag className="h-3.5 w-3.5" />
             )}
-            {isAdding ? "Aguarde..." : inStock ? "Adicionar" : "Esgotado"}
+            {isAdding ? "Aguarde" : inStock ? "Adicionar" : "Esgotado"}
           </button>
         </div>
 
         {!inStock && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[1px]">
-            <span className="rounded bg-destructive px-3 py-1 text-xs font-bold text-white shadow-lg">
+          <div className="absolute inset-0 flex items-center justify-center bg-background/70 backdrop-blur-[1px]">
+            <span className="bg-foreground px-4 py-1 text-[0.6rem] font-medium uppercase tracking-[0.2em] text-background">
               Esgotado
             </span>
           </div>

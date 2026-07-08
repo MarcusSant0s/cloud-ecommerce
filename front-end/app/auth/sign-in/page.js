@@ -63,8 +63,11 @@ export default function SignInPageClient() {
       {/* Right — form */}
       <div className="flex items-center justify-center p-6 md:p-8">
         <div className="w-full max-w-md space-y-4">
-          <div className="space-y-1 text-center md:text-left">
-            <h2 className="text-3xl font-bold">Entrar</h2>
+          <div className="space-y-2 text-center md:text-left">
+            <span className="text-[0.65rem] font-medium uppercase tracking-[0.25em] text-muted-foreground">
+              Loja
+            </span>
+            <h2 className="font-display text-3xl font-normal uppercase tracking-[0.12em]">Entrar</h2>
             <p className="text-sm text-muted-foreground">
               Digite suas credenciais para acessar sua conta
             </p>
@@ -110,7 +113,7 @@ export default function SignInPageClient() {
                   <div className="text-sm font-medium text-destructive">{error}</div>
                 )}
 
-                <Button className="w-full" disabled={loading} type="submit">
+                <Button className="w-full rounded-sm text-[0.7rem] uppercase tracking-[0.15em]" disabled={loading} type="submit">
                   {loading ? "Entrando..." : "Entrar"}
                 </Button>
               </form>
@@ -129,7 +132,7 @@ export default function SignInPageClient() {
               <div className="mt-6 text-center text-sm text-muted-foreground">
                 Não tem uma conta?{" "}
                 <Link
-                  className="text-primary underline-offset-4 hover:underline"
+                  className="font-medium text-foreground underline-offset-4 hover:underline"
                   href={`/auth/sign-up${redirectQs}`}
                 >
                   Cadastre-se

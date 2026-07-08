@@ -74,28 +74,31 @@ export default function Testimonial({
     >
       <div
         className={`
-          max-w-container mx-auto flex flex-col items-center gap-4 text-center
+          mx-auto flex max-w-7xl flex-col items-center gap-10 text-center
           sm:gap-16
         `}
       >
         <div
           className={`
             flex flex-col items-center gap-4 px-4
-            sm:gap-8
           `}
         >
+          <span className="text-[0.65rem] font-medium uppercase tracking-[0.25em] text-muted-foreground">
+            Depoimentos
+          </span>
           <h2
             className={`
-              max-w-[720px] text-3xl leading-tight font-semibold
-              sm:text-5xl sm:leading-tight
+              max-w-[720px] font-display text-3xl font-normal uppercase
+              leading-tight tracking-[0.12em]
+              sm:text-4xl
             `}
           >
             {title}
           </h2>
+          <div className="h-px w-12 bg-foreground/30" />
           <p
             className={`
-              text-md max-w-[600px] font-medium text-muted-foreground
-              sm:text-xl
+              max-w-[600px] text-sm text-muted-foreground
             `}
           >
             {description}

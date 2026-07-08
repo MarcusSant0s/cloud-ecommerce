@@ -36,7 +36,7 @@ export default function Navbar({ categories = [] }) {
   }, [])
 
   // shared underline-on-hover treatment for top-level nav items
-  const navLink = "group relative py-2 text-[0.7rem] font-medium uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:text-foreground"
+  const navLink = "group relative inline-flex items-center py-2 text-[0.7rem] font-medium uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:text-foreground"
   const underline = "pointer-events-none absolute inset-x-0 -bottom-px h-px origin-center scale-x-0 bg-foreground transition-transform duration-300 group-hover:scale-x-100"
 
   return (
@@ -74,7 +74,7 @@ export default function Navbar({ categories = [] }) {
                       onClick={() => setCatOpen(o => !o)}
                       aria-expanded={catOpen}
                       aria-haspopup="true"
-                      className={`flex items-center gap-1.5 ${navLink} ${catOpen ? "text-foreground" : ""}`}
+                      className={`${navLink} gap-1.5 ${catOpen ? "text-foreground" : ""}`}
                     >
                       Categorias
                       <ChevronDown className={`h-3 w-3 transition-transform ${catOpen ? "rotate-180" : ""}`} />
