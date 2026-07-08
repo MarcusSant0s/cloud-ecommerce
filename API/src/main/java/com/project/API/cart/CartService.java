@@ -140,11 +140,7 @@ public class CartService {
     public CartResponseDTO getActiveCartDTO(Long userId) {
         Cart cart = getOrCreateCart(userId);
 
-        //If cart items IS empty
-        if(cart.getCartItem().isEmpty()){
-            return null;
 
-        }
         List<CartResponseDTO.CartItemDTO> itemDTOs = cart.getCartItem().stream()
                 .map(item -> {
                     Product product = item.getProduct();
