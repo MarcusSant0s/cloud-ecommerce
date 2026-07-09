@@ -37,6 +37,16 @@ public class OrderController {
         return ResponseEntity.ok(Map.of("checkoutUrl", checkoutUrl));
     }
 
+    @PostMapping("/{orderId}/pay")
+    public ResponseEntity<Map<String, String>> repay(
+            @AuthenticationPrincipal User user,
+            @PathVariable Long orderId
+    ) throws MPException, MPApiException {
+
+        String checkoutUrl = orderService.repayOrder(user.getId(), orderId);
+        return ResponseEntity.ok(Map.of("checkoutUrl", checkoutUrl));
+    }
+
     @PatchMapping("/{orderId}/status")
     public ResponseEntity<OrderStatus> changeOrderStatus(
             @PathVariable Long orderId,

@@ -20,6 +20,8 @@ public interface OrderService {
 
      String checkout(Long userId) throws MPException, MPApiException;
 
+     String repayOrder(Long userId, Long orderId) throws MPException, MPApiException;
+
     @Transactional
     Order createOrder(Long userId, Cart cart);
 

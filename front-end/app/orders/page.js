@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Package, CheckCircle2, Clock, XCircle, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
+import { Package, CheckCircle2, Clock, XCircle, ArrowLeft, ChevronLeft, ChevronRight, CreditCard, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import api from "@/services/api";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -65,6 +66,27 @@ function OrderCard({ order }) {
   const firstItem = order.items?.[0];
   const extraCount = (order.items?.length ?? 0) - 1;
   const date = order.createdAt ? DATE_FORMAT.format(new Date(order.createdAt)) : null;
+  const isPending = order.status?.toUpperCase() === "PENDING";
+  const [paying, setPaying] = useState(false);
+
+  const handlePay = async () => {
+    try {
+      setPaying(true);
+      const res = await api.post(`/order/${order.id}/pay`);
+      // Redirect to Mercado Pago (or the demo success page) — the page unloads.
+      window.location.href = res.data.checkoutUrl;
+    } catch (err) {
+      const code = err?.response?.data?.code;
+      if (code === "ORDER_NOT_PAYABLE") {
+        toast.error("Este pedido não pode mais ser pago.");
+      } else if (code === "ADDRESS_REQUIRED") {
+        toast.error("Cadastre um endereço de entrega antes de pagar.");
+      } else {
+        toast.error("Não foi possível reabrir o pagamento. Tente novamente.");
+      }
+      setPaying(false);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-4 rounded-2xl border bg-card p-4 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 sm:flex-row sm:items-center sm:p-5">
@@ -100,8 +122,18 @@ function OrderCard({ order }) {
           <StatusBadge status={order.status} />
         </div>
 
-        <div className="flex items-center justify-between mt-2">
+        <div className="mt-2 flex items-center justify-between gap-3">
           <p className="text-lg font-bold text-primary">{CURRENCY.format(order.total)}</p>
+          {isPending && (
+            <button
+              onClick={handlePay}
+              disabled={paying}
+              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-sm bg-foreground px-4 py-2 text-[0.65rem] font-medium uppercase tracking-[0.15em] text-background transition hover:bg-foreground/90 disabled:opacity-60"
+            >
+              {paying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CreditCard className="h-3.5 w-3.5" />}
+              {paying ? "Redirecionando" : "Pagar agora"}
+            </button>
+          )}
         </div>
       </div>
     </div>

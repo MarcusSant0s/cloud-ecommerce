@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Fragment } from "react";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, MapPin, Package, Mail } from "lucide-react";
 import api from "@/services/api";
 import { Button } from "@/primitives/button";
 import { Badge } from "@/primitives/badge";
@@ -26,6 +26,12 @@ function formatDate(dateStr) {
   );
 }
 
+function formatCep(cep) {
+  if (!cep) return "—";
+  const digits = String(cep).replace(/\D/g, "");
+  return digits.length === 8 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : cep;
+}
+
 export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
   const [totalPages, setTotalPages] = useState(0);
@@ -33,6 +39,7 @@ export default function AdminOrders() {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState(null);
   const [pendingStatus, setPendingStatus] = useState({});
+  const [expandedId, setExpandedId] = useState(null);
 
   const fetchOrders = useCallback(async (p = 0) => {
     setLoading(true);
@@ -114,11 +121,24 @@ export default function AdminOrders() {
                     : "—";
                 const total =
                   order.total ?? order.totalAmount ?? order.totalPrice ?? 0;
+                const isExpanded = expandedId === order.id;
+                const addr = order.shippingAddress;
+                const items = order.items ?? [];
 
                 return (
-                  <tr key={order.id} className="bg-background hover:bg-muted/30 transition-colors">
+                  <Fragment key={order.id}>
+                  <tr className="bg-background hover:bg-muted/30 transition-colors">
                     <td className="px-4 py-3 font-medium text-muted-foreground">
-                      #{order.id}
+                      <button
+                        type="button"
+                        onClick={() => setExpandedId(prev => (prev === order.id ? null : order.id))}
+                        aria-expanded={isExpanded}
+                        aria-label={isExpanded ? "Hide shipping details" : "Show shipping details"}
+                        className="inline-flex items-center gap-1.5 transition-colors hover:text-foreground"
+                      >
+                        <ChevronRight className={`h-3.5 w-3.5 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
+                        #{order.id}
+                      </button>
                     </td>
                     <td className="px-4 py-3">{customerName}</td>
                     <td className="px-4 py-3 text-muted-foreground">
@@ -158,6 +178,74 @@ export default function AdminOrders() {
                       </div>
                     </td>
                   </tr>
+
+                  {isExpanded && (
+                    <tr className="bg-muted/20">
+                      <td colSpan={6} className="px-4 py-5">
+                        <div className="grid gap-6 md:grid-cols-2">
+                          {/* Shipping destination */}
+                          <div>
+                            <h4 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                              <MapPin size={14} /> Ship to
+                            </h4>
+                            {addr ? (
+                              <address className="text-sm not-italic leading-relaxed">
+                                <div className="font-medium text-foreground">{customerName}</div>
+                                <div>{addr.street}{addr.number ? `, ${addr.number}` : ""}</div>
+                                <div>{addr.city}</div>
+                                <div>CEP {formatCep(addr.cep)}</div>
+                                {order.customer?.email && (
+                                  <div className="mt-1 flex items-center gap-1.5 text-muted-foreground">
+                                    <Mail size={13} /> {order.customer.email}
+                                  </div>
+                                )}
+                              </address>
+                            ) : (
+                              <p className="text-sm font-medium text-destructive">
+                                No delivery address on file — cannot ship this order.
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Pack list */}
+                          <div>
+                            <h4 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                              <Package size={14} /> Items to ship
+                            </h4>
+                            {items.length > 0 ? (
+                              <ul className="space-y-1.5 text-sm">
+                                {items.map(item => (
+                                  <li
+                                    key={item.id ?? item.productId}
+                                    className="flex items-center justify-between gap-3"
+                                  >
+                                    <span className="text-foreground">
+                                      <span className="font-medium tabular-nums">{item.quantity}×</span>{" "}
+                                      {item.productName}
+                                    </span>
+                                    <span className="shrink-0 text-muted-foreground">
+                                      {BRL.format((item.unitPrice ?? 0) * item.quantity)}
+                                    </span>
+                                  </li>
+                                ))}
+                                <li className="flex items-center justify-between gap-3 border-t pt-1.5 text-muted-foreground">
+                                  <span>Shipping</span>
+                                  <span>{BRL.format(order.shippingCost ?? 0)}</span>
+                                </li>
+                                <li className="flex items-center justify-between gap-3 font-medium text-foreground">
+                                  <span>Total</span>
+                                  <span>{BRL.format(total)}</span>
+                                </li>
+                              </ul>
+                            ) : (
+                              <p className="text-sm text-muted-foreground">No items.</p>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  </Fragment>
                 );
               })}
             </tbody>

@@ -71,6 +71,12 @@ public class GlobalExceptionHandler {
                 .body(new ApiError(400, "ADDRESS_REQUIRED", ex.getMessage(), null));
     }
 
+    @ExceptionHandler(OrderNotPayableException.class)
+    public ResponseEntity<ApiError> handleOrderNotPayable(OrderNotPayableException ex){
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiError(409, "ORDER_NOT_PAYABLE", ex.getMessage(), null));
+    }
+
     @ExceptionHandler(InvalidWebhookSignatureException.class)
     public ResponseEntity<ApiError> handleInvalidWebhookSignature(InvalidWebhookSignatureException ex){
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)

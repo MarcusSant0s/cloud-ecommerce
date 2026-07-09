@@ -16,6 +16,7 @@ import com.project.API.cart.CartStatus;
 import com.project.API.cart.CartRepository;
 import com.project.API.cart.exception.InsufficientStockException;
 import com.project.API.commom.exception.CartInconsistencyException;
+import com.project.API.commom.exception.OrderNotPayableException;
 import com.project.API.commom.exception.ResourceNotFoundException;
 import com.project.API.commom.exception.ShippingAddressRequiredException;
 import com.project.API.order.DTO.AdminOrderResponse;
@@ -116,6 +117,43 @@ public class OrderServiceImp implements OrderService {
     }
 
     /**
+     * Re-opens payment for an existing PENDING order. Unlike {@link #checkout},
+     * this does not require an ACTIVE cart — a pending order already moved its
+     * cart to CHECKOUT — so it lets the user finish paying an order they
+     * abandoned at the Mercado Pago step.
+     */
+    @Transactional
+    @Override
+    public String repayOrder(Long userId, Long orderId) throws MPException, MPApiException {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+
+        // Don't leak the existence of other users' orders.
+        if (order.getUser() == null || !order.getUser().getId().equals(userId)) {
+            throw new ResourceNotFoundException("Order not found");
+        }
+
+        if (order.getStatus() != OrderStatus.PENDING) {
+            throw new OrderNotPayableException("Somente pedidos pendentes podem ser pagos.");
+        }
+
+        if (paymentsDemoMode) {
+            return completeDemoCheckout(order,
+                    cartRepository.findByUserIdAndStatus(userId, CartStatus.CHECKOUT).orElse(null));
+        }
+
+        if (order.getMercadoPagoPreferenceId() != null) {
+            return "https://sandbox.mercadopago.com.br/checkout/v1/redirect?pref_id="
+                    + order.getMercadoPagoPreferenceId();
+        }
+
+        // No preference yet (checkout was interrupted before Mercado Pago responded):
+        // build one now. The cart is already in CHECKOUT for a pending order.
+        Cart cart = cartRepository.findByUserIdAndStatus(userId, CartStatus.CHECKOUT).orElse(null);
+        return createCheckout(order, cart);
+    }
+
+    /**
      * Simulates an approved payment for demo deploys: marks the order PAID,
      * decrements stock and clears the cart — the same effect the Mercado Pago
      * "approved" webhook would have — then sends the user to the success page.
@@ -129,7 +167,9 @@ public class OrderServiceImp implements OrderService {
                 productRepository.decrementStock(item.getProductId(), item.getQuantity()));
         orderRepository.save(order);
 
-        cartRepository.delete(cart);
+        if (cart != null) {
+            cartRepository.delete(cart);
+        }
 
         return frontendUrl + "/orders/success?external_reference=" + order.getId();
     }
@@ -231,16 +271,18 @@ public class OrderServiceImp implements OrderService {
             order.setMercadoPagoPreferenceId(preference.getId());
 
 
-
-
-            cart.setStatus(CartStatus.CHECKOUT);
+            if (cart != null) {
+                cart.setStatus(CartStatus.CHECKOUT);
+            }
 
 
             return preference.getInitPoint();
 
         } catch (MPApiException e) {
 
-            cart.setStatus(CartStatus.ACTIVE);
+            if (cart != null) {
+                cart.setStatus(CartStatus.ACTIVE);
+            }
             orderRepository.delete(order);
             System.out.println("Status: " + e.getStatusCode());
             System.out.println("Response: " + e.getApiResponse().getContent());
