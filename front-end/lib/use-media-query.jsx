@@ -1,21 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 
 export function useMediaQuery(query) {
-  // Start with false during SSR
-  const [matches, setMatches] = useState(false);
+  const subscribe = useCallback(
+    (callback) => {
+      const media = window.matchMedia(query);
+      media.addEventListener("change", callback);
+      return () => media.removeEventListener("change", callback);
+    },
+    [query]
+  );
 
-  useEffect(() => {
-    // Update the state on client-side
-    setMatches(window.matchMedia(query).matches);
+  const getSnapshot = useCallback(() => window.matchMedia(query).matches, [query]);
 
-    const media = window.matchMedia(query);
-    const listener = () => setMatches(media.matches);
-
-    media.addEventListener("change", listener);
-    return () => media.removeEventListener("change", listener);
-  }, [query]);
-
-  return matches;
+  // false during SSR — matchMedia isn't available on the server.
+  return useSyncExternalStore(subscribe, getSnapshot, () => false);
 }

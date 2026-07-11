@@ -8,7 +8,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "cartItem")
-public class CartItem {
+public class    CartItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

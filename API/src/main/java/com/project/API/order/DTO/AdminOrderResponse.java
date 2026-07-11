@@ -22,7 +22,7 @@ public record AdminOrderResponse(
 ) {
     public record Customer(Long id, String firstName, String lastName, String email) {}
 
-    public record ShippingAddress(String street, String number, String city, String cep) {}
+    public record ShippingAddress(String street, String number, String bairro, String city, String cep, String phone) {}
 
     public static AdminOrderResponse fromEntity(Order order) {
         User user = order.getUser();
@@ -36,8 +36,10 @@ public record AdminOrderResponse(
             shippingAddress = new ShippingAddress(
                     address.getStreet(),
                     address.getNumber(),
+                    address.getBairro(),
                     address.getCity(),
-                    address.getCep()
+                    address.getCep(),
+                    address.getPhone()
             );
         }
 

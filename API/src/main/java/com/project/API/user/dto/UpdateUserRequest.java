@@ -20,7 +20,9 @@ public record UpdateUserRequest(
         @NotBlank
         String cep,
         @NotBlank
-        String number
+        String number,
+        String bairro,
+        String phone
      ) {
 
     public User applyTo(User user){
@@ -37,6 +39,8 @@ public record UpdateUserRequest(
         if(this.city != null) adress.setCity(city);
         if(this.cep != null) adress.setCep(cep);
         if(this.number != null) adress.setNumber(number);
+        if(this.bairro != null) adress.setBairro(bairro);
+        if(this.phone != null) adress.setPhone(phone);
 
         user.setUserAdress(adress);
 

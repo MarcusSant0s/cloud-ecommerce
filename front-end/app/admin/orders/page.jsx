@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, Fragment } from "react";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Loader2, MapPin, Package, Mail } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, MapPin, Package, Mail, Phone } from "lucide-react";
 import api from "@/services/api";
 import { Button } from "@/primitives/button";
 import { Badge } from "@/primitives/badge";
@@ -192,11 +192,21 @@ export default function AdminOrders() {
                               <address className="text-sm not-italic leading-relaxed">
                                 <div className="font-medium text-foreground">{customerName}</div>
                                 <div>{addr.street}{addr.number ? `, ${addr.number}` : ""}</div>
+                                {addr.bairro && <div>{addr.bairro}</div>}
                                 <div>{addr.city}</div>
                                 <div>CEP {formatCep(addr.cep)}</div>
-                                {order.customer?.email && (
-                                  <div className="mt-1 flex items-center gap-1.5 text-muted-foreground">
-                                    <Mail size={13} /> {order.customer.email}
+                                {(addr.phone || order.customer?.email) && (
+                                  <div className="mt-1 space-y-0.5 text-muted-foreground">
+                                    {addr.phone && (
+                                      <div className="flex items-center gap-1.5">
+                                        <Phone size={13} /> {addr.phone}
+                                      </div>
+                                    )}
+                                    {order.customer?.email && (
+                                      <div className="flex items-center gap-1.5">
+                                        <Mail size={13} /> {order.customer.email}
+                                      </div>
+                                    )}
                                   </div>
                                 )}
                               </address>

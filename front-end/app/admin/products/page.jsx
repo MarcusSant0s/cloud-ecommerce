@@ -14,11 +14,16 @@ import { Badge } from "@/primitives/badge";
 import { Skeleton } from "@/primitives/skeleton";
 import { Sheet, SheetContent, SheetHeader, SheetFooter } from "@/primitives/sheet";
 
+// Image constraints for the product form.
+const MIN_IMAGES = 1;
+const MAX_IMAGES = 6;
+const MAX_FILE_SIZE_MB = 5;
+
 const EMPTY_FORM = {
   name: "",
   description: "",
   priceOriginal: "",
-  priceDiscount: "",
+  priceDiscount: "0", // default: no discount
   quantity: "",
   categoryIds: [],
   files: [],
@@ -39,7 +44,9 @@ function validateForm(form, editingId) {
   }
   const qty = parseInt(form.quantity, 10);
   if (form.quantity === "" || isNaN(qty) || qty < 0) errs.quantity = true;
-  if (!editingId && form.files.length === 0) errs.files = true;
+  // New products need at least MIN_IMAGES; nobody may exceed MAX_IMAGES.
+  if (!editingId && form.files.length < MIN_IMAGES) errs.files = true;
+  if (form.files.length > MAX_IMAGES) errs.files = true;
   return errs;
 }
 
@@ -67,11 +74,36 @@ export default function AdminProducts() {
   const [errors, setErrors] = useState(EMPTY_ERRORS);
   const [shaking, setShaking] = useState({});
   const [dragActive, setDragActive] = useState(false);
+  const [previews, setPreviews] = useState([]);
 
   function addFiles(fileList) {
-    const picked = Array.from(fileList ?? []).filter(f => f.type.startsWith("image/"));
-    if (picked.length === 0) return;
-    setForm(prev => ({ ...prev, files: [...prev.files, ...picked] }));
+    const incoming = Array.from(fileList ?? []);
+    if (incoming.length === 0) return;
+
+    // Reject non-images.
+    const images = incoming.filter(f => f.type.startsWith("image/"));
+    if (images.length < incoming.length) toast.error("Apenas arquivos de imagem são permitidos.");
+
+    // Reject oversized files.
+    const sized = images.filter(f => {
+      const ok = f.size <= MAX_FILE_SIZE_MB * 1024 * 1024;
+      if (!ok) toast.error(`"${f.name}" excede ${MAX_FILE_SIZE_MB}MB.`);
+      return ok;
+    });
+    if (sized.length === 0) return;
+
+    // Enforce the max count.
+    const room = MAX_IMAGES - form.files.length;
+    if (room <= 0) {
+      toast.error(`Máximo de ${MAX_IMAGES} imagens atingido.`);
+      return;
+    }
+    const accepted = sized.slice(0, room);
+    if (accepted.length < sized.length) {
+      toast.warning(`Só cabem mais ${room} — ${sized.length - accepted.length} imagem(ns) ignorada(s).`);
+    }
+
+    setForm(prev => ({ ...prev, files: [...prev.files, ...accepted] }));
     clearError("files");
   }
 
@@ -124,6 +156,14 @@ export default function AdminProducts() {
       .catch(() => {});
   }, []);
 
+  // Build object-URL previews for pending files once per file-list change,
+  // and revoke them on change/unmount so blobs don't leak.
+  useEffect(() => {
+    const urls = form.files.map(f => URL.createObjectURL(f));
+    setPreviews(urls);
+    return () => urls.forEach(u => URL.revokeObjectURL(u));
+  }, [form.files]);
+
   function openCreate() {
     setEditingId(null);
     setForm(EMPTY_FORM);
@@ -140,7 +180,7 @@ export default function AdminProducts() {
       name: product.name ?? "",
       description: product.description ?? "",
       priceOriginal: product.priceOriginal ?? "",
-      priceDiscount: product.priceDiscount ?? "",
+      priceDiscount: product.priceDiscount ?? "0",
       quantity: product.quantity ?? "",
       categoryIds: (product.categories ?? []).map(c => c.id),
       files: [],
@@ -174,7 +214,11 @@ export default function AdminProducts() {
         name: form.name,
         description: form.description,
         priceOriginal: parseFloat(form.priceOriginal),
-        priceDiscount: form.priceDiscount ? parseFloat(form.priceDiscount) : null,
+        // Always a valid fraction (0 = no discount) — never null, which the
+        // edit path would otherwise append to FormData as the string "null".
+        priceDiscount: form.priceDiscount === "" || isNaN(parseFloat(form.priceDiscount))
+          ? 0
+          : parseFloat(form.priceDiscount),
         quantity: parseInt(form.quantity, 10),
         categoryIds: Array.from(form.categoryIds),
       };
@@ -597,50 +641,68 @@ export default function AdminProducts() {
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Images {!editingId && <span className="text-destructive">*</span>}
                 </h3>
-                {form.files.length > 0 && (
-                  <span className="text-xs text-muted-foreground">{form.files.length} selected</span>
-                )}
+                <span className={`text-xs ${form.files.length > MAX_IMAGES ? "text-destructive" : "text-muted-foreground"}`}>
+                  {form.files.length} / {MAX_IMAGES}
+                </span>
               </div>
-              {editingId && (
-                <p className="-mt-1 text-xs text-muted-foreground">Optional — new images are added to the existing ones.</p>
+              <p className="-mt-1 text-xs text-muted-foreground">
+                {editingId
+                  ? `Optional — new images are added to the existing ones (máx. ${MAX_IMAGES}).`
+                  : `Entre ${MIN_IMAGES} e ${MAX_IMAGES} imagens. A primeira é a principal.`}
+              </p>
+
+              {form.files.length < MAX_IMAGES ? (
+                <div className={shaking.files ? "shake" : ""}>
+                  <label
+                    onDragOver={e => { e.preventDefault(); setDragActive(true); }}
+                    onDragLeave={e => { e.preventDefault(); setDragActive(false); }}
+                    onDrop={e => { e.preventDefault(); setDragActive(false); addFiles(e.dataTransfer.files); }}
+                    className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-xl p-7 cursor-pointer
+                      text-sm transition-colors
+                      ${dragActive ? "border-primary bg-primary/5 text-primary"
+                        : errors.files ? "border-destructive text-destructive"
+                        : "border-border text-muted-foreground hover:bg-accent/50"}`}
+                  >
+                    <Upload size={22} />
+                    <span className="font-medium">
+                      {dragActive ? "Drop images here" : "Drag & drop or click to upload"}
+                    </span>
+                    <span className="text-xs text-muted-foreground">PNG, JPG — até {MAX_FILE_SIZE_MB}MB cada</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="sr-only"
+                      onChange={e => { addFiles(e.target.files); e.target.value = ""; }}
+                    />
+                  </label>
+                </div>
+              ) : (
+                <div className="rounded-xl border-2 border-dashed border-border/70 p-4 text-center text-xs text-muted-foreground">
+                  Máximo de {MAX_IMAGES} imagens — remova uma para adicionar outra.
+                </div>
               )}
 
-              <div className={shaking.files ? "shake" : ""}>
-                <label
-                  onDragOver={e => { e.preventDefault(); setDragActive(true); }}
-                  onDragLeave={e => { e.preventDefault(); setDragActive(false); }}
-                  onDrop={e => { e.preventDefault(); setDragActive(false); addFiles(e.dataTransfer.files); }}
-                  className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-xl p-7 cursor-pointer
-                    text-sm transition-colors
-                    ${dragActive ? "border-primary bg-primary/5 text-primary"
-                      : errors.files ? "border-destructive text-destructive"
-                      : "border-border text-muted-foreground hover:bg-accent/50"}`}
-                >
-                  <Upload size={22} />
-                  <span className="font-medium">
-                    {dragActive ? "Drop images here" : "Drag & drop or click to upload"}
-                  </span>
-                  <span className="text-xs text-muted-foreground">PNG, JPG — the first image is the main one</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    className="sr-only"
-                    onChange={e => { addFiles(e.target.files); e.target.value = ""; }}
-                  />
-                </label>
-              </div>
-              {errors.files && <p className="text-xs text-destructive">At least one image is required.</p>}
+              {errors.files && (
+                <p className="text-xs text-destructive">
+                  {form.files.length > MAX_IMAGES
+                    ? `Mantenha no máximo ${MAX_IMAGES} imagens.`
+                    : `Pelo menos ${MIN_IMAGES} imagem é obrigatória.`}
+                </p>
+              )}
 
               {form.files.length > 0 && (
                 <div className="grid grid-cols-3 gap-2 mt-1">
                   {form.files.map((file, i) => (
-                    <div key={i} className="relative rounded-lg overflow-hidden border aspect-square group">
-                      <img
-                        src={URL.createObjectURL(file)}
-                        alt={file.name}
-                        className="object-cover w-full h-full"
-                      />
+                    <div key={`${file.name}-${file.lastModified}-${i}`} className="relative rounded-lg overflow-hidden border aspect-square">
+                      {previews[i] && (
+                        // eslint-disable-next-line @next/next/no-img-element -- local blob preview, cannot use next/image
+                        <img
+                          src={previews[i]}
+                          alt={file.name}
+                          className="object-cover w-full h-full"
+                        />
+                      )}
                       {i === 0 && (
                         <div className="absolute top-1 left-1">
                           <Badge className="text-xs px-1.5 py-0.5 gap-1">
@@ -651,8 +713,8 @@ export default function AdminProducts() {
                       <button
                         type="button"
                         onClick={() => setForm(prev => ({ ...prev, files: prev.files.filter((_, j) => j !== i) }))}
-                        className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                        aria-label="Remove"
+                        className="absolute top-1 right-1 rounded-full bg-black/60 p-1 text-white transition-colors hover:bg-black/80"
+                        aria-label={`Remove ${file.name}`}
                       >
                         <Trash2 size={12} />
                       </button>

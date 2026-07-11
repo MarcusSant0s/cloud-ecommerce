@@ -313,7 +313,10 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private UserAdress address(String street, String city, String cep, String number) {
-        return userAdressRepository.save(new UserAdress(street, city, cep, number));
+        UserAdress a = new UserAdress(street, city, cep, number);
+        a.setBairro("Centro");
+        a.setPhone("(11) 98888-0000");
+        return userAdressRepository.save(a);
     }
 
     private User user(String firstName, String lastName, String email,

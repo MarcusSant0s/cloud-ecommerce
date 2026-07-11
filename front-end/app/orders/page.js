@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Package, CheckCircle2, Clock, XCircle, ArrowLeft, ChevronLeft, ChevronRight, CreditCard, Loader2 } from "lucide-react";
@@ -214,7 +214,7 @@ export default function OrdersPage() {
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
 
-  const fetchOrders = async (pageNum = 0) => {
+  const fetchOrders = useCallback(async (pageNum = 0) => {
     if (!user?.id) return;
     try {
       setLoading(true);
@@ -228,11 +228,11 @@ export default function OrdersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
 
   useEffect(() => {
     if (!authLoading) fetchOrders(page);
-  }, [user?.id, authLoading, page]);
+  }, [authLoading, page, fetchOrders]);
 
   const handlePageChange = (newPage) => {
     setPage(newPage);

@@ -23,7 +23,9 @@ public class UserServiceTest {
                 "Avenida Central",
                 "São Paulo",
                 "01000-000",
-                "999"
+                "999",
+                "Centro",
+                "(11) 98888-0000"
         );
 
         Mockito.when(userRepository.findById(Mockito.any()))

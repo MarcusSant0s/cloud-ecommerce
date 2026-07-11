@@ -47,6 +47,8 @@ public class AuthService {
                 request.getCep(),
                 request.getNumber()
         );
+        userAdress.setBairro(request.getBairro());
+        userAdress.setPhone(request.getPhone());
 
         adressRepository.save(userAdress);
 

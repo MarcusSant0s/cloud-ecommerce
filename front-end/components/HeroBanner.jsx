@@ -73,7 +73,7 @@ export default function HeroBanner() {
             lineHeight: 1.5,
           }}
         >
-          "Elegância não é ser notada — é ser lembrada."
+          &ldquo;Elegância não é ser notada — é ser lembrada.&rdquo;
         </p>
 
         {/* Gold divider */}

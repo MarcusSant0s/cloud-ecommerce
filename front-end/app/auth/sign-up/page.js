@@ -26,6 +26,8 @@ export default function SignUpPageClient() {
   const [city, setCity] = useState("");
   const [cep, setCep] = useState("");
   const [numberAddress, setNumberAddress] = useState("");
+  const [bairro, setBairro] = useState("");
+  const [phone, setPhone] = useState("");
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -56,6 +58,7 @@ export default function SignUpPageClient() {
         }
         setStreet(data.logradouro || "");
         setCity(data.localidade || "");
+        setBairro(data.bairro || "");
       } catch {
         setCepError("Erro ao buscar CEP");
       } finally {
@@ -64,12 +67,21 @@ export default function SignUpPageClient() {
     }
   };
 
+  const handlePhoneChange = (e) => {
+    const digits = e.target.value.replace(/\D/g, "").slice(0, 11);
+    let formatted = digits;
+    if (digits.length > 7) formatted = `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+    else if (digits.length > 2) formatted = `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+    else if (digits.length > 0) formatted = `(${digits}`;
+    setPhone(formatted);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
-      await register(firstName, lastName, email, password, street, city, cep, numberAddress);
+      await register(firstName, lastName, email, password, street, city, cep, numberAddress, bairro, phone);
       const redirect = new URLSearchParams(window.location.search).get("redirect");
       router.push(sanitizeRedirect(redirect));
     } catch (err) {
@@ -201,6 +213,16 @@ export default function SignUpPageClient() {
                       />
                     </div>
 
+                    <div className="grid gap-2">
+                      <Label htmlFor="bairro">Bairro</Label>
+                      <Input
+                        id="bairro"
+                        value={bairro}
+                        onChange={e => setBairro(e.target.value)}
+                        placeholder="Centro"
+                      />
+                    </div>
+
                     <div className="grid grid-cols-2 gap-3">
                       <div className="grid gap-2">
                         <Label htmlFor="city">Cidade</Label>
@@ -222,6 +244,18 @@ export default function SignUpPageClient() {
                           required
                         />
                       </div>
+                    </div>
+
+                    <div className="grid gap-2">
+                      <Label htmlFor="phone">Celular</Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        value={phone}
+                        onChange={handlePhoneChange}
+                        placeholder="(11) 98888-0000"
+                        required
+                      />
                     </div>
                   </div>
                 </div>

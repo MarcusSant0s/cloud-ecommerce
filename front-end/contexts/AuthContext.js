@@ -28,6 +28,7 @@ const [loading, setLoading] = useState(true);
             }
 
             loadUser();
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount to rehydrate the session
     }, [])
 
     async function fetchMe(tokenParam){
@@ -77,10 +78,10 @@ const [loading, setLoading] = useState(true);
 
     }
 
-async function register(firstName, lastName, email, password, street, city, cep, numberAddress) {
+async function register(firstName, lastName, email, password, street, city, cep, numberAddress, bairro, phone) {
         const res = await api.post("auth/register", {
     firstName, lastName, email, password,
-    street, city, cep, numberAddress
+    street, city, cep, numberAddress, bairro, phone
   });
 
         const jwt = res.data.token;

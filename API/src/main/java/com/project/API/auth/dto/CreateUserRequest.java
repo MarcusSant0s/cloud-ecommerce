@@ -21,6 +21,9 @@ public class CreateUserRequest {
     private String cep;
     @NotBlank
     private String numberAddress;
+    // Optional server-side (older clients omit them); the sign-up form requires phone.
+    private String bairro;
+    private String phone;
 
     public CreateUserRequest(String firstName, String lastName, String email,String password, String street, String city, String cep,String numberAddress){
         this.firstName=firstName;
@@ -74,6 +77,20 @@ public class CreateUserRequest {
     }
     public void setNumber(String number) {
         this.numberAddress = number;
+    }
+
+    public String getBairro() {
+        return bairro;
+    }
+    public void setBairro(String bairro) {
+        this.bairro = bairro;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
 }

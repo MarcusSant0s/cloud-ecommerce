@@ -35,6 +35,11 @@ public class UserAdress {
     @Column(nullable = false)
     private String number;
 
+    // Nullable: pre-existing addresses were created before these fields existed.
+    private String bairro;
+
+    private String phone;
+
     @OneToOne(mappedBy = "userAdress")
     @JsonIgnore
     private User user;
@@ -70,6 +75,20 @@ public class UserAdress {
     }
     public void setNumber(String number) {
         this.number = number;
+    }
+
+    public String getBairro() {
+        return bairro;
+    }
+    public void setBairro(String bairro) {
+        this.bairro = bairro;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
     public User getUser() {

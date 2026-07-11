@@ -131,6 +131,8 @@ export default function AccountPage() {
     city: "",
     cep: "",
     number: "",
+    bairro: "",
+    phone: "",
   });
 
   useEffect(() => {
@@ -144,6 +146,8 @@ export default function AccountPage() {
         city: user.userAdress?.city ?? "",
         cep: user.userAdress?.cep ?? "",
         number: user.userAdress?.number ?? "",
+        bairro: user.userAdress?.bairro ?? "",
+        phone: user.userAdress?.phone ?? "",
       });
     }
   }, [user]);
@@ -190,6 +194,8 @@ export default function AccountPage() {
         city: user.userAdress?.city ?? "",
         cep: user.userAdress?.cep ?? "",
         number: user.userAdress?.number ?? "",
+        bairro: user.userAdress?.bairro ?? "",
+        phone: user.userAdress?.phone ?? "",
       });
     }
     setErrors({});
@@ -295,6 +301,16 @@ export default function AccountPage() {
                   disabled={!editing}
                 />
               </div>
+              <div className="sm:col-span-2">
+                <Field
+                  label="Bairro"
+                  name="bairro"
+                  value={form.bairro}
+                  onChange={handleChange}
+                  error={errors.bairro}
+                  disabled={!editing}
+                />
+              </div>
               <Field
                 label="Cidade"
                 name="city"
@@ -317,6 +333,14 @@ export default function AccountPage() {
                 value={form.number}
                 onChange={handleChange}
                 error={errors.number}
+                disabled={!editing}
+              />
+              <Field
+                label="Celular"
+                name="phone"
+                value={form.phone}
+                onChange={handleChange}
+                error={errors.phone}
                 disabled={!editing}
               />
             </div>
