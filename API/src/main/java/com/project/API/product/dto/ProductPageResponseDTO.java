@@ -21,7 +21,7 @@ public record ProductPageResponseDTO(
                 product.getFinalPrice(),
                 product.getPriceOriginal(),
                 product.getPriceDiscount(),
-                product.getMainImage().getUrl()
+                product.getMainImage() != null ? product.getMainImage().getUrl() : null
         );
     }
 }

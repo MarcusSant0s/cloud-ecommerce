@@ -196,7 +196,9 @@ public class OrderServiceImp implements OrderService {
                     cartItem.getProduct().getName(),
                     cartItem.getProduct().getFinalPrice(),
                     cartItem.getQuantity(),
-                    cartItem.getProduct().getMainImage().getUrl(),
+                    cartItem.getProduct().getMainImage() != null
+                            ? cartItem.getProduct().getMainImage().getUrl()
+                            : "",
                     cartItem.getProduct().getDescription()
             );
 
