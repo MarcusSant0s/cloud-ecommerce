@@ -1,8 +1,9 @@
 import Link from "next/link"
+import { SERVER_API_URL } from "@/lib/server-api"
 
 async function getCategories() {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/category/all-categories`, {
+    const res = await fetch(`${SERVER_API_URL}/category/all-categories`, {
       next: { revalidate: 60 },
     });
     if (!res.ok) return [];

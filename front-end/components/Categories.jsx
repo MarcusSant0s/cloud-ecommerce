@@ -1,16 +1,29 @@
 
 import Link from "next/link"
 import Image from "next/image"
+import { SERVER_API_URL } from "@/lib/server-api"
+
+async function getCategories() {
+  try {
+    const res = await fetch(
+      `${SERVER_API_URL}/category/all-categories`,
+      { next: { revalidate: 60 } }
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch {
+    // API unreachable or non-JSON (e.g. an HTML error page) — degrade gracefully.
+    return [];
+  }
+}
 
 export default async function Categories(){
 
-  // Axios isnt compatiple with cache. It must be updated ASAPwwww
-  
-  const categories = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/category/all-categories`,
-    { next: { revalidate: 60 } }
-  ).then(res => res.json());
+  const categories = await getCategories();
 
+  // Nothing to show (e.g. API down) — hide the section rather than crash.
+  if (categories.length === 0) return null;
 
     return (
       <section className="py-12 md:py-16">

@@ -46,6 +46,10 @@ services:
         NEXT_PUBLIC_API_URL: ${APP_BASE_URL}/api
     container_name: commerce-web
     restart: always
+    environment:
+      # Server-side (SSR) calls reach the backend directly on the internal
+      # network — the container can't reach its own public domain.
+      - INTERNAL_API_URL=http://commerce-api:8080
     depends_on:
       - backend
     networks:

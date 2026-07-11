@@ -1,16 +1,24 @@
 
 import ProductCard from './ProductCard';
+import { SERVER_API_URL } from '@/lib/server-api';
+
+async function getProducts() {
+  try {
+    const res = await fetch(`${SERVER_API_URL}/product?size=10`, {
+      next: { revalidate: 300 },
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data?.content) ? data.content : [];
+  } catch {
+    // API unreachable or non-JSON (e.g. an HTML error page) — degrade gracefully.
+    return [];
+  }
+}
 
 const ProductSection = async () => {
 
-    const products = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/product?size=10`,
-    {
-       next: { revalidate: 300 }
-   })
-   .then(res => res.json())
-   .then(data => data.content);
-
+  const products = await getProducts();
 
   return (
     <section className="bg-muted/30 py-16 md:py-20">
@@ -29,11 +37,17 @@ const ProductSection = async () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
-          {products.map(product => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {products.length > 0 ? (
+          <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+            {products.map(product => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        ) : (
+          <p className="text-center text-sm text-muted-foreground">
+            Nenhum produto disponível no momento.
+          </p>
+        )}
       </div>
     </section>
   )
