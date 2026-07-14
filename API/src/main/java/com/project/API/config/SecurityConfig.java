@@ -38,15 +38,28 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/order/webhook").permitAll()
                         .requestMatchers(HttpMethod.GET, "/product").permitAll()
                         .requestMatchers(HttpMethod.GET, "/product/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/category").permitAll()                        .requestMatchers(HttpMethod.GET, "/product/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/category").permitAll()
                         .requestMatchers(HttpMethod.GET, "/category/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/collection").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/collection/**").permitAll()
 
                         .requestMatchers(HttpMethod.POST, "/product/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/product/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/product/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/category").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/category/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/category/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/{id}/images").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/category/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/category/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/collection").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/collection/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/collection/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/collection/**").hasRole("ADMIN")
+
+                        // Image management is admin-only: POST /product/{id}/images is already
+                        // covered by the /product/** rules above, but /images/** is its own route.
+                        .requestMatchers(HttpMethod.PATCH, "/images/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/images/**").hasRole("ADMIN")
 
                         .anyRequest().authenticated()
                 )

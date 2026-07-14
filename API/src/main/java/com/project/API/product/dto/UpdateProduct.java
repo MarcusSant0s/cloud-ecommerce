@@ -13,6 +13,7 @@ public record UpdateProduct(
         BigDecimal priceDiscount,
         Integer quantity,
         String categoryIds,
+        String collectionIds,
         List<MultipartFile> files
 ) {
 }

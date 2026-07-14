@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { LayoutDashboard, Package, Tag, ShoppingBag, Users, LogOut, Menu, X } from "lucide-react";
+import { LayoutDashboard, Package, Tag, Layers, ShoppingBag, Users, LogOut, Menu, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/primitives/button";
 import { Skeleton } from "@/primitives/skeleton";
@@ -12,6 +12,7 @@ const NAV = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/products", label: "Products", icon: Package },
   { href: "/admin/categories", label: "Categories", icon: Tag },
+  { href: "/admin/collections", label: "Collections", icon: Layers },
   { href: "/admin/orders", label: "Orders", icon: ShoppingBag },
   { href: "/admin/users", label: "Users", icon: Users },
 ];

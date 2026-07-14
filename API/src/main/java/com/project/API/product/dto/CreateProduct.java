@@ -1,9 +1,11 @@
 package com.project.API.product.dto;
 
-import com.project.API.category.Category;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class CreateProduct {
@@ -13,9 +15,14 @@ public class CreateProduct {
     private int quantity;
     private BigDecimal priceOriginal;
     private BigDecimal priceDiscount;
-    private Set<Category> categories = new HashSet<>();
 
     private Set<Long> categoryIds = new HashSet<>();
+
+    private Set<Long> collectionIds = new HashSet<>();
+
+    // Images are sent with the product itself so the two are created in one transaction.
+    // The first file becomes the main image.
+    private List<MultipartFile> files = new ArrayList<>();
 
     public CreateProduct() {
     }
@@ -67,13 +74,21 @@ public class CreateProduct {
     public void setCategoryIds(Set<Long> categoryIds) {
         this.categoryIds = categoryIds;
     }
-    public Set<Category> getCategories() {
-        return categories;
+
+    public Set<Long> getCollectionIds() {
+        return collectionIds;
     }
 
-    public void setCategories(Set<Category> categories) {
-        this.categories = categories;
+    public void setCollectionIds(Set<Long> collectionIds) {
+        this.collectionIds = collectionIds;
     }
 
+    public List<MultipartFile> getFiles() {
+        return files;
+    }
+
+    public void setFiles(List<MultipartFile> files) {
+        this.files = files;
+    }
 
 }

@@ -1,4 +1,4 @@
-package com.project.API.category;
+package com.project.API.collection;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.project.API.product.Product;
@@ -10,12 +10,12 @@ import java.util.Set;
 
 @Entity
 @Table(
-        name = "category",
+        name = "collection",
         uniqueConstraints = {
         @UniqueConstraint(columnNames = "name")
         }
 )
-public class Category {
+public class ProductCollection {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,9 +32,9 @@ public class Category {
     @Column(nullable = false)
     private String url;
 
-    // Inverse side of Product.categories. Product owns the product_category join
-    // table, so the join rows can only be cleared from there — see DeleteCategory.
-    @ManyToMany(mappedBy = "categories")
+    // Inverse side of Product.collections. Product owns the product_collection join
+    // table, so the join rows can only be cleared from there — see DeleteCollection.
+    @ManyToMany(mappedBy = "collections")
     @JsonIgnore
     private Set<Product> products = new HashSet<>();
 
@@ -74,8 +74,8 @@ public class Category {
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
-        Category category = (Category) o;
-        return Objects.equals(id, category.id);
+        ProductCollection collection = (ProductCollection) o;
+        return Objects.equals(id, collection.id);
     }
 
     @Override

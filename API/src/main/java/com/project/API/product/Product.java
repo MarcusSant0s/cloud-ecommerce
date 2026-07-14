@@ -5,6 +5,7 @@ import com.project.API.cart.Cart;
 import com.project.API.cart.CartItem;
 import com.project.API.productImage.ProductImage;
 import com.project.API.category.Category;
+import com.project.API.collection.ProductCollection;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -53,6 +54,14 @@ public class Product {
              inverseJoinColumns = @JoinColumn(name = "category_id")
     )
     private Set<Category> categories = new HashSet<>();
+
+    @ManyToMany()
+    @JoinTable(
+            name = "product_collection",
+            joinColumns = @JoinColumn(name = "product_id"),
+            inverseJoinColumns = @JoinColumn(name = "collection_id")
+    )
+    private Set<ProductCollection> collections = new HashSet<>();
 
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
@@ -105,6 +114,22 @@ public class Product {
 
     public void RemoveCategory(Category category){
         categories.remove(category);
+    }
+
+    public Set<ProductCollection> getCollections() {
+        return collections;
+    }
+
+    public void setCollections(Set<ProductCollection> collections) {
+        this.collections = collections;
+    }
+
+    public void AddCollection(ProductCollection collection){
+        collections.add(collection);
+    }
+
+    public void RemoveCollection(ProductCollection collection){
+        collections.remove(collection);
     }
 
     public Long getId() {

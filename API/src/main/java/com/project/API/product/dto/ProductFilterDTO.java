@@ -5,6 +5,7 @@ import java.util.List;
 
 public record ProductFilterDTO(
          Long categoryId,
+         Long collectionId,
          String name,
          BigDecimal minPrice,
          BigDecimal maxPrice,

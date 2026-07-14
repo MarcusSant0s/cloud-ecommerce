@@ -13,7 +13,7 @@ public interface ProductService {
     void delete(Long id);
     Product findById(Long id);
     Page<ProductPageResponseDTO> findAll(ProductFilterDTO filters, Pageable pageable);
-    void uploadImages(MultipartFile file, Long id) ;
+    void uploadImages(List<MultipartFile> files, Long id) ;
       List<ProductsImagesResponse> findImagesById(Long id);
 
 }

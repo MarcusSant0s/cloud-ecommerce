@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, Fragment } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
 import {
-  Plus, Pencil, Trash2, Images, Star, Upload, ChevronLeft, ChevronRight, Loader2, Search, X, Check,
+  Plus, Pencil, Trash2, Star, Upload, ChevronLeft, ChevronRight, Loader2, Search, X, Check,
 } from "lucide-react";
 import api from "@/services/api";
 import { Button } from "@/primitives/button";
@@ -26,6 +26,7 @@ const EMPTY_FORM = {
   priceDiscount: "0", // default: no discount
   quantity: "",
   categoryIds: [],
+  collectionIds: [],
   files: [],
 };
 
@@ -33,7 +34,7 @@ const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" 
 
 const EMPTY_ERRORS = { name: false, priceOriginal: false, priceDiscount: false, quantity: false, files: false };
 
-function validateForm(form, editingId) {
+function validateForm(form, editingId, existingCount = 0) {
   const errs = {};
   if (!form.name.trim()) errs.name = true;
   const price = parseFloat(form.priceOriginal);
@@ -44,9 +45,10 @@ function validateForm(form, editingId) {
   }
   const qty = parseInt(form.quantity, 10);
   if (form.quantity === "" || isNaN(qty) || qty < 0) errs.quantity = true;
-  // New products need at least MIN_IMAGES; nobody may exceed MAX_IMAGES.
-  if (!editingId && form.files.length < MIN_IMAGES) errs.files = true;
-  if (form.files.length > MAX_IMAGES) errs.files = true;
+  // Already-saved images count towards both limits when editing.
+  const total = existingCount + form.files.length;
+  if (total < MIN_IMAGES) errs.files = true;
+  if (total > MAX_IMAGES) errs.files = true;
   return errs;
 }
 
@@ -55,6 +57,7 @@ export default function AdminProducts() {
   const [totalPages, setTotalPages] = useState(0);
   const [page, setPage] = useState(0);
   const [categories, setCategories] = useState([]);
+  const [collections, setCollections] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
@@ -64,10 +67,11 @@ export default function AdminProducts() {
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadPct, setUploadPct] = useState(0);
 
-  const [imgOpen, setImgOpen] = useState(false);
-  const [imgProduct, setImgProduct] = useState(null);
-  const [imgLoading, setImgLoading] = useState(false);
+  // Images already persisted for the product being edited (empty while creating).
+  const [existingImages, setExistingImages] = useState([]);
+  const [imagesLoading, setImagesLoading] = useState(false);
 
   const [confirmId, setConfirmId] = useState(null);
 
@@ -92,8 +96,8 @@ export default function AdminProducts() {
     });
     if (sized.length === 0) return;
 
-    // Enforce the max count.
-    const room = MAX_IMAGES - form.files.length;
+    // Enforce the max count across saved + pending images.
+    const room = MAX_IMAGES - existingImages.length - form.files.length;
     if (room <= 0) {
       toast.error(`Máximo de ${MAX_IMAGES} imagens atingido.`);
       return;
@@ -154,6 +158,9 @@ export default function AdminProducts() {
     api.get("/category/all-categories")
       .then(res => setCategories(res.data))
       .catch(() => {});
+    api.get("/collection/all-collections")
+      .then(res => setCollections(res.data))
+      .catch(() => {});
   }, []);
 
   // Build object-URL previews for pending files once per file-list change,
@@ -167,14 +174,16 @@ export default function AdminProducts() {
   function openCreate() {
     setEditingId(null);
     setForm(EMPTY_FORM);
+    setExistingImages([]);
     setErrors(EMPTY_ERRORS);
     setFormOpen(true);
   }
 
   async function openEdit(product_id) {
     setEditingId(product_id);
-    let product = await fetchEditProduct(product_id);
-    console.log(product)
+    setExistingImages([]);
+    fetchImages(product_id);
+    const product = await fetchEditProduct(product_id);
 
     setForm({
       name: product.name ?? "",
@@ -183,82 +192,89 @@ export default function AdminProducts() {
       priceDiscount: product.priceDiscount ?? "0",
       quantity: product.quantity ?? "",
       categoryIds: (product.categories ?? []).map(c => c.id),
+      collectionIds: (product.collections ?? []).map(c => c.id),
       files: [],
     });
     setErrors(EMPTY_ERRORS);
     setFormOpen(true);
   }
 
-  async function uploadFiles(productId, files) {
-    for (const file of files) {
-      const fd = new FormData();
-      fd.append("File", file);
-      await api.post(`/product/${productId}/images`, fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-    }
+  // Feeds the <progress> in the footer. Uploads are the slow part of a save, so the
+  // admin sees bytes moving instead of a spinner that could mean anything.
+  function trackUpload(e) {
+    if (!e.total) return;
+    setUploadPct(Math.round((e.loaded * 100) / e.total));
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
-    const errs = validateForm(form, editingId);
+    const errs = validateForm(form, editingId, existingImages.length);
     if (Object.keys(errs).length > 0) {
       setErrors(prev => ({ ...prev, ...errs }));
       triggerShake(Object.keys(errs));
+      toast.error("Revise os campos destacados.");
       return;
     }
     setSubmitting(true);
+    setUploadPct(0);
+
+    // The domain models "no discount" as an absent value, not 0 — the entity requires
+    // a discount to be >= 0.01. So a zero/blank discount is simply not sent, and the
+    // edit path clears any existing discount by omitting it.
+    const parsedDiscount = parseFloat(form.priceDiscount);
+    const hasRealDiscount = !isNaN(parsedDiscount) && parsedDiscount > 0;
 
     try {
-      const payload = {
-        name: form.name,
-        description: form.description,
-        priceOriginal: parseFloat(form.priceOriginal),
-        // Always a valid fraction (0 = no discount) — never null, which the
-        // edit path would otherwise append to FormData as the string "null".
-        priceDiscount: form.priceDiscount === "" || isNaN(parseFloat(form.priceDiscount))
-          ? 0
-          : parseFloat(form.priceDiscount),
-        quantity: parseInt(form.quantity, 10),
-        categoryIds: Array.from(form.categoryIds),
-      };
-
       if (editingId) {
-
         const formData = new FormData();
-
-        formData.append("name", payload.name);
-        formData.append("description", payload.description);
-        formData.append("priceOriginal", payload.priceOriginal);
-        formData.append("priceDiscount", payload.priceDiscount);
-        formData.append("quantity", payload.quantity);
-        formData.append("categoryIds", 
-            JSON.stringify(form.categoryIds)
-        );
-      
-
-
-        form.files.forEach(file => {
-          formData.append("files", file);
-        });
-        console.log(formData)
-
+        formData.append("name", form.name);
+        formData.append("description", form.description);
+        formData.append("priceOriginal", parseFloat(form.priceOriginal));
+        if (hasRealDiscount) formData.append("priceDiscount", parsedDiscount);
+        formData.append("quantity", parseInt(form.quantity, 10));
+        // The update endpoint parses these two as JSON strings.
+        formData.append("categoryIds", JSON.stringify(form.categoryIds));
+        formData.append("collectionIds", JSON.stringify(form.collectionIds));
 
         await api.put(`/product/${editingId}`, formData);
-        if (form.files.length > 0) await uploadFiles(editingId, form.files);
+
+        // New images go up as one batch rather than one request per file.
+        if (form.files.length > 0) {
+          const images = new FormData();
+          form.files.forEach(file => images.append("File", file));
+          await api.post(`/product/${editingId}/images`, images, {
+            headers: { "Content-Type": "multipart/form-data" },
+            onUploadProgress: trackUpload,
+          });
+        }
         toast.success("Product updated.");
       } else {
-        const res = await api.post("/product", payload);
-        await uploadFiles(res.data.id, form.files);
+        // Product and images in a single request — the API creates them in one
+        // transaction, so a failed upload can't leave a half-created product behind.
+        const formData = new FormData();
+        formData.append("name", form.name);
+        formData.append("description", form.description);
+        formData.append("priceOriginal", parseFloat(form.priceOriginal));
+        if (hasRealDiscount) formData.append("priceDiscount", parsedDiscount);
+        formData.append("quantity", parseInt(form.quantity, 10));
+        form.categoryIds.forEach(id => formData.append("categoryIds", id));
+        form.collectionIds.forEach(id => formData.append("collectionIds", id));
+        form.files.forEach(file => formData.append("files", file));
+
+        await api.post("/product", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+          onUploadProgress: trackUpload,
+        });
         toast.success("Product created.");
       }
 
       setFormOpen(false);
       fetchProducts(page, search, filterCategory);
-    } catch {
-      toast.error("Failed to save product.");
+    } catch (err) {
+      toast.error(err?.response?.data?.message ?? "Failed to save product.");
     } finally {
       setSubmitting(false);
+      setUploadPct(0);
     }
   }
 
@@ -274,28 +290,28 @@ export default function AdminProducts() {
   }
 
   async function fetchImages(productId) {
-    setImgLoading(true);
+    setImagesLoading(true);
     try {
-      const res = await api.get(`product/product-images/${productId}`);
-      setImgProduct(prev => ({ ...prev, images: Array.from(res.data) }));
+      const res = await api.get(`/product/product-images/${productId}`);
+      setExistingImages(Array.from(res.data));
     } catch {
       toast.error("Failed to load images.");
     } finally {
-      setImgLoading(false);
+      setImagesLoading(false);
     }
   }
 
-  async function openImages(product) {
-    setImgProduct(product);
-    setImgOpen(true);
-    await fetchImages(product.id);
-  }
-
+  // Saved images are deleted straight away rather than on submit — they are already
+  // persisted, so there is nothing to stage.
   async function handleDeleteImage(imageId) {
+    if (existingImages.length + form.files.length <= MIN_IMAGES) {
+      toast.error(`O produto precisa de pelo menos ${MIN_IMAGES} imagem.`);
+      return;
+    }
     try {
       await api.delete(`/images/${imageId}`);
       toast.success("Image deleted.");
-      await fetchImages(imgProduct.id);
+      await fetchImages(editingId);
       fetchProducts(page, search, filterCategory);
     } catch {
       toast.error("Failed to delete image.");
@@ -306,7 +322,7 @@ export default function AdminProducts() {
     try {
       await api.patch(`/images/${imageId}/set-main`);
       toast.success("Main image updated.");
-      await fetchImages(imgProduct.id);
+      await fetchImages(editingId);
       fetchProducts(page, search, filterCategory);
     } catch {
       toast.error("Failed to set main image.");
@@ -321,6 +337,26 @@ export default function AdminProducts() {
         : [...prev.categoryIds, id],
     }));
   }
+
+  // The API makes the first file the main image, so "set main" is a reorder.
+  function makePendingMain(index) {
+    setForm(prev => {
+      const files = [...prev.files];
+      const [chosen] = files.splice(index, 1);
+      return { ...prev, files: [chosen, ...files] };
+    });
+  }
+
+  function toggleCollection(id) {
+    setForm(prev => ({
+      ...prev,
+      collectionIds: prev.collectionIds.includes(id)
+        ? prev.collectionIds.filter(c => c !== id)
+        : [...prev.collectionIds, id],
+    }));
+  }
+
+  const totalImages = existingImages.length + form.files.length;
 
   const priceNum = parseFloat(form.priceOriginal);
   const discNum = parseFloat(form.priceDiscount);
@@ -432,9 +468,6 @@ export default function AdminProducts() {
                     </td> 
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => openImages(product)} title="Manage images">
-                          <Images size={15} />
-                        </Button>
                         <Button variant="ghost" size="icon" onClick={() => openEdit(product.id)} title="Edit">
                           <Pencil size={15} />
                         </Button>
@@ -639,19 +672,69 @@ export default function AdminProducts() {
             <section className="grid gap-3 border-t pt-6">
               <div className="flex items-center justify-between">
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Images {!editingId && <span className="text-destructive">*</span>}
+                  Images <span className="text-destructive">*</span>
                 </h3>
-                <span className={`text-xs ${form.files.length > MAX_IMAGES ? "text-destructive" : "text-muted-foreground"}`}>
-                  {form.files.length} / {MAX_IMAGES}
+                <span className={`text-xs ${totalImages > MAX_IMAGES ? "text-destructive" : "text-muted-foreground"}`}>
+                  {totalImages} / {MAX_IMAGES}
                 </span>
               </div>
               <p className="-mt-1 text-xs text-muted-foreground">
                 {editingId
-                  ? `Optional — new images are added to the existing ones (máx. ${MAX_IMAGES}).`
+                  ? `Entre ${MIN_IMAGES} e ${MAX_IMAGES} imagens. Alterações nas imagens salvas são aplicadas imediatamente.`
                   : `Entre ${MIN_IMAGES} e ${MAX_IMAGES} imagens. A primeira é a principal.`}
               </p>
 
-              {form.files.length < MAX_IMAGES ? (
+              {/* Saved images — delete / set-main act on the server right away. */}
+              {editingId && (imagesLoading ? (
+                <div className="grid grid-cols-3 gap-2">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <Skeleton key={i} className="aspect-square rounded-lg" />
+                  ))}
+                </div>
+              ) : existingImages.length > 0 ? (
+                <div className="grid grid-cols-3 gap-2">
+                  {existingImages.map(img => (
+                    <div key={img.id} className="relative overflow-hidden rounded-lg border">
+                      <div className="relative aspect-square">
+                        {img.url ? (
+                          <Image src={img.url} alt="product image" fill sizes="120px" className="object-cover" />
+                        ) : (
+                          <div className="h-full bg-muted" />
+                        )}
+                        {img.isMain && (
+                          <div className="absolute top-1 left-1">
+                            <Badge className="gap-1 px-1.5 py-0.5 text-[10px]">
+                              <Star size={9} fill="currentColor" /> Main
+                            </Badge>
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteImage(img.id)}
+                          className="absolute top-1 right-1 rounded-full bg-black/60 p-1 text-white transition-colors hover:bg-black/80"
+                          aria-label="Delete image"
+                          title="Delete image"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                      {!img.isMain && (
+                        <button
+                          type="button"
+                          onClick={() => handleSetMain(img.id)}
+                          className="flex w-full items-center justify-center gap-1 bg-muted/50 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                        >
+                          <Star size={11} /> Set main
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">Nenhuma imagem salva.</p>
+              ))}
+
+              {totalImages < MAX_IMAGES ? (
                 <div className={shaking.files ? "shake" : ""}>
                   <label
                     onDragOver={e => { e.preventDefault(); setDragActive(true); }}
@@ -685,7 +768,7 @@ export default function AdminProducts() {
 
               {errors.files && (
                 <p className="text-xs text-destructive">
-                  {form.files.length > MAX_IMAGES
+                  {totalImages > MAX_IMAGES
                     ? `Mantenha no máximo ${MAX_IMAGES} imagens.`
                     : `Pelo menos ${MIN_IMAGES} imagem é obrigatória.`}
                 </p>
@@ -703,12 +786,23 @@ export default function AdminProducts() {
                           className="object-cover w-full h-full"
                         />
                       )}
-                      {i === 0 && (
+                      {/* The first file becomes main, and only when nothing is saved yet. */}
+                      {i === 0 && existingImages.length === 0 ? (
                         <div className="absolute top-1 left-1">
                           <Badge className="text-xs px-1.5 py-0.5 gap-1">
                             <Star size={9} fill="currentColor" /> Main
                           </Badge>
                         </div>
+                      ) : existingImages.length === 0 && (
+                        <button
+                          type="button"
+                          onClick={() => makePendingMain(i)}
+                          className="absolute bottom-1 left-1 rounded-full bg-black/60 p-1 text-white transition-colors hover:bg-black/80"
+                          aria-label={`Use ${file.name} as main image`}
+                          title="Use as main image"
+                        >
+                          <Star size={12} />
+                        </button>
                       )}
                       <button
                         type="button"
@@ -761,10 +855,63 @@ export default function AdminProducts() {
                 </div>
               </section>
             )}
+
+            {/* ── Collections ─────────────────────────────────────── */}
+            {collections.length > 0 && (
+              <section className="grid gap-3 border-t pt-6">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Collections
+                  {form.collectionIds.length > 0 && (
+                    <span className="ml-1.5 font-normal normal-case text-muted-foreground">
+                      ({form.collectionIds.length} selected)
+                    </span>
+                  )}
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {collections.map(col => {
+                    const active = form.collectionIds.includes(col.id);
+                    return (
+                      <label
+                        key={col.id}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm cursor-pointer transition-colors select-none
+                          ${active
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-background hover:bg-accent"
+                          }`}
+                      >
+                        <input
+                          type="checkbox"
+                          className="sr-only"
+                          checked={active}
+                          onChange={() => toggleCollection(col.id)}
+                        />
+                        {active && <Check size={13} />}
+                        {col.name}
+                      </label>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
           </form>
 
           <SheetFooter className="border-t">
-            <Button variant="outline" onClick={() => setFormOpen(false)}>Cancel</Button>
+            {/* Upload progress — only meaningful once bytes are actually moving. */}
+            {submitting && uploadPct > 0 && (
+              <div className="mb-2 w-full">
+                <div className="mb-1 flex justify-between text-xs text-muted-foreground">
+                  <span>{uploadPct < 100 ? "Enviando imagens…" : "Processando…"}</span>
+                  <span>{uploadPct}%</span>
+                </div>
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-primary transition-all duration-200"
+                    style={{ width: `${uploadPct}%` }}
+                  />
+                </div>
+              </div>
+            )}
+            <Button variant="outline" onClick={() => setFormOpen(false)} disabled={submitting}>Cancel</Button>
             <Button type="submit" form="product-form" disabled={submitting}>
               {submitting && <Loader2 size={15} className="animate-spin mr-2" />}
               {editingId ? "Save Changes" : "Create Product"}
@@ -773,76 +920,6 @@ export default function AdminProducts() {
         </SheetContent>
       </Sheet>
 
-      {/* Image Management Sheet */}
-      <Sheet open={imgOpen} onOpenChange={setImgOpen}>
-        <SheetContent side="right" className="sm:max-w-lg w-full overflow-y-auto">
-          <SheetHeader className="border-b pb-4">
-            <h2 className="font-semibold text-foreground">
-              Images — {imgProduct?.name}
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Delete or set the main image for this product.
-            </p>
-          </SheetHeader>
-
-          <div className="p-4 flex flex-col gap-4">
-            {imgLoading ? (
-              <div className="grid grid-cols-2 gap-3">
-                {Array.from({ length: 2 }).map((_, i) => (
-                  <Skeleton key={i} className="aspect-square rounded-lg" />
-                ))}
-              </div>
-            ) : (imgProduct?.images ?? []).length === 0 ? (
-              <p className="text-sm text-muted-foreground">No images yet.</p>
-            ) : (
-              <div className="grid grid-cols-2 gap-3">
-                {(imgProduct?.images ?? []).map(img => {
-                  const src = img.url ?? img.imageUrl;
-                  console.log(imgProduct)
-                  return (
-                    <div key={img.id} className="relative border rounded-lg overflow-hidden group">
-                      <div className="relative aspect-square">
-                        {src ? (
-                          <Image src={src} alt="product image" fill className="object-cover" />
-                        ) : (
-                          <div className="h-full bg-muted" />
-                        )}
-                      </div>
-                      {img.isMain && (
-                        <div className="absolute top-2 left-2">
-                          <Badge className="gap-1 text-xs">
-                            <Star size={10} fill="currentColor" /> Main
-                          </Badge>
-                        </div>
-                      )}
-                      <div className="flex gap-2 p-2 bg-muted/50">
-                        {!img.isMain && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="flex-1 text-xs gap-1"
-                            onClick={() => handleSetMain(img.id)}
-                          >
-                            <Star size={12} /> Set main
-                          </Button>
-                        )}
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          className="flex-1 text-xs gap-1"
-                          onClick={() => handleDeleteImage(img.id)}
-                        >
-                          <Trash2 size={12} /> Delete
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </SheetContent>
-      </Sheet>
     </div>
   );
 }

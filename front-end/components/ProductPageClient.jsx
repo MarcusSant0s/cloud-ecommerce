@@ -6,7 +6,7 @@ import { useCart } from "@/lib/use-cart";
 import { useRouter, useSearchParams } from "next/navigation";
 import React from "react";
 
-export default function ProductPageClient({ categories, products, totalPages, currentPage }) {
+export default function ProductPageClient({ categories, collections = [], products, totalPages, currentPage }) {
   const { addItem } = useCart();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -34,6 +34,7 @@ export default function ProductPageClient({ categories, products, totalPages, cu
   }, [addItem]);
 
   const selectedCategoryId = searchParams.get("categoryId");
+  const selectedCollectionId = searchParams.get("collectionId");
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -52,28 +53,68 @@ export default function ProductPageClient({ categories, products, totalPages, cu
               </p>
             </div>
 
-            {/* Category pills — horizontally scrollable on mobile */}
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-              <Button
-                className="rounded-sm shrink-0 text-[0.7rem] uppercase tracking-[0.12em]"
-                size="sm"
-                variant={!selectedCategoryId ? "default" : "outline"}
-                onClick={() => updateParam("categoryId", null)}
-              >
-                Todos
-              </Button>
-              {categories.map((category) => (
-                <Button
-                  aria-pressed={category.id === Number(selectedCategoryId)}
-                  className="rounded-sm shrink-0 text-[0.7rem] uppercase tracking-[0.12em]"
-                  key={category.id}
-                  onClick={() => updateParam("categoryId", category.id)}
-                  size="sm"
-                  variant={category.id === Number(selectedCategoryId) ? "default" : "outline"}
-                >
-                  {category.name}
-                </Button>
-              ))}
+            {/* Filter pills — horizontally scrollable on mobile */}
+            <div className="flex flex-col gap-3">
+              <div>
+                {/* Only worth naming the rows once there are two of them. */}
+                {collections.length > 0 && (
+                  <span className="mb-2 block text-[0.65rem] font-medium uppercase tracking-[0.25em] text-muted-foreground">
+                    Categoria
+                  </span>
+                )}
+                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+                  <Button
+                    className="rounded-sm shrink-0 text-[0.7rem] uppercase tracking-[0.12em]"
+                    size="sm"
+                    variant={!selectedCategoryId ? "default" : "outline"}
+                    onClick={() => updateParam("categoryId", null)}
+                  >
+                    Todos
+                  </Button>
+                  {categories.map((category) => (
+                    <Button
+                      aria-pressed={category.id === Number(selectedCategoryId)}
+                      className="rounded-sm shrink-0 text-[0.7rem] uppercase tracking-[0.12em]"
+                      key={category.id}
+                      onClick={() => updateParam("categoryId", category.id)}
+                      size="sm"
+                      variant={category.id === Number(selectedCategoryId) ? "default" : "outline"}
+                    >
+                      {category.name}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {collections.length > 0 && (
+                <div>
+                  <span className="mb-2 block text-[0.65rem] font-medium uppercase tracking-[0.25em] text-muted-foreground">
+                    Coleção
+                  </span>
+                  <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+                    <Button
+                      className="rounded-sm shrink-0 text-[0.7rem] uppercase tracking-[0.12em]"
+                      size="sm"
+                      variant={!selectedCollectionId ? "default" : "outline"}
+                      onClick={() => updateParam("collectionId", null)}
+                    >
+                      Todas
+                    </Button>
+                    {collections.map((collection) => (
+                      <Button
+                        aria-pressed={collection.id === Number(selectedCollectionId)}
+                        className="rounded-sm shrink-0 text-[0.7rem] uppercase tracking-[0.12em]"
+                        key={collection.id}
+                        onClick={() => updateParam("collectionId", collection.id)}
+                        size="sm"
+                        variant={collection.id === Number(selectedCollectionId) ? "default" : "outline"}
+                      >
+                        {collection.name}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

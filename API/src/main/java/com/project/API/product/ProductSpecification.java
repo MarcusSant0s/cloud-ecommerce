@@ -1,6 +1,7 @@
 package com.project.API.product;
 
  import com.project.API.category.Category;
+ import com.project.API.collection.ProductCollection;
  import com.project.API.product.dto.ProductFilterDTO;
  import jakarta.persistence.criteria.Join;
  import jakarta.persistence.criteria.JoinType;
@@ -13,6 +14,7 @@ public class ProductSpecification{
     public static Specification<Product> withFilters (ProductFilterDTO filters){
         return Specification
                 .where(byCategoryId(filters.categoryId()))
+                .and(byCollectionId(filters.collectionId()))
                 .and(byName(filters.name()))
                 .and(byMinPrice(filters.minPrice()))
                 .and(byMaxPrice(filters.maxPrice()))
@@ -24,6 +26,14 @@ public class ProductSpecification{
             query.distinct(true);
             Join<Product, Category> categories = root.join("categories", JoinType.INNER);
             return cb.equal(categories.get("id"), categoryId);
+        };
+    }
+    private static Specification<Product> byCollectionId(Long collectionId) {
+        return (root, query, cb) -> {
+            if (collectionId == null) return null;
+            query.distinct(true);
+            Join<Product, ProductCollection> collections = root.join("collections", JoinType.INNER);
+            return cb.equal(collections.get("id"), collectionId);
         };
     }
     private static Specification<Product> byName(String name) {

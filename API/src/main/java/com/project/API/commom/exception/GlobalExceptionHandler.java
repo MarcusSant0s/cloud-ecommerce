@@ -2,6 +2,7 @@ package com.project.API.commom.exception;
 
 import com.project.API.cart.exception.InsufficientStockException;
  import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +36,12 @@ public class GlobalExceptionHandler {
                 .body(new ApiError(409, "EMAIL_ALREADY_REGISTERED", ex.getMessage(), null));
     }
 
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ResponseEntity<ApiError> handleDuplicateResource(DuplicateResourceException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiError(409, "DUPLICATE_RESOURCE", ex.getMessage(), null));
+    }
+
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ApiError> handleBadCredentials(BadCredentialsException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -51,6 +58,16 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleValidation(IllegalArgumentException ex) {
         return ResponseEntity.badRequest()
                 .body(new ApiError(400, "INVALID_ARGUMENT", ex.getMessage(), null));
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiError> handleConstraintViolation(ConstraintViolationException ex) {
+        String message = ex.getConstraintViolations().stream()
+                .findFirst()
+                .map(v -> v.getPropertyPath() + " " + v.getMessage())
+                .orElse("Validation failed");
+        return ResponseEntity.badRequest()
+                .body(new ApiError(400, "VALIDATION_ERROR", message, null));
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

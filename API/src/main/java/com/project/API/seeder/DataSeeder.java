@@ -2,6 +2,8 @@ package com.project.API.seeder;
 
 import com.project.API.category.Category;
 import com.project.API.category.CategoryRepository;
+import com.project.API.collection.ProductCollection;
+import com.project.API.collection.ProductCollectionRepository;
 import com.project.API.order.Order;
 import com.project.API.order.OrderItem;
 import com.project.API.order.OrderRepository;
@@ -28,6 +30,7 @@ import java.util.List;
 public class DataSeeder implements CommandLineRunner {
 
     private final CategoryRepository categoryRepository;
+    private final ProductCollectionRepository collectionRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final UserAdressRepository userAdressRepository;
@@ -36,6 +39,7 @@ public class DataSeeder implements CommandLineRunner {
 
     public DataSeeder(
             CategoryRepository categoryRepository,
+            ProductCollectionRepository collectionRepository,
             ProductRepository productRepository,
             UserRepository userRepository,
             UserAdressRepository userAdressRepository,
@@ -43,6 +47,7 @@ public class DataSeeder implements CommandLineRunner {
             BCryptPasswordEncoder passwordEncoder
     ) {
         this.categoryRepository = categoryRepository;
+        this.collectionRepository = collectionRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
         this.userAdressRepository = userAdressRepository;
@@ -56,6 +61,7 @@ public class DataSeeder implements CommandLineRunner {
 
         List<Category> categories = seedCategories();
         List<Product> products = seedProducts(categories);
+        seedCollections(products);
         List<User> users = seedUsers();
         seedOrders(users, products);
     }
@@ -191,6 +197,34 @@ public class DataSeeder implements CommandLineRunner {
         return productRepository.saveAll(saved);
     }
 
+    // Product owns the product_collection join table, so the collections are attached
+    // to the already-persisted products and re-saved rather than set from this side.
+    private void seedCollections(List<Product> products) {
+        List<ProductCollection> saved = collectionRepository.saveAll(List.of(
+                collection("Coleção Verão",   "collections/verao.jpg",
+                        "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400"),
+                collection("Coleção Inverno", "collections/inverno.jpg",
+                        "https://images.unsplash.com/photo-1483664852095-d6cc6870702d?w=400")
+        ));
+
+        ProductCollection verao   = saved.get(0);
+        ProductCollection inverno = saved.get(1);
+
+        Product camiseta  = products.get(3);
+        Product jaqueta   = products.get(4);
+        Product tenis     = products.get(5);
+        Product sandalia  = products.get(6);
+        Product bicicleta = products.get(7);
+
+        camiseta.AddCollection(verao);
+        sandalia.AddCollection(verao);
+        tenis.AddCollection(verao);
+        bicicleta.AddCollection(verao);
+        jaqueta.AddCollection(inverno);
+
+        productRepository.saveAll(List.of(camiseta, jaqueta, tenis, sandalia, bicicleta));
+    }
+
     private List<User> seedUsers() {
         User ana      = user("Ana",      "Lima",     "ana.lima@email.com",      "senha123",
                 address("Rua das Flores",         "São Paulo",        "01310-100", "45"));
@@ -278,6 +312,14 @@ public class DataSeeder implements CommandLineRunner {
 
     private Category category(String name, String s3key, String url) {
         Category c = new Category();
+        c.setName(name);
+        c.setS3key(s3key);
+        c.setUrl(url);
+        return c;
+    }
+
+    private ProductCollection collection(String name, String s3key, String url) {
+        ProductCollection c = new ProductCollection();
         c.setName(name);
         c.setS3key(s3key);
         c.setUrl(url);
