@@ -66,5 +66,6 @@ AuthProvider
 | Auth | `POST /auth/login`, `POST /auth/register`, `GET /users/me`, `PUT /users/UpdateMe` |
 | Products | `GET /product`, `GET /product/:id` |
 | Categories | `GET /category/all-categories` |
+| Collections | `GET /collection/all-collections`, `POST /collection`, `PUT /collection/:id`, `DELETE /collection/:id` (admin) |
 | Cart | `GET /cart/:userId`, `POST /cart/:userId/add`, `PATCH /cart/:userId/item/:itemId`, `DELETE /cart/:userId/item/:itemId`, `DELETE /cart/:userId` |
 | Orders | `GET /order` |
