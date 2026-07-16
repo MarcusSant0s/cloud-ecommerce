@@ -147,6 +147,7 @@ async function handleSubmit(e) {
                               src={cat.url ?? cat.url}
                               alt={cat.name}
                               fill
+                              sizes="40px"
                               className="object-cover"
                             />
                           </div>

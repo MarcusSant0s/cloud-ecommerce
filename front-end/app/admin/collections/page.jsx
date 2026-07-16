@@ -143,6 +143,7 @@ export default function AdminCollections() {
                                 src={col.url}
                                 alt={col.name}
                                 fill
+                                sizes="40px"
                                 className="object-cover"
                               />
                             </div>

@@ -7,6 +7,7 @@ import {
   Plus, Pencil, Trash2, Star, Upload, ChevronLeft, ChevronRight, Loader2, Search, X, Check,
 } from "lucide-react";
 import api from "@/services/api";
+import { compressImage } from "@/lib/compress-image";
 import { Button } from "@/primitives/button";
 import { Input } from "@/primitives/input";
 import { Label } from "@/primitives/label";
@@ -40,8 +41,8 @@ function validateForm(form, editingId, existingCount = 0) {
   const price = parseFloat(form.priceOriginal);
   if (form.priceOriginal === "" || isNaN(price) || price < 0) errs.priceOriginal = true;
   if (form.priceDiscount !== "" && form.priceDiscount !== null) {
-    const disc = parseFloat(form.priceDiscount);
-    if (isNaN(disc) || disc < 0 || disc > 1) errs.priceDiscount = true;
+    const disc = parseFloat(form.priceDiscount); // percent, 0–100
+    if (isNaN(disc) || disc < 0 || disc > 100) errs.priceDiscount = true;
   }
   const qty = parseInt(form.quantity, 10);
   if (form.quantity === "" || isNaN(qty) || qty < 0) errs.quantity = true;
@@ -189,7 +190,8 @@ export default function AdminProducts() {
       name: product.name ?? "",
       description: product.description ?? "",
       priceOriginal: product.priceOriginal ?? "",
-      priceDiscount: product.priceDiscount ?? "0",
+      // API stores the discount as a fraction (0.10); the form edits it as a percent (10).
+      priceDiscount: product.priceDiscount != null ? String(Math.round(product.priceDiscount * 10000) / 100) : "0",
       quantity: product.quantity ?? "",
       categoryIds: (product.categories ?? []).map(c => c.id),
       collectionIds: (product.collections ?? []).map(c => c.id),
@@ -218,19 +220,25 @@ export default function AdminProducts() {
     setSubmitting(true);
     setUploadPct(0);
 
-    // The domain models "no discount" as an absent value, not 0 — the entity requires
-    // a discount to be >= 0.01. So a zero/blank discount is simply not sent, and the
-    // edit path clears any existing discount by omitting it.
-    const parsedDiscount = parseFloat(form.priceDiscount);
-    const hasRealDiscount = !isNaN(parsedDiscount) && parsedDiscount > 0;
+    // The form edits the discount as a percent (10 = 10% off); the API stores it as a
+    // fraction (0.10). Convert here. "No discount" is modelled as an absent value, not 0 —
+    // the entity requires a discount >= 0.01 — so a zero/blank discount is simply not sent,
+    // and the edit path clears any existing discount by omitting it.
+    const discountPercent = parseFloat(form.priceDiscount);
+    const hasRealDiscount = !isNaN(discountPercent) && discountPercent > 0;
+    const discountFraction = hasRealDiscount ? discountPercent / 100 : 0;
 
     try {
+      // Downscale/re-encode in the browser so we upload far fewer bytes and the origin
+      // stores reasonably-sized assets. compressImage returns the original on any failure.
+      const compressedFiles = await Promise.all(form.files.map(f => compressImage(f)));
+
       if (editingId) {
         const formData = new FormData();
         formData.append("name", form.name);
         formData.append("description", form.description);
         formData.append("priceOriginal", parseFloat(form.priceOriginal));
-        if (hasRealDiscount) formData.append("priceDiscount", parsedDiscount);
+        if (hasRealDiscount) formData.append("priceDiscount", discountFraction);
         formData.append("quantity", parseInt(form.quantity, 10));
         // The update endpoint parses these two as JSON strings.
         formData.append("categoryIds", JSON.stringify(form.categoryIds));
@@ -239,9 +247,9 @@ export default function AdminProducts() {
         await api.put(`/product/${editingId}`, formData);
 
         // New images go up as one batch rather than one request per file.
-        if (form.files.length > 0) {
+        if (compressedFiles.length > 0) {
           const images = new FormData();
-          form.files.forEach(file => images.append("File", file));
+          compressedFiles.forEach(file => images.append("File", file));
           await api.post(`/product/${editingId}/images`, images, {
             headers: { "Content-Type": "multipart/form-data" },
             onUploadProgress: trackUpload,
@@ -255,11 +263,11 @@ export default function AdminProducts() {
         formData.append("name", form.name);
         formData.append("description", form.description);
         formData.append("priceOriginal", parseFloat(form.priceOriginal));
-        if (hasRealDiscount) formData.append("priceDiscount", parsedDiscount);
+        if (hasRealDiscount) formData.append("priceDiscount", discountFraction);
         formData.append("quantity", parseInt(form.quantity, 10));
         form.categoryIds.forEach(id => formData.append("categoryIds", id));
         form.collectionIds.forEach(id => formData.append("collectionIds", id));
-        form.files.forEach(file => formData.append("files", file));
+        compressedFiles.forEach(file => formData.append("files", file));
 
         await api.post("/product", formData, {
           headers: { "Content-Type": "multipart/form-data" },
@@ -359,10 +367,10 @@ export default function AdminProducts() {
   const totalImages = existingImages.length + form.files.length;
 
   const priceNum = parseFloat(form.priceOriginal);
-  const discNum = parseFloat(form.priceDiscount);
+  const discPercent = parseFloat(form.priceDiscount); // 0–100
   const hasPrice = !isNaN(priceNum) && priceNum >= 0;
-  const hasDiscount = !isNaN(discNum) && discNum > 0 && discNum <= 1;
-  const finalPrice = hasPrice ? (hasDiscount ? priceNum * (1 - discNum) : priceNum) : null;
+  const hasDiscount = !isNaN(discPercent) && discPercent > 0 && discPercent <= 100;
+  const finalPrice = hasPrice ? (hasDiscount ? priceNum * (1 - discPercent / 100) : priceNum) : null;
 
   return (
     <div>
@@ -449,6 +457,7 @@ export default function AdminProducts() {
                               src={product.mainImageUrl}
                               alt={product.name}
                               fill
+                              sizes="40px"
                               className="object-cover"
                             />
                           </div>
@@ -597,31 +606,32 @@ export default function AdminProducts() {
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="p-discount">Discount</Label>
+                  <Label htmlFor="p-discount">Discount (%)</Label>
                   <div className={`relative ${shaking.priceDiscount ? "shake" : ""}`}>
                     <Input
                       id="p-discount"
                       type="number"
                       min="0"
-                      max="1"
-                      step="0.01"
+                      max="100"
+                      step="1"
                       value={form.priceDiscount}
                       onChange={e => {
                         setForm(prev => ({ ...prev, priceDiscount: e.target.value }));
                         const v = parseFloat(e.target.value);
-                        if (e.target.value === "" || (!isNaN(v) && v >= 0 && v <= 1)) clearError("priceDiscount");
+                        if (e.target.value === "" || (!isNaN(v) && v >= 0 && v <= 100)) clearError("priceDiscount");
                       }}
                       onBlur={e => {
                         const v = parseFloat(e.target.value);
-                        if (!isNaN(v)) setForm(prev => ({ ...prev, priceDiscount: v.toFixed(2) }));
+                        if (!isNaN(v)) setForm(prev => ({ ...prev, priceDiscount: String(v) }));
                       }}
-                      className={errors.priceDiscount ? "border-destructive focus-visible:ring-destructive/30" : ""}
-                      placeholder="0.00"
+                      className={`pr-8 ${errors.priceDiscount ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
+                      placeholder="0"
                     />
+                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">%</span>
                   </div>
                   {errors.priceDiscount
-                    ? <p className="text-xs text-destructive">Must be between 0.00 and 1.00.</p>
-                    : <p className="text-xs text-muted-foreground">Fraction off — 0.10 means 10% off.</p>}
+                    ? <p className="text-xs text-destructive">Must be between 0 and 100.</p>
+                    : <p className="text-xs text-muted-foreground">Percent off — enter 10 for 10% off.</p>}
                 </div>
               </div>
 
@@ -658,7 +668,7 @@ export default function AdminProducts() {
                         {hasDiscount && (
                           <>
                             <span className="text-xs text-muted-foreground line-through">{BRL.format(priceNum)}</span>
-                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">-{Math.round(discNum * 100)}%</Badge>
+                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">-{Math.round(discPercent)}%</Badge>
                           </>
                         )}
                       </>
@@ -818,6 +828,43 @@ export default function AdminProducts() {
               )}
             </section>
 
+            {/* ── Collections ─────────────────────────────────────── */}
+            {collections.length > 0 && (
+              <section className="grid gap-3 border-t pt-6">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Collections
+                  {form.collectionIds.length > 0 && (
+                    <span className="ml-1.5 font-normal normal-case text-muted-foreground">
+                      ({form.collectionIds.length} selected)
+                    </span>
+                  )}
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {collections.map(col => {
+                    const active = form.collectionIds.includes(col.id);
+                    return (
+                      <label
+                        key={col.id}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm cursor-pointer transition-colors select-none
+                          ${active
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-background hover:bg-accent"
+                          }`}
+                      >
+                        <input
+                          type="checkbox"
+                          className="sr-only"
+                          checked={active}
+                          onChange={() => toggleCollection(col.id)}
+                        />
+                        {active && <Check size={13} />}
+                        {col.name}
+                      </label>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
             {/* ── Categories ──────────────────────────────────────── */}
             {categories.length > 0 && (
               <section className="grid gap-3 border-t pt-6">
@@ -856,43 +903,6 @@ export default function AdminProducts() {
               </section>
             )}
 
-            {/* ── Collections ─────────────────────────────────────── */}
-            {collections.length > 0 && (
-              <section className="grid gap-3 border-t pt-6">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Collections
-                  {form.collectionIds.length > 0 && (
-                    <span className="ml-1.5 font-normal normal-case text-muted-foreground">
-                      ({form.collectionIds.length} selected)
-                    </span>
-                  )}
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {collections.map(col => {
-                    const active = form.collectionIds.includes(col.id);
-                    return (
-                      <label
-                        key={col.id}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm cursor-pointer transition-colors select-none
-                          ${active
-                            ? "bg-primary text-primary-foreground border-primary"
-                            : "bg-background hover:bg-accent"
-                          }`}
-                      >
-                        <input
-                          type="checkbox"
-                          className="sr-only"
-                          checked={active}
-                          onChange={() => toggleCollection(col.id)}
-                        />
-                        {active && <Check size={13} />}
-                        {col.name}
-                      </label>
-                    );
-                  })}
-                </div>
-              </section>
-            )}
           </form>
 
           <SheetFooter className="border-t">

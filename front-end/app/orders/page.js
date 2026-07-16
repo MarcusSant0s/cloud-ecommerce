@@ -92,7 +92,7 @@ function OrderCard({ order }) {
     <div className="flex flex-col gap-4 rounded-2xl border bg-card p-4 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 sm:flex-row sm:items-center sm:p-5">
       <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl border bg-muted sm:h-20 sm:w-20">
         {firstItem?.url ? (
-          <Image src={firstItem.url} alt={firstItem.productName} fill className="object-cover" />
+          <Image src={firstItem.url} alt={firstItem.productName} fill sizes="80px" className="object-cover" />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
             <Package className="h-8 w-8 text-muted-foreground" />

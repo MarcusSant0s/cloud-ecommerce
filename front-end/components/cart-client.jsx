@@ -180,6 +180,7 @@ export function CartClient({ className }) {
                     <Image
                       alt={item.name}
                       fill
+                      sizes="80px"
                       src={item.image || "/placeholder.png"}
                       className="object-cover"
                     />

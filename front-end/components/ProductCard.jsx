@@ -7,7 +7,7 @@ import { ShoppingBag, Loader2 } from "lucide-react";
 import { useCart } from "@/lib/use-cart";
 import { toast } from "sonner";
 
-const ProductCard = ({ product }) => {
+const ProductCard = ({ product, priority = false }) => {
   const [isAdding, setIsAdding] = useState(false);
   const { addItem } = useCart();
 
@@ -55,6 +55,7 @@ const ProductCard = ({ product }) => {
               src={image}
               alt={name}
               fill
+              priority={priority}
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               className="object-cover transition-transform duration-[600ms] ease-out group-hover:scale-105"
             />

@@ -2,6 +2,8 @@
 const nextConfig = {
   output: "standalone",
   images: {
+    // Serve AVIF when the browser supports it (~20–30% smaller than WebP), else WebP.
+    formats: ["image/avif", "image/webp"],
     remotePatterns: [
       {
         protocol: "https",

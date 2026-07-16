@@ -117,20 +117,18 @@ export default function Navbar({ categories = [] }) {
                             <Link
                               href={`/products?categoryId=${featured.id}`}
                               onClick={() => setCatOpen(false)}
-                              className="group relative hidden w-48 shrink-0 overflow-hidden rounded-sm sm:block"
+                              className="group relative hidden w-48 shrink-0 self-stretch min-h-[16rem] overflow-hidden rounded-sm sm:block"
                             >
-                              <div className="relative aspect-[3/4]">
-                                {featured.url && (
-                                  <Image
-                                    src={featured.url}
-                                    alt={featured.name}
-                                    fill
-                                    sizes="192px"
-                                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                                  />
-                                )}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
-                              </div>
+                              {featured.url && (
+                                <Image
+                                  src={featured.url}
+                                  alt={featured.name}
+                                  fill
+                                  sizes="192px"
+                                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                />
+                              )}
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
                               <div className="absolute inset-x-3 bottom-3">
                                 <p className="text-[0.55rem] uppercase tracking-[0.25em] text-white/80">Destaque</p>
                                 <p className="font-display text-lg uppercase tracking-[0.1em] text-white capitalize">{featured.name}</p>
