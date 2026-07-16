@@ -162,7 +162,7 @@ import java.util.Set;
         }
 
         // Uploads each file and hangs the resulting images off the product.
-        private void attachImages(Product product, List<MultipartFile> files) {
+        private void attachImages(Product product, List<d> files) {
 
             if (files == null || files.isEmpty()) {
                 return;
