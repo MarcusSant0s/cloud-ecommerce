@@ -79,8 +79,8 @@ const Footer = async () => {
             © {new Date().getFullYear()} Loja. Todos os direitos reservados.
           </p>
           <div className="flex items-center gap-6 text-xs uppercase tracking-[0.15em] text-muted-foreground">
-            <Link className="transition-colors hover:text-foreground" href="/products">Privacidade</Link>
-            <Link className="transition-colors hover:text-foreground" href="/products">Termos</Link>
+            <Link className="transition-colors hover:text-foreground" href="/privacidade">Privacidade</Link>
+            <Link className="transition-colors hover:text-foreground" href="/termos">Termos</Link>
             <span>PT-BR · BRL</span>
           </div>
         </div>

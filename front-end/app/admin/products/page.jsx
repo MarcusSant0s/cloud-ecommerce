@@ -132,7 +132,7 @@ export default function AdminProducts() {
       setProducts(res.data.content ?? res.data);
       setTotalPages(res.data.totalPages ?? 1);
     } catch {
-      toast.error("Failed to load products.");
+      toast.error("Falha ao carregar os produtos.");
     } finally {
       setLoading(false);
     }
@@ -144,7 +144,7 @@ export default function AdminProducts() {
       const res = await api.get(`/product/${product_id}`);
       return res.data;
     } catch {
-      toast.error("Failed to load product.");
+      toast.error("Falha ao carregar o produto.");
     } finally {
       setLoading(false);
     }
@@ -255,7 +255,7 @@ export default function AdminProducts() {
             onUploadProgress: trackUpload,
           });
         }
-        toast.success("Product updated.");
+        toast.success("Produto atualizado.");
       } else {
         // Product and images in a single request — the API creates them in one
         // transaction, so a failed upload can't leave a half-created product behind.
@@ -273,13 +273,13 @@ export default function AdminProducts() {
           headers: { "Content-Type": "multipart/form-data" },
           onUploadProgress: trackUpload,
         });
-        toast.success("Product created.");
+        toast.success("Produto criado.");
       }
 
       setFormOpen(false);
       fetchProducts(page, search, filterCategory);
     } catch (err) {
-      toast.error(err?.response?.data?.message ?? "Failed to save product.");
+      toast.error(err?.response?.data?.message ?? "Falha ao salvar o produto.");
     } finally {
       setSubmitting(false);
       setUploadPct(0);
@@ -289,11 +289,11 @@ export default function AdminProducts() {
   async function handleDelete(id) {
     try {
       await api.delete(`/product/${id}`);
-      toast.success("Product deleted.");
+      toast.success("Produto excluído.");
       setConfirmId(null);
       fetchProducts(page, search, filterCategory);
     } catch {
-      toast.error("Failed to delete product.");
+      toast.error("Falha ao excluir o produto.");
     }
   }
 
@@ -303,7 +303,7 @@ export default function AdminProducts() {
       const res = await api.get(`/product/product-images/${productId}`);
       setExistingImages(Array.from(res.data));
     } catch {
-      toast.error("Failed to load images.");
+      toast.error("Falha ao carregar as imagens.");
     } finally {
       setImagesLoading(false);
     }
@@ -318,22 +318,22 @@ export default function AdminProducts() {
     }
     try {
       await api.delete(`/images/${imageId}`);
-      toast.success("Image deleted.");
+      toast.success("Imagem excluída.");
       await fetchImages(editingId);
       fetchProducts(page, search, filterCategory);
     } catch {
-      toast.error("Failed to delete image.");
+      toast.error("Falha ao excluir a imagem.");
     }
   }
 
   async function handleSetMain(imageId) {
     try {
       await api.patch(`/images/${imageId}/set-main`);
-      toast.success("Main image updated.");
+      toast.success("Imagem principal atualizada.");
       await fetchImages(editingId);
       fetchProducts(page, search, filterCategory);
     } catch {
-      toast.error("Failed to set main image.");
+      toast.error("Falha ao definir a imagem principal.");
     }
   }
 
@@ -386,11 +386,11 @@ export default function AdminProducts() {
       `}</style>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-2xl font-bold">Products</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Manage your product catalog</p>
+          <h1 className="text-2xl font-bold">Produtos</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Gerencie seu catálogo de produtos</p>
         </div>
         <Button onClick={openCreate} size="sm" className="gap-2">
-          <Plus size={16} /> New Product
+          <Plus size={16} /> Novo Produto
         </Button>
       </div>
 
@@ -400,7 +400,7 @@ export default function AdminProducts() {
           <Input
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(0); }}
-            placeholder="Search by name…"
+            placeholder="Buscar por nome…"
             className="pl-8 pr-8"
           />
           {search && (
@@ -418,7 +418,7 @@ export default function AdminProducts() {
           onChange={e => { setFilterCategory(e.target.value); setPage(0); }}
           className="h-9 rounded-md border bg-transparent px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
         >
-          <option value="">All categories</option>
+          <option value="">Todas as categorias</option>
           {categories.map(cat => (
             <option key={cat.id} value={cat.id}>{cat.name}</option>
           ))}
@@ -432,16 +432,16 @@ export default function AdminProducts() {
           ))}
         </div>
       ) : products.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No products found.</p>
+        <p className="text-sm text-muted-foreground">Nenhum produto encontrado.</p>
       ) : (
         <div className="border rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
           <table className="w-full min-w-[560px] text-sm">
             <thead className="bg-muted/50 text-muted-foreground">
               <tr>
-                <th className="text-left px-4 py-3 font-medium">Product</th>
-                <th className="text-left px-4 py-3 font-medium">Price</th>
-                <th className="text-left px-4 py-3 font-medium">Stock</th>
+                <th className="text-left px-4 py-3 font-medium">Produto</th>
+                <th className="text-left px-4 py-3 font-medium">Preço</th>
+                <th className="text-left px-4 py-3 font-medium">Estoque</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -477,7 +477,7 @@ export default function AdminProducts() {
                     </td> 
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => openEdit(product.id)} title="Edit">
+                        <Button variant="ghost" size="icon" onClick={() => openEdit(product.id)} title="Editar">
                           <Pencil size={15} />
                         </Button>
                         <Button
@@ -485,7 +485,7 @@ export default function AdminProducts() {
                           size="icon"
                           className="text-destructive hover:text-destructive"
                           onClick={() => setConfirmId(product.id)}
-                          title="Delete"
+                          title="Excluir"
                         >
                           <Trash2 size={15} />
                         </Button>
@@ -497,13 +497,13 @@ export default function AdminProducts() {
                       <td colSpan={5} className="px-4 py-3">
                         <div className="flex flex-wrap items-center gap-3 text-sm">
                           <span className="text-destructive font-medium">
-                            Delete &ldquo;{product.name}&rdquo;? This cannot be undone.
+                            Excluir &ldquo;{product.name}&rdquo;? Esta ação não pode ser desfeita.
                           </span>
                           <Button size="sm" variant="destructive" onClick={() => handleDelete(product.id)}>
-                            Confirm
+                            Confirmar
                           </Button>
                           <Button size="sm" variant="ghost" onClick={() => setConfirmId(null)}>
-                            Cancel
+                            Cancelar
                           </Button>
                         </div>
                       </td>
@@ -522,7 +522,7 @@ export default function AdminProducts() {
           <Button variant="outline" size="icon" disabled={page === 0} onClick={() => setPage(p => p - 1)}>
             <ChevronLeft size={16} />
           </Button>
-          <span>Page {page + 1} / {totalPages}</span>
+          <span>Página {page + 1} / {totalPages}</span>
           <Button variant="outline" size="icon" disabled={page + 1 >= totalPages} onClick={() => setPage(p => p + 1)}>
             <ChevronRight size={16} />
           </Button>
@@ -534,10 +534,10 @@ export default function AdminProducts() {
         <SheetContent side="right" className="sm:max-w-lg w-full overflow-y-auto">
           <SheetHeader className="border-b pb-4">
             <h2 className="font-semibold text-foreground">
-              {editingId ? "Edit Product" : "New Product"}
+              {editingId ? "Editar Produto" : "Novo Produto"}
             </h2>
             <p className="text-sm text-muted-foreground">
-              {editingId ? "Update the product details below." : "Fill in the details to create a new product."}
+              {editingId ? "Atualize os dados do produto abaixo." : "Preencha os dados para criar um novo produto."}
             </p>
           </SheetHeader>
 
@@ -545,10 +545,10 @@ export default function AdminProducts() {
 
             {/* ── Details ─────────────────────────────────────────── */}
             <section className="grid gap-4">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Details</h3>
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Detalhes</h3>
 
               <div className="grid gap-2">
-                <Label htmlFor="p-name">Name <span className="text-destructive">*</span></Label>
+                <Label htmlFor="p-name">Nome <span className="text-destructive">*</span></Label>
                 <div className={shaking.name ? "shake" : ""}>
                   <Input
                     id="p-name"
@@ -558,19 +558,19 @@ export default function AdminProducts() {
                       if (e.target.value.trim()) clearError("name");
                     }}
                     className={errors.name ? "border-destructive focus-visible:ring-destructive/30" : ""}
-                    placeholder="Product name"
+                    placeholder="Nome do produto"
                   />
                 </div>
-                {errors.name && <p className="text-xs text-destructive">Name is required.</p>}
+                {errors.name && <p className="text-xs text-destructive">O nome é obrigatório.</p>}
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="p-desc">Description</Label>
+                <Label htmlFor="p-desc">Descrição</Label>
                 <textarea
                   id="p-desc"
                   value={form.description}
                   onChange={e => setForm(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Product description"
+                  placeholder="Descrição do produto"
                   rows={3}
                   className="flex w-full rounded-md border bg-transparent px-3 py-2 text-sm
                     placeholder:text-muted-foreground focus-visible:outline-none
@@ -581,11 +581,11 @@ export default function AdminProducts() {
 
             {/* ── Pricing & stock ─────────────────────────────────── */}
             <section className="grid gap-4 border-t pt-6">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Pricing &amp; stock</h3>
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Preço &amp; estoque</h3>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="p-price">Price (R$) <span className="text-destructive">*</span></Label>
+                  <Label htmlFor="p-price">Preço (R$) <span className="text-destructive">*</span></Label>
                   <div className={shaking.priceOriginal ? "shake" : ""}>
                     <Input
                       id="p-price"
@@ -602,11 +602,11 @@ export default function AdminProducts() {
                       placeholder="0.00"
                     />
                   </div>
-                  {errors.priceOriginal && <p className="text-xs text-destructive">Valid price required.</p>}
+                  {errors.priceOriginal && <p className="text-xs text-destructive">Informe um preço válido.</p>}
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="p-discount">Discount (%)</Label>
+                  <Label htmlFor="p-discount">Desconto (%)</Label>
                   <div className={`relative ${shaking.priceDiscount ? "shake" : ""}`}>
                     <Input
                       id="p-discount"
@@ -630,14 +630,14 @@ export default function AdminProducts() {
                     <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">%</span>
                   </div>
                   {errors.priceDiscount
-                    ? <p className="text-xs text-destructive">Must be between 0 and 100.</p>
-                    : <p className="text-xs text-muted-foreground">Percent off — enter 10 for 10% off.</p>}
+                    ? <p className="text-xs text-destructive">Deve estar entre 0 e 100.</p>
+                    : <p className="text-xs text-muted-foreground">Percentual de desconto — digite 10 para 10% off.</p>}
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-4 items-start sm:grid-cols-2">
                 <div className="grid gap-2">
-                  <Label htmlFor="p-qty">Stock <span className="text-destructive">*</span></Label>
+                  <Label htmlFor="p-qty">Estoque <span className="text-destructive">*</span></Label>
                   <div className={shaking.quantity ? "shake" : ""}>
                     <Input
                       id="p-qty"
@@ -653,12 +653,12 @@ export default function AdminProducts() {
                       placeholder="0"
                     />
                   </div>
-                  {errors.quantity && <p className="text-xs text-destructive">Valid stock quantity required.</p>}
+                  {errors.quantity && <p className="text-xs text-destructive">Informe uma quantidade válida.</p>}
                 </div>
 
                 {/* Live final-price preview */}
                 <div className="grid gap-2">
-                  <Label>Customer pays</Label>
+                  <Label>Cliente paga</Label>
                   <div className="flex h-9 items-center gap-2 rounded-md border bg-muted/40 px-3">
                     {finalPrice === null ? (
                       <span className="text-sm text-muted-foreground">—</span>
@@ -682,7 +682,7 @@ export default function AdminProducts() {
             <section className="grid gap-3 border-t pt-6">
               <div className="flex items-center justify-between">
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Images <span className="text-destructive">*</span>
+                  Imagens <span className="text-destructive">*</span>
                 </h3>
                 <span className={`text-xs ${totalImages > MAX_IMAGES ? "text-destructive" : "text-muted-foreground"}`}>
                   {totalImages} / {MAX_IMAGES}
@@ -714,7 +714,7 @@ export default function AdminProducts() {
                         {img.isMain && (
                           <div className="absolute top-1 left-1">
                             <Badge className="gap-1 px-1.5 py-0.5 text-[10px]">
-                              <Star size={9} fill="currentColor" /> Main
+                              <Star size={9} fill="currentColor" /> Principal
                             </Badge>
                           </div>
                         )}
@@ -722,8 +722,8 @@ export default function AdminProducts() {
                           type="button"
                           onClick={() => handleDeleteImage(img.id)}
                           className="absolute top-1 right-1 rounded-full bg-black/60 p-1 text-white transition-colors hover:bg-black/80"
-                          aria-label="Delete image"
-                          title="Delete image"
+                          aria-label="Excluir imagem"
+                          title="Excluir imagem"
                         >
                           <Trash2 size={12} />
                         </button>
@@ -734,7 +734,7 @@ export default function AdminProducts() {
                           onClick={() => handleSetMain(img.id)}
                           className="flex w-full items-center justify-center gap-1 bg-muted/50 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                         >
-                          <Star size={11} /> Set main
+                          <Star size={11} /> Definir principal
                         </button>
                       )}
                     </div>
@@ -758,7 +758,7 @@ export default function AdminProducts() {
                   >
                     <Upload size={22} />
                     <span className="font-medium">
-                      {dragActive ? "Drop images here" : "Drag & drop or click to upload"}
+                      {dragActive ? "Solte as imagens aqui" : "Arraste e solte ou clique para enviar"}
                     </span>
                     <span className="text-xs text-muted-foreground">PNG, JPG — até {MAX_FILE_SIZE_MB}MB cada</span>
                     <input
@@ -800,7 +800,7 @@ export default function AdminProducts() {
                       {i === 0 && existingImages.length === 0 ? (
                         <div className="absolute top-1 left-1">
                           <Badge className="text-xs px-1.5 py-0.5 gap-1">
-                            <Star size={9} fill="currentColor" /> Main
+                            <Star size={9} fill="currentColor" /> Principal
                           </Badge>
                         </div>
                       ) : existingImages.length === 0 && (
@@ -808,8 +808,8 @@ export default function AdminProducts() {
                           type="button"
                           onClick={() => makePendingMain(i)}
                           className="absolute bottom-1 left-1 rounded-full bg-black/60 p-1 text-white transition-colors hover:bg-black/80"
-                          aria-label={`Use ${file.name} as main image`}
-                          title="Use as main image"
+                          aria-label={`Usar ${file.name} como imagem principal`}
+                          title="Usar como imagem principal"
                         >
                           <Star size={12} />
                         </button>
@@ -818,7 +818,7 @@ export default function AdminProducts() {
                         type="button"
                         onClick={() => setForm(prev => ({ ...prev, files: prev.files.filter((_, j) => j !== i) }))}
                         className="absolute top-1 right-1 rounded-full bg-black/60 p-1 text-white transition-colors hover:bg-black/80"
-                        aria-label={`Remove ${file.name}`}
+                        aria-label={`Remover ${file.name}`}
                       >
                         <Trash2 size={12} />
                       </button>
@@ -832,10 +832,10 @@ export default function AdminProducts() {
             {collections.length > 0 && (
               <section className="grid gap-3 border-t pt-6">
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Collections
+                  Coleções
                   {form.collectionIds.length > 0 && (
                     <span className="ml-1.5 font-normal normal-case text-muted-foreground">
-                      ({form.collectionIds.length} selected)
+                      ({form.collectionIds.length} selecionada{form.collectionIds.length > 1 ? "s" : ""})
                     </span>
                   )}
                 </h3>
@@ -869,10 +869,10 @@ export default function AdminProducts() {
             {categories.length > 0 && (
               <section className="grid gap-3 border-t pt-6">
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Categories
+                  Categorias
                   {form.categoryIds.length > 0 && (
                     <span className="ml-1.5 font-normal normal-case text-muted-foreground">
-                      ({form.categoryIds.length} selected)
+                      ({form.categoryIds.length} selecionada{form.categoryIds.length > 1 ? "s" : ""})
                     </span>
                   )}
                 </h3>
@@ -921,10 +921,10 @@ export default function AdminProducts() {
                 </div>
               </div>
             )}
-            <Button variant="outline" onClick={() => setFormOpen(false)} disabled={submitting}>Cancel</Button>
+            <Button variant="outline" onClick={() => setFormOpen(false)} disabled={submitting}>Cancelar</Button>
             <Button type="submit" form="product-form" disabled={submitting}>
               {submitting && <Loader2 size={15} className="animate-spin mr-2" />}
-              {editingId ? "Save Changes" : "Create Product"}
+              {editingId ? "Salvar Alterações" : "Criar Produto"}
             </Button>
           </SheetFooter>
         </SheetContent>

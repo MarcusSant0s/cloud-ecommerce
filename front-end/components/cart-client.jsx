@@ -117,7 +117,7 @@ export function CartClient({ className }) {
 
   const CartTrigger = (
     <Button
-      aria-label="Open cart"
+      aria-label="Abrir carrinho"
       className="relative inline-flex h-9 w-9 items-center justify-center rounded-sm border border-border bg-background transition-colors hover:bg-accent"
       size="icon"
       variant="outline"

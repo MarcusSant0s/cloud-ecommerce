@@ -39,4 +39,11 @@ public class UserController {
 
         return ResponseEntity.ok(userService.updateUser(request, user.getId()));
     }
+
+    // Direito de eliminação (LGPD, art. 18, VI)
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteMe(@AuthenticationPrincipal User user){
+        userService.deleteMe(user.getId());
+        return ResponseEntity.noContent().build();
+    }
 }

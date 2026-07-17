@@ -31,7 +31,7 @@ export default function AdminCollections() {
       const res = await api.get("/collection/all-collections");
       setCollections(res.data);
     } catch {
-      toast.error("Failed to load collections.");
+      toast.error("Falha ao carregar as coleções.");
     } finally {
       setLoading(false);
     }
@@ -55,8 +55,8 @@ export default function AdminCollections() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!form.name.trim()) return toast.error("Name is required.");
-    if (!editingId && !form.file) return toast.error("Image is required.");
+    if (!form.name.trim()) return toast.error("O nome é obrigatório.");
+    if (!editingId && !form.file) return toast.error("A imagem é obrigatória.");
     setSubmitting(true);
     try {
       const fd = new FormData();
@@ -68,12 +68,12 @@ export default function AdminCollections() {
         await api.put(`/collection/${editingId}`, fd, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        toast.success("Collection updated.");
+        toast.success("Coleção atualizada.");
       } else {
         await api.post("/collection", fd, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        toast.success("Collection created.");
+        toast.success("Coleção criada.");
       }
 
       setFormOpen(false);
@@ -82,8 +82,8 @@ export default function AdminCollections() {
       // 409 is the API's duplicate-name response — worth spelling out.
       toast.error(
         err?.response?.status === 409
-          ? "A collection with that name already exists."
-          : "Failed to save collection."
+          ? "Já existe uma coleção com esse nome."
+          : "Falha ao salvar a coleção."
       );
     } finally {
       setSubmitting(false);
@@ -93,11 +93,11 @@ export default function AdminCollections() {
   async function handleDelete(id) {
     try {
       await api.delete(`/collection/${id}`);
-      toast.success("Collection deleted.");
+      toast.success("Coleção excluída.");
       setConfirmId(null);
       fetchCollections();
     } catch {
-      toast.error("Failed to delete collection.");
+      toast.error("Falha ao excluir a coleção.");
     }
   }
 
@@ -105,11 +105,11 @@ export default function AdminCollections() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Collections</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Manage product collections</p>
+          <h1 className="text-2xl font-bold">Coleções</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Gerencie as coleções de produtos</p>
         </div>
         <Button onClick={openCreate} size="sm" className="gap-2">
-          <Plus size={16} /> New Collection
+          <Plus size={16} /> Nova Coleção
         </Button>
       </div>
 
@@ -120,14 +120,14 @@ export default function AdminCollections() {
           ))}
         </div>
       ) : collections.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No collections found.</p>
+        <p className="text-sm text-muted-foreground">Nenhuma coleção encontrada.</p>
       ) : (
         <div className="border rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[560px] text-sm">
               <thead className="bg-muted/50 text-muted-foreground">
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium">Collection</th>
+                  <th className="text-left px-4 py-3 font-medium">Coleção</th>
                   <th className="px-4 py-3" />
                 </tr>
               </thead>
@@ -155,7 +155,7 @@ export default function AdminCollections() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-end gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => openEdit(col)} title="Edit">
+                          <Button variant="ghost" size="icon" onClick={() => openEdit(col)} title="Editar">
                             <Pencil size={15} />
                           </Button>
                           <Button
@@ -163,7 +163,7 @@ export default function AdminCollections() {
                             size="icon"
                             className="text-destructive hover:text-destructive"
                             onClick={() => setConfirmId(col.id)}
-                            title="Delete"
+                            title="Excluir"
                           >
                             <Trash2 size={15} />
                           </Button>
@@ -175,17 +175,17 @@ export default function AdminCollections() {
                         <td colSpan={2} className="px-4 py-3">
                           <div className="flex flex-wrap items-center gap-3 text-sm">
                             <span className="text-destructive font-medium">
-                              Delete &ldquo;{col.name}&rdquo;? This cannot be undone.
+                              Excluir &ldquo;{col.name}&rdquo;? Esta ação não pode ser desfeita.
                             </span>
                             <Button
                               size="sm"
                               variant="destructive"
                               onClick={() => handleDelete(col.id)}
                             >
-                              Confirm
+                              Confirmar
                             </Button>
                             <Button size="sm" variant="ghost" onClick={() => setConfirmId(null)}>
-                              Cancel
+                              Cancelar
                             </Button>
                           </div>
                         </td>
@@ -203,18 +203,18 @@ export default function AdminCollections() {
         <SheetContent side="right" className="sm:max-w-sm w-full">
           <SheetHeader className="border-b pb-4">
             <h2 className="font-semibold text-foreground">
-              {editingId ? "Edit Collection" : "New Collection"}
+              {editingId ? "Editar Coleção" : "Nova Coleção"}
             </h2>
           </SheetHeader>
 
           <form id="col-form" onSubmit={handleSubmit} className="p-4">
             <div className="grid gap-2">
-              <Label htmlFor="col-name">Name</Label>
+              <Label htmlFor="col-name">Nome</Label>
               <Input
                 id="col-name"
                 value={form.name}
                 onChange={e => setForm(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Collection name"
+                placeholder="Nome da coleção"
                 required
               />
               <Label htmlFor="col-image">Imagem</Label>
@@ -230,17 +230,17 @@ export default function AdminCollections() {
               />
               {editingId && (
                 <p className="text-xs text-muted-foreground">
-                  Leave empty to keep the current image.
+                  Deixe em branco para manter a imagem atual.
                 </p>
               )}
             </div>
           </form>
 
           <SheetFooter className="border-t">
-            <Button variant="outline" onClick={() => setFormOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setFormOpen(false)}>Cancelar</Button>
             <Button type="submit" form="col-form" disabled={submitting}>
               {submitting && <Loader2 size={15} className="animate-spin mr-2" />}
-              {editingId ? "Save Changes" : "Create"}
+              {editingId ? "Salvar Alterações" : "Criar"}
             </Button>
           </SheetFooter>
         </SheetContent>

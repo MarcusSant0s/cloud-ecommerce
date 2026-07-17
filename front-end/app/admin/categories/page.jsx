@@ -31,7 +31,7 @@ export default function AdminCategories() {
       const res = await api.get("/category/all-categories");
       setCategories(res.data);
     } catch {
-      toast.error("Failed to load categories.");
+      toast.error("Falha ao carregar as categorias.");
     } finally {
       setLoading(false);
     }
@@ -58,8 +58,8 @@ export default function AdminCategories() {
 
 async function handleSubmit(e) {
   e.preventDefault();
-  if (!form.name.trim()) return toast.error("Name is required.");
-  if (!editingId && !form.file ) return toast.error("Image is required."); 
+  if (!form.name.trim()) return toast.error("O nome é obrigatório.");
+  if (!editingId && !form.file ) return toast.error("A imagem é obrigatória."); 
   setSubmitting(true);
   try {
     if (editingId) {
@@ -73,7 +73,7 @@ async function handleSubmit(e) {
           headers: { "Content-Type": "multipart/form-data" }
         });
     
-      toast.success("Category updated.");
+      toast.success("Categoria atualizada.");
     } else {
       // create — FormData com nome e arquivo
       const fd = new FormData();
@@ -82,13 +82,13 @@ async function handleSubmit(e) {
       await api.post("/category", fd, {
         headers: { "Content-Type": "multipart/form-data" }
       });
-      toast.success("Category created.");
+      toast.success("Categoria criada.");
     }
 
     setFormOpen(false);
     fetchCategories();
   } catch {
-    toast.error("Failed to save category.");
+    toast.error("Falha ao salvar a categoria.");
   } finally {
     setSubmitting(false);
   }
@@ -97,11 +97,11 @@ async function handleSubmit(e) {
   async function handleDelete(id) {
     try {
       await api.delete(`/category/${id}`);
-      toast.success("Category deleted.");
+      toast.success("Categoria excluída.");
       setConfirmId(null);
       fetchCategories();
     } catch {
-      toast.error("Failed to delete category.");
+      toast.error("Falha ao excluir a categoria.");
     }
   }
 
@@ -109,11 +109,11 @@ async function handleSubmit(e) {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Categories</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Manage product categories</p>
+          <h1 className="text-2xl font-bold">Categorias</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Gerencie as categorias de produtos</p>
         </div>
         <Button onClick={openCreate} size="sm" className="gap-2">
-          <Plus size={16} /> New Category
+          <Plus size={16} /> Nova Categoria
         </Button>
       </div>
 
@@ -124,14 +124,14 @@ async function handleSubmit(e) {
           ))}
         </div>
       ) : categories.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No categories found.</p>
+        <p className="text-sm text-muted-foreground">Nenhuma categoria encontrada.</p>
       ) : (
         <div className="border rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
           <table className="w-full min-w-[560px] text-sm">
             <thead className="bg-muted/50 text-muted-foreground">
               <tr>
-                <th className="text-left px-4 py-3 font-medium">Category</th>
+                <th className="text-left px-4 py-3 font-medium">Categoria</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -159,7 +159,7 @@ async function handleSubmit(e) {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => openEdit(cat)} title="Edit">
+                        <Button variant="ghost" size="icon" onClick={() => openEdit(cat)} title="Editar">
                           <Pencil size={15} />
                         </Button>
                         <Button
@@ -167,7 +167,7 @@ async function handleSubmit(e) {
                           size="icon"
                           className="text-destructive hover:text-destructive"
                           onClick={() => setConfirmId(cat.id)}
-                          title="Delete"
+                          title="Excluir"
                         >
                           <Trash2 size={15} />
                         </Button>
@@ -179,17 +179,17 @@ async function handleSubmit(e) {
                       <td colSpan={2} className="px-4 py-3">
                         <div className="flex items-center gap-3 text-sm">
                           <span className="text-destructive font-medium">
-                            Delete &ldquo;{cat.name}&rdquo;? This cannot be undone.
+                            Excluir &ldquo;{cat.name}&rdquo;? Esta ação não pode ser desfeita.
                           </span>
                           <Button
                             size="sm"
                             variant="destructive"
                             onClick={() => handleDelete(cat.id)}
                           >
-                            Confirm
+                            Confirmar
                           </Button>
                           <Button size="sm" variant="ghost" onClick={() => setConfirmId(null)}>
-                            Cancel
+                            Cancelar
                           </Button>
                         </div>
                       </td>
@@ -207,19 +207,19 @@ async function handleSubmit(e) {
         <SheetContent side="right" className="sm:max-w-sm w-full">
           <SheetHeader className="border-b pb-4">
             <h2 className="font-semibold text-foreground">
-              {editingId ? "Edit Category" : "New Category"}
+              {editingId ? "Editar Categoria" : "Nova Categoria"}
             </h2>
           </SheetHeader>
 
           <form id="cat-form" onSubmit={handleSubmit} className="p-4">
             <div className="grid gap-2">
-              <Label htmlFor="cat-name">Name</Label>
+              <Label htmlFor="cat-name">Nome</Label>
               <input type="hidden" name="cat-id" value={form.id} />
               <Input
                 id="cat-name"
                 value={form.name}
                 onChange={e => setForm(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Category name"
+                placeholder="Nome da categoria"
                 required={!editingId}
               />
               <Label htmlFor="cat-image">Imagem</Label>
@@ -236,10 +236,10 @@ async function handleSubmit(e) {
           </form>
 
           <SheetFooter className="border-t">
-            <Button variant="outline" onClick={() => setFormOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setFormOpen(false)}>Cancelar</Button>
             <Button type="submit" form="cat-form" disabled={submitting}>
               {submitting && <Loader2 size={15} className="animate-spin mr-2" />}
-              {editingId ? "Save Changes" : "Create"}
+              {editingId ? "Salvar Alterações" : "Criar"}
             </Button>
           </SheetFooter>
         </SheetContent>

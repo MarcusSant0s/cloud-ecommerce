@@ -264,6 +264,19 @@ export default function SignUpPageClient() {
                   <p className="text-sm font-medium text-destructive">{error}</p>
                 )}
 
+                {/* Aviso de consentimento (LGPD, art. 7º/8º) */}
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  Ao criar sua conta, você concorda com nossos{" "}
+                  <Link href="/termos" className="font-medium text-foreground underline-offset-4 hover:underline">
+                    Termos de Uso
+                  </Link>{" "}
+                  e com o tratamento de dados descrito na{" "}
+                  <Link href="/privacidade" className="font-medium text-foreground underline-offset-4 hover:underline">
+                    Política de Privacidade
+                  </Link>
+                  .
+                </p>
+
                 <Button className="w-full rounded-sm text-[0.7rem] uppercase tracking-[0.15em]" disabled={loading} type="submit">
                   {loading ? "Criando conta..." : "Criar conta"}
                 </Button>

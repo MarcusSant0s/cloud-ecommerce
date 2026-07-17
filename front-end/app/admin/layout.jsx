@@ -9,12 +9,12 @@ import { Button } from "@/primitives/button";
 import { Skeleton } from "@/primitives/skeleton";
 
 const NAV = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/products", label: "Products", icon: Package },
-  { href: "/admin/categories", label: "Categories", icon: Tag },
-  { href: "/admin/collections", label: "Collections", icon: Layers },
-  { href: "/admin/orders", label: "Orders", icon: ShoppingBag },
-  { href: "/admin/users", label: "Users", icon: Users },
+  { href: "/admin", label: "Painel", icon: LayoutDashboard },
+  { href: "/admin/products", label: "Produtos", icon: Package },
+  { href: "/admin/categories", label: "Categorias", icon: Tag },
+  { href: "/admin/collections", label: "Coleções", icon: Layers },
+  { href: "/admin/orders", label: "Pedidos", icon: ShoppingBag },
+  { href: "/admin/users", label: "Usuários", icon: Users },
 ];
 
 export default function AdminLayout({ children }) {
@@ -42,7 +42,7 @@ export default function AdminLayout({ children }) {
   const sidebarBody = (
     <>
       <div className="flex items-center justify-between border-b p-4">
-        <span className="text-base font-bold">Admin Panel</span>
+        <span className="text-base font-bold">Painel Admin</span>
         <button
           type="button"
           onClick={() => setSidebarOpen(false)}
@@ -79,7 +79,7 @@ export default function AdminLayout({ children }) {
           onClick={logout}
         >
           <LogOut size={16} />
-          Sign out
+          Sair
         </Button>
       </div>
     </>
@@ -120,7 +120,7 @@ export default function AdminLayout({ children }) {
           >
             <Menu size={20} />
           </button>
-          <span className="text-base font-bold">Admin Panel</span>
+          <span className="text-base font-bold">Painel Admin</span>
         </div>
 
         <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>

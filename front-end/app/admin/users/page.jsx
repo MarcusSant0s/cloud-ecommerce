@@ -11,6 +11,9 @@ import { Avatar, AvatarFallback } from "@/primitives/Avatar";
 
 const ROLES = ["USER", "ADMIN"];
 
+// Rótulos de exibição em PT-BR — os valores de enum enviados à API não mudam.
+const ROLE_LABELS = { USER: "Usuário", ADMIN: "Admin" };
+
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,7 +23,7 @@ export default function AdminUsers() {
   useEffect(() => {
     api.get("/users")
       .then(res => setUsers(res.data.content ?? res.data))
-      .catch(() => toast.error("Failed to load users."))
+      .catch(() => toast.error("Falha ao carregar os usuários."))
       .finally(() => setLoading(false));
   }, []);
 
@@ -30,7 +33,7 @@ export default function AdminUsers() {
     setUpdatingId(userId);
     try {
       await api.put(`/users/${userId}/role`, { role });
-      toast.success("Role updated.");
+      toast.success("Papel atualizado.");
       setUsers(prev =>
         prev.map(u => (u.id === userId ? { ...u, role } : u))
       );
@@ -40,7 +43,7 @@ export default function AdminUsers() {
         return next;
       });
     } catch {
-      toast.error("Failed to update role.");
+      toast.error("Falha ao atualizar o papel.");
     } finally {
       setUpdatingId(null);
     }
@@ -49,8 +52,8 @@ export default function AdminUsers() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Users</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Manage user accounts and roles</p>
+        <h1 className="text-2xl font-bold">Usuários</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">Gerencie contas e papéis de usuários</p>
       </div>
 
       {loading ? (
@@ -60,16 +63,16 @@ export default function AdminUsers() {
           ))}
         </div>
       ) : users.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No users found.</p>
+        <p className="text-sm text-muted-foreground">Nenhum usuário encontrado.</p>
       ) : (
         <div className="border rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
           <table className="w-full min-w-[560px] text-sm">
             <thead className="bg-muted/50 text-muted-foreground">
               <tr>
-                <th className="text-left px-4 py-3 font-medium">User</th>
-                <th className="text-left px-4 py-3 font-medium">Email</th>
-                <th className="text-left px-4 py-3 font-medium">Role</th>
+                <th className="text-left px-4 py-3 font-medium">Usuário</th>
+                <th className="text-left px-4 py-3 font-medium">E-mail</th>
+                <th className="text-left px-4 py-3 font-medium">Papel</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -97,7 +100,7 @@ export default function AdminUsers() {
                     <td className="px-4 py-3 text-muted-foreground">{user.email}</td>
                     <td className="px-4 py-3">
                       <Badge variant={currentRole === "ADMIN" ? "default" : "secondary"}>
-                        {currentRole}
+                        {ROLE_LABELS[currentRole] ?? currentRole}
                       </Badge>
                     </td>
                     <td className="px-4 py-3">
@@ -112,7 +115,7 @@ export default function AdminUsers() {
                           disabled={isUpdating}
                         >
                           {ROLES.map(r => (
-                            <option key={r} value={r}>{r}</option>
+                            <option key={r} value={r}>{ROLE_LABELS[r] ?? r}</option>
                           ))}
                         </select>
                         <Button
@@ -122,7 +125,7 @@ export default function AdminUsers() {
                         >
                           {isUpdating
                             ? <Loader2 size={14} className="animate-spin" />
-                            : "Save"
+                            : "Salvar"
                           }
                         </Button>
                       </div>

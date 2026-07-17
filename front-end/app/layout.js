@@ -3,6 +3,7 @@ import "./globals.css";
 
 import NavbarContainer from '../components/Headers/NavbarContainer'
 import Footer from "@/components/Footer";
+import CookieConsent from "@/components/CookieConsent";
 
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -82,6 +83,7 @@ export default function RootLayout({ children }) {
         </CartProvider>
         </AuthProvider>
         <Footer></Footer>
+        <CookieConsent />
         <Toaster richColors />
       </body>
     </html>

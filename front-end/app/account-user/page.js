@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import api from "@/services/api";
 import {
   ArrowLeft, User, MapPin, Mail, Save,
-  CheckCircle2, AlertCircle, Loader2, Edit3
+  CheckCircle2, AlertCircle, Loader2, Edit3, Trash2
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -116,12 +116,14 @@ function validate(form) {
 }
 
 export default function AccountPage() {
-  const { user, loading: authLoading, fetchMe } = useAuth();
+  const { user, loading: authLoading, fetchMe, logout } = useAuth();
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [errors, setErrors] = useState({});
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const [form, setForm] = useState({
     firstName: "",
@@ -181,6 +183,19 @@ export default function AccountPage() {
       toast.error("Falha ao atualizar perfil. Tente novamente.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  // Direito de eliminação (LGPD, art. 18, VI): remove conta, pedidos e endereço.
+  async function handleDeleteAccount() {
+    try {
+      setDeleting(true);
+      await api.delete("/users/me");
+      toast.success("Conta excluída. Sentiremos sua falta!");
+      logout();
+    } catch {
+      toast.error("Falha ao excluir a conta. Tente novamente.");
+      setDeleting(false);
     }
   }
 
@@ -372,6 +387,59 @@ export default function AccountPage() {
           )}
 
         </form>
+
+        {/* Excluir conta — direito de eliminação (LGPD, art. 18, VI) */}
+        <div className="mt-5 rounded-2xl border border-destructive/30 bg-card shadow-sm overflow-hidden">
+          <div className="flex items-center gap-2 border-b border-destructive/20 bg-destructive/5 px-5 py-3.5">
+            <Trash2 className="h-4 w-4 text-destructive" />
+            <h2 className="text-sm font-semibold text-destructive">Excluir conta</h2>
+          </div>
+          <div className="p-5 flex flex-col gap-4">
+            <p className="text-sm text-muted-foreground">
+              Exclui permanentemente sua conta, seus pedidos, seu carrinho e seu
+              endereço, conforme previsto na nossa{" "}
+              <Link href="/privacidade" className="font-medium text-foreground underline-offset-4 hover:underline">
+                Política de Privacidade
+              </Link>
+              . Esta ação não pode ser desfeita.
+            </p>
+            {confirmingDelete ? (
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-sm font-medium text-destructive">
+                  Tem certeza? Todos os seus dados serão apagados.
+                </span>
+                <button
+                  type="button"
+                  onClick={handleDeleteAccount}
+                  disabled={deleting}
+                  className="flex items-center gap-2 rounded-xl bg-destructive px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-destructive/90 disabled:opacity-50"
+                >
+                  {deleting ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" /> Excluindo...</>
+                  ) : (
+                    "Sim, excluir minha conta"
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmingDelete(false)}
+                  disabled={deleting}
+                  className="rounded-xl border px-4 py-2 text-sm font-medium transition hover:bg-accent disabled:opacity-50"
+                >
+                  Cancelar
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmingDelete(true)}
+                className="self-start rounded-xl border border-destructive/40 px-4 py-2 text-sm font-medium text-destructive transition hover:bg-destructive/10"
+              >
+                Excluir minha conta
+              </button>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

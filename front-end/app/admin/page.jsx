@@ -8,35 +8,35 @@ const SECTIONS = [
   {
     href: "/admin/products",
     icon: Package,
-    title: "Products",
-    description: "Create, edit, delete products and manage their images.",
+    title: "Produtos",
+    description: "Crie, edite e exclua produtos e gerencie suas imagens.",
   },
   {
     href: "/admin/categories",
     icon: Tag,
-    title: "Categories",
-    description: "Manage product categories and their cover images.",
+    title: "Categorias",
+    description: "Gerencie as categorias de produtos e suas imagens de capa.",
   },
   {
     href: "/admin/orders",
     icon: ShoppingBag,
-    title: "Orders",
-    description: "View all orders and update their statuses.",
+    title: "Pedidos",
+    description: "Veja todos os pedidos e atualize seus status.",
   },
   {
     href: "/admin/users",
     icon: Users,
-    title: "Users",
-    description: "List all users and manage their roles.",
+    title: "Usuários",
+    description: "Liste todos os usuários e gerencie seus papéis.",
   },
 ];
 
 export default function AdminDashboard() {
   return (
     <div className="max-w-3xl">
-      <h1 className="text-2xl font-bold mb-1">Dashboard</h1>
+      <h1 className="text-2xl font-bold mb-1">Painel</h1>
       <p className="text-sm text-muted-foreground mb-8">
-        Welcome to the admin panel. Select a section to manage.
+        Bem-vindo ao painel administrativo. Selecione uma seção para gerenciar.
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

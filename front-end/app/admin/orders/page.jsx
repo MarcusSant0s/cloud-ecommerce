@@ -17,6 +17,14 @@ const STATUS_VARIANT = {
   REFUNDED: "outline",
 };
 
+// Rótulos de exibição em PT-BR — os valores de enum enviados à API não mudam.
+const STATUS_LABELS = {
+  PENDING: "Pendente",
+  PAID: "Pago",
+  CANCELLED: "Cancelado",
+  REFUNDED: "Reembolsado",
+};
+
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
 function formatDate(dateStr) {
@@ -48,7 +56,7 @@ export default function AdminOrders() {
       setOrders(res.data.content ?? res.data);
       setTotalPages(res.data.totalPages ?? 1);
     } catch {
-      toast.error("Failed to load orders.");
+      toast.error("Falha ao carregar os pedidos.");
     } finally {
       setLoading(false);
     }
@@ -64,7 +72,7 @@ export default function AdminOrders() {
     setUpdatingId(orderId);
     try {
       await api.patch(`/order/${orderId}/status`, null, { params: { orderStatus: status } });
-      toast.success("Order status updated.");
+      toast.success("Status do pedido atualizado.");
       setOrders(prev =>
         prev.map(o => (o.id === orderId ? { ...o, status } : o))
       );
@@ -74,7 +82,7 @@ export default function AdminOrders() {
         return next;
       });
     } catch {
-      toast.error("Failed to update status.");
+      toast.error("Falha ao atualizar o status.");
     } finally {
       setUpdatingId(null);
     }
@@ -83,8 +91,8 @@ export default function AdminOrders() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Orders</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">View and update order statuses</p>
+        <h1 className="text-2xl font-bold">Pedidos</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">Veja e atualize o status dos pedidos</p>
       </div>
 
       {loading ? (
@@ -94,16 +102,16 @@ export default function AdminOrders() {
           ))}
         </div>
       ) : orders.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No orders found.</p>
+        <p className="text-sm text-muted-foreground">Nenhum pedido encontrado.</p>
       ) : (
         <div className="border rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
           <table className="w-full min-w-[560px] text-sm">
             <thead className="bg-muted/50 text-muted-foreground">
               <tr>
-                <th className="text-left px-4 py-3 font-medium">Order</th>
-                <th className="text-left px-4 py-3 font-medium">Customer</th>
-                <th className="text-left px-4 py-3 font-medium">Date</th>
+                <th className="text-left px-4 py-3 font-medium">Pedido</th>
+                <th className="text-left px-4 py-3 font-medium">Cliente</th>
+                <th className="text-left px-4 py-3 font-medium">Data</th>
                 <th className="text-left px-4 py-3 font-medium">Total</th>
                 <th className="text-left px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3" />
@@ -133,7 +141,7 @@ export default function AdminOrders() {
                         type="button"
                         onClick={() => setExpandedId(prev => (prev === order.id ? null : order.id))}
                         aria-expanded={isExpanded}
-                        aria-label={isExpanded ? "Hide shipping details" : "Show shipping details"}
+                        aria-label={isExpanded ? "Ocultar detalhes de envio" : "Mostrar detalhes de envio"}
                         className="inline-flex items-center gap-1.5 transition-colors hover:text-foreground"
                       >
                         <ChevronRight className={`h-3.5 w-3.5 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
@@ -147,7 +155,7 @@ export default function AdminOrders() {
                     <td className="px-4 py-3">{BRL.format(total)}</td>
                     <td className="px-4 py-3">
                       <Badge variant={STATUS_VARIANT[currentStatus] ?? "secondary"}>
-                        {currentStatus}
+                        {STATUS_LABELS[currentStatus] ?? currentStatus}
                       </Badge>
                     </td>
                     <td className="px-4 py-3">
@@ -162,7 +170,7 @@ export default function AdminOrders() {
                           disabled={isUpdating}
                         >
                           {STATUSES.map(s => (
-                            <option key={s} value={s}>{s}</option>
+                            <option key={s} value={s}>{STATUS_LABELS[s] ?? s}</option>
                           ))}
                         </select>
                         <Button
@@ -172,7 +180,7 @@ export default function AdminOrders() {
                         >
                           {isUpdating
                             ? <Loader2 size={14} className="animate-spin" />
-                            : "Save"
+                            : "Salvar"
                           }
                         </Button>
                       </div>
@@ -186,7 +194,7 @@ export default function AdminOrders() {
                           {/* Shipping destination */}
                           <div>
                             <h4 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                              <MapPin size={14} /> Ship to
+                              <MapPin size={14} /> Enviar para
                             </h4>
                             {addr ? (
                               <address className="text-sm not-italic leading-relaxed">
@@ -212,7 +220,7 @@ export default function AdminOrders() {
                               </address>
                             ) : (
                               <p className="text-sm font-medium text-destructive">
-                                No delivery address on file — cannot ship this order.
+                                Sem endereço de entrega cadastrado — não é possível enviar este pedido.
                               </p>
                             )}
                           </div>
@@ -220,7 +228,7 @@ export default function AdminOrders() {
                           {/* Pack list */}
                           <div>
                             <h4 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                              <Package size={14} /> Items to ship
+                              <Package size={14} /> Itens para envio
                             </h4>
                             {items.length > 0 ? (
                               <ul className="space-y-1.5 text-sm">
@@ -239,7 +247,7 @@ export default function AdminOrders() {
                                   </li>
                                 ))}
                                 <li className="flex items-center justify-between gap-3 border-t pt-1.5 text-muted-foreground">
-                                  <span>Shipping</span>
+                                  <span>Frete</span>
                                   <span>{BRL.format(order.shippingCost ?? 0)}</span>
                                 </li>
                                 <li className="flex items-center justify-between gap-3 font-medium text-foreground">
@@ -248,7 +256,7 @@ export default function AdminOrders() {
                                 </li>
                               </ul>
                             ) : (
-                              <p className="text-sm text-muted-foreground">No items.</p>
+                              <p className="text-sm text-muted-foreground">Sem itens.</p>
                             )}
                           </div>
                         </div>
@@ -274,7 +282,7 @@ export default function AdminOrders() {
           >
             <ChevronLeft size={16} />
           </Button>
-          <span>Page {page + 1} / {totalPages}</span>
+          <span>Página {page + 1} / {totalPages}</span>
           <Button
             variant="outline"
             size="icon"
