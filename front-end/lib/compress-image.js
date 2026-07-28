@@ -2,7 +2,7 @@
 // sends far fewer bytes and the origin (S3) stores reasonably-sized assets. Returns a
 // new File; on any failure — or if compression doesn't actually shrink the file — the
 // original File is returned unchanged, so callers can use the result unconditionally.
-export async function compressImage(file, { maxDim = 1600, quality = 0.82 } = {}) {
+export async function compressImage(file, { maxDim = 2560, quality = 0.9 } = {}) {
   // Only raster images. Leave anything else (e.g. SVG) alone.
   if (!file || !file.type?.startsWith("image/") || file.type === "image/svg+xml") {
     return file;

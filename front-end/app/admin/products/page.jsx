@@ -15,10 +15,12 @@ import { Badge } from "@/primitives/badge";
 import { Skeleton } from "@/primitives/skeleton";
 import { Sheet, SheetContent, SheetHeader, SheetFooter } from "@/primitives/sheet";
 
-// Image constraints for the product form.
+// Image constraints for the product form. High-quality phone photos (iPhone
+// HEIC/JPEG, ProRAW) can exceed 40MB, so the gate is generous — the browser
+// downscales/re-encodes each file before upload (see lib/compress-image.js).
 const MIN_IMAGES = 1;
 const MAX_IMAGES = 6;
-const MAX_FILE_SIZE_MB = 5;
+const MAX_FILE_SIZE_MB = 100;
 
 const EMPTY_FORM = {
   name: "",
