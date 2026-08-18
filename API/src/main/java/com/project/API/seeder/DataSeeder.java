@@ -149,7 +149,7 @@ public class DataSeeder implements CommandLineRunner {
         Product sandalia = product(
                 "Sandália Havaianas Top",
                 "Sandália feminina com solado anatômico em borracha natural e palmilha texturizada antiderrapante.",
-                200, new BigDecimal("49.90"), null,
+                200, new BigDecimal("1.00"), null,
                 calcados);
         addImages(sandalia,
                 img("products/sandalia-1.jpg", "https://images.unsplash.com/photo-1603487742131-4160ec999306?w=800", true));
@@ -227,7 +227,8 @@ public class DataSeeder implements CommandLineRunner {
 
     private List<User> seedUsers() {
         User ana      = user("Ana",      "Lima",     "ana.lima@email.com",      "senha123",
-                address("Rua das Flores",         "São Paulo",        "01310-100", "45"));
+                address("Rua das Flores",         "São Paulo",        "01310-100", "45")
+        );
         User carlos   = user("Carlos",   "Mendes",   "carlos.mendes@email.com", "senha123",
                 address("Avenida Atlântica",       "Rio de Janeiro",   "22070-000", "1702"));
         User fernanda = user("Fernanda", "Costa",    "fernanda.costa@email.com","senha123",
