@@ -107,7 +107,9 @@ export function CartClient({ className }) {
       if (code === "INSUFFICIENT_STOCK") {
         toast.error("Quantidade indisponível em estoque. Atualize seu carrinho.");
       } else if (code === "ADDRESS_REQUIRED") {
-        toast.error("Cadastre um endereço de entrega antes de finalizar.");
+        toast.error("Cadastre um endereço de entrega antes de finalizar.");  
+        setIsOpen(false);
+        router.push('/account-user')
       } else {
         toast.error("Erro ao iniciar pagamento. Tente novamente.");
       }
