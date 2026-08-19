@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [main]
 
-jobs
+jobs:
   backend:
     runs-on: ubuntu-latest
     defaults:
