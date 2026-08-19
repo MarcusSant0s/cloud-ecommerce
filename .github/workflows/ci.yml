@@ -21,7 +21,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: '21'
-          distribution: 'temurim'
+          distribution: 'temurin'
           cache: 'mavem'
           cache-dependency-path: backend/pom.xml
 
@@ -45,7 +45,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/chekout@v4
+        uses: actions/checkout@v4
 
       - name: Set up Node 20
         uses: actions/setup-node@v4
