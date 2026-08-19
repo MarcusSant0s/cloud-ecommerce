@@ -23,7 +23,7 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: 'maven'
-          cache-dependency-path: api/pom.xml
+          cache-dependency-path: API/pom.xml
 
       
 
