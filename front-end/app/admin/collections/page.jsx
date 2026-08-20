@@ -5,7 +5,8 @@ import { useState, useEffect, Fragment } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
-import api from "@/services/api";
+import axios from "axios";
+import api, { UPLOAD_TIMEOUT } from "@/services/api";
 import { Button } from "@/primitives/button";
 import { Input } from "@/primitives/input";
 import { Label } from "@/primitives/label";
@@ -28,10 +29,16 @@ export default function AdminCollections() {
   async function fetchCollections() {
     setLoading(true);
     try {
+      // The 5s ceiling comes from the axios instance — no manual AbortController
+      // needed here. axios reports it as a CanceledError, not an AbortError.
       const res = await api.get("/collection/all-collections");
       setCollections(res.data);
-    } catch {
-      toast.error("Falha ao carregar as coleções.");
+    } catch (error) {
+      if (axios.isCancel(error) || error?.code === "ECONNABORTED") {
+        toast.error("O servidor demorou demais para responder.");
+      } else {
+        toast.error("Falha ao carregar as coleções.");
+      }
     } finally {
       setLoading(false);
     }
@@ -67,11 +74,13 @@ export default function AdminCollections() {
       if (editingId) {
         await api.put(`/collection/${editingId}`, fd, {
           headers: { "Content-Type": "multipart/form-data" },
+          timeout: UPLOAD_TIMEOUT,
         });
         toast.success("Coleção atualizada.");
       } else {
         await api.post("/collection", fd, {
           headers: { "Content-Type": "multipart/form-data" },
+          timeout: UPLOAD_TIMEOUT,
         });
         toast.success("Coleção criada.");
       }

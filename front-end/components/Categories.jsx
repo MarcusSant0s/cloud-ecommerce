@@ -1,26 +1,15 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { SERVER_API_URL } from "@/lib/server-api"
-
-async function getCategories() {
-  try {
-    const res = await fetch(
-      `${SERVER_API_URL}/category/all-categories`,
-      { next: { revalidate: 60 } }
-    );
-    if (!res.ok) return [];
-    const data = await res.json();
-    return Array.isArray(data) ? data : [];
-  } catch {
-    // API unreachable or non-JSON (e.g. an HTML error page) — degrade gracefully.
-    return [];
-  }
-}
+import { fetchJson } from "@/lib/server-api"
 
 export default async function Categories(){
 
-  const categories = await getCategories();
+  // fetchJson returns null when the API is down or times out — degrade gracefully.
+  const data = await fetchJson("/category/all-categories", {
+    next: { revalidate: 60 },
+  });
+  const categories = Array.isArray(data) ? data : [];
 
   // Nothing to show (e.g. API down) — hide the section rather than crash.
   if (categories.length === 0) return null;

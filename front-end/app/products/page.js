@@ -1,5 +1,5 @@
 import ProductPageClient from "@/components/ProductPageClient";
-import { SERVER_API_URL } from "@/lib/server-api";
+import { fetchJson } from "@/lib/server-api";
 
 export const dynamic = "force-dynamic";
 
@@ -7,17 +7,6 @@ export const metadata = {
   title: "Produtos",
   description: "Explore nosso catálogo completo de produtos. Filtre por categoria ou coleção e encontre o que você precisa.",
 };
-
-async function getJson(url, options) {
-  try {
-    const res = await fetch(url, options);
-    if (!res.ok) return null;
-    return await res.json();
-  } catch {
-    // API unreachable or non-JSON — degrade gracefully instead of crashing SSR.
-    return null;
-  }
-}
 
 export default async function Page({ searchParams }) {
 
@@ -31,10 +20,12 @@ export default async function Page({ searchParams }) {
     name: name ?? "",
   });
 
+  // fetchJson returns null on failure or after a 5s timeout — the page still
+  // renders, just empty, instead of hanging SSR when the API is unreachable.
   const [categories, collections, productsPage] = await Promise.all([
-    getJson(`${SERVER_API_URL}/category/all-categories`, { next: { revalidate: 60 } }),
-    getJson(`${SERVER_API_URL}/collection/all-collections`, { next: { revalidate: 60 } }),
-    getJson(`${SERVER_API_URL}/product?${productQuery.toString()}`, { cache: "no-store" }),
+    fetchJson("/category/all-categories", { next: { revalidate: 60 } }),
+    fetchJson("/collection/all-collections", { next: { revalidate: 60 } }),
+    fetchJson(`/product?${productQuery.toString()}`, { cache: "no-store" }),
   ]);
 
   return (

@@ -1,23 +1,15 @@
 import Link from "next/link"
-import { SERVER_API_URL } from "@/lib/server-api"
-
-async function getCategories() {
-  try {
-    const res = await fetch(`${SERVER_API_URL}/category/all-categories`, {
-      next: { revalidate: 60 },
-    });
-    if (!res.ok) return [];
-    return await res.json();
-  } catch {
-    return [];
-  }
-}
+import { fetchJson } from "@/lib/server-api"
 
 const colHead = "mb-4 text-[0.6rem] font-medium uppercase tracking-[0.25em] text-muted-foreground"
 const colLink = "text-sm text-muted-foreground transition-colors hover:text-foreground"
 
 const Footer = async () => {
-  const categories = await getCategories();
+  // fetchJson returns null when the API is down or times out — degrade gracefully.
+  const data = await fetchJson("/category/all-categories", {
+    next: { revalidate: 60 },
+  });
+  const categories = Array.isArray(data) ? data : [];
 
   return (
     <footer className="border-t border-border/60 bg-background">

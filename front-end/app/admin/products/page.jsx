@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import {
   Plus, Pencil, Trash2, Star, Upload, ChevronLeft, ChevronRight, Loader2, Search, X, Check,
 } from "lucide-react";
-import api from "@/services/api";
+import api, { UPLOAD_TIMEOUT } from "@/services/api";
 import { compressImage } from "@/lib/compress-image";
 import { Button } from "@/primitives/button";
 import { Input } from "@/primitives/input";
@@ -246,7 +246,9 @@ export default function AdminProducts() {
         formData.append("categoryIds", JSON.stringify(form.categoryIds));
         formData.append("collectionIds", JSON.stringify(form.collectionIds));
 
-        await api.put(`/product/${editingId}`, formData);
+        await api.put(`/product/${editingId}`, formData, {
+          timeout: UPLOAD_TIMEOUT,
+        });
 
         // New images go up as one batch rather than one request per file.
         if (compressedFiles.length > 0) {
@@ -254,6 +256,7 @@ export default function AdminProducts() {
           compressedFiles.forEach(file => images.append("File", file));
           await api.post(`/product/${editingId}/images`, images, {
             headers: { "Content-Type": "multipart/form-data" },
+            timeout: UPLOAD_TIMEOUT,
             onUploadProgress: trackUpload,
           });
         }
@@ -273,6 +276,7 @@ export default function AdminProducts() {
 
         await api.post("/product", formData, {
           headers: { "Content-Type": "multipart/form-data" },
+          timeout: UPLOAD_TIMEOUT,
           onUploadProgress: trackUpload,
         });
         toast.success("Produto criado.");

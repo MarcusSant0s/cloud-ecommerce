@@ -1,22 +1,12 @@
 import Navbar from "./Navbar";
+import { fetchJson } from "@/lib/server-api";
 
 // Server component: fetches the category list once (cached) and hands it to the
-// client Navbar. A failed fetch degrades to an empty menu instead of breaking
-// the whole layout.
-async function getCategories() {
-  try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/category/all-categories`,
-      { next: { revalidate: 60 } }
-    );
-    if (!res.ok) return [];
-    return await res.json();
-  } catch {
-    return [];
-  }
-}
-
+// client Navbar. A failed or slow fetch degrades to an empty menu instead of
+// breaking the whole layout — this runs on every route, so it must never hang.
 export default async function NavbarContainer() {
-  const categories = await getCategories();
-  return <Navbar categories={categories} />;
+  const data = await fetchJson("/category/all-categories", {
+    next: { revalidate: 60 },
+  });
+  return <Navbar categories={Array.isArray(data) ? data : []} />;
 }

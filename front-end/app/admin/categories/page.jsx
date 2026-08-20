@@ -5,7 +5,7 @@ import { useState, useEffect, Fragment } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
-import api from "@/services/api";
+import api, { UPLOAD_TIMEOUT } from "@/services/api";
 import { Button } from "@/primitives/button";
 import { Input } from "@/primitives/input";
 import { Label } from "@/primitives/label";
@@ -70,7 +70,8 @@ async function handleSubmit(e) {
         if (form.file) fd.append("File", form.file); 
         console.log(form)
           await api.put(`/category/${editingId}`, fd, {
-          headers: { "Content-Type": "multipart/form-data" }
+          headers: { "Content-Type": "multipart/form-data" },
+          timeout: UPLOAD_TIMEOUT,
         });
     
       toast.success("Categoria atualizada.");
@@ -80,7 +81,8 @@ async function handleSubmit(e) {
       fd.append("name", form.name); 
       fd.append("File", form.file);
       await api.post("/category", fd, {
-        headers: { "Content-Type": "multipart/form-data" }
+        headers: { "Content-Type": "multipart/form-data" },
+        timeout: UPLOAD_TIMEOUT,
       });
       toast.success("Categoria criada.");
     }

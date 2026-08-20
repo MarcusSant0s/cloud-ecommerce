@@ -1,24 +1,14 @@
 
 import ProductCard from './ProductCard';
-import { SERVER_API_URL } from '@/lib/server-api';
-
-async function getProducts() {
-  try {
-    const res = await fetch(`${SERVER_API_URL}/product?size=10`, {
-      next: { revalidate: 300 },
-    });
-    if (!res.ok) return [];
-    const data = await res.json();
-    return Array.isArray(data?.content) ? data.content : [];
-  } catch {
-    // API unreachable or non-JSON (e.g. an HTML error page) — degrade gracefully.
-    return [];
-  }
-}
+import { fetchJson } from '@/lib/server-api';
 
 const ProductSection = async () => {
 
-  const products = await getProducts();
+  // fetchJson returns null when the API is down or times out — degrade gracefully.
+  const data = await fetchJson('/product?size=10', {
+    next: { revalidate: 300 },
+  });
+  const products = Array.isArray(data?.content) ? data.content : [];
 
   return (
     <section className="bg-muted/30 py-16 md:py-20">
