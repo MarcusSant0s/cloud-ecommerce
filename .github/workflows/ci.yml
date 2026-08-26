@@ -68,7 +68,7 @@ jobs:
     if: github.ref == 'refs/head/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
-      content: read
+      contents: read
       packages: write
     
     steps:
