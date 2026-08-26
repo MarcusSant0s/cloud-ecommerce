@@ -85,7 +85,7 @@ jobs:
       - name: Build and push backend image
         uses: docker/build-push-action@v6
         with:
-          context: ./backend
+          context: ./API
           push: true
           tags: |
             ghcr.io/${{ github.repository_owner }}/cloudecommerce:latest
@@ -94,7 +94,7 @@ jobs:
       - name: Build and push frontend image
         uses: docker/build-push-action@v6
         with:
-          context: ./frontend
+          context: ./front-end
           push: true
           build-args: |
            NEXT_PUBLIC_API_URL=${{ secrets.PUBLIC_API_URL }}
