@@ -13,7 +13,7 @@ services:
       - app-network
 
   backend:
-    image: ghcr.io/MarcusSant0s/cloudecommerce-backend:latest
+    image: ghcr.io/marcussant0s/cloudecommerce-backend:latest
     container_name: commerce-api
     restart: always
     environment:
@@ -40,7 +40,7 @@ services:
       - app-network
 
   frontend:
-    image: ghcr.io/MarcusSant0s/cloudecommerce-frontend:latest
+    image: ghcr.io/marcussant0s/cloudecommerce-frontend:latest
     container_name: commerce-web
     restart: always
     environment:

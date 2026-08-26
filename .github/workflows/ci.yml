@@ -1,6 +1,6 @@
 name: CI
 
-on: 
+on:
   push:
     branches: [main]
   pull_request:
@@ -10,9 +10,9 @@ jobs:
   backend:
     runs-on: ubuntu-latest
     defaults:
-      run: 
+      run:
         working-directory: ./API
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -25,8 +25,6 @@ jobs:
           cache: 'maven'
           cache-dependency-path: API/pom.xml
 
-      
-
       - name: Build and run tests
         run: mvn -B clean verify
 
@@ -34,8 +32,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: backend-surefice-reports
-          path: backend/target/surefire-reports
+          name: backend-surefire-reports
+          path: API/target/surefire-reports
 
   frontend:
     runs-on: ubuntu-latest
@@ -55,57 +53,60 @@ jobs:
           cache-dependency-path: front-end/package-lock.json
 
       - name: Install dependencies
-        run: npm ci 
+        run: npm ci
 
       - name: Lint
         run: npm run lint
 
       - name: Build
         run: npm run build
-  
+
   build-and-push:
     needs: [backend, frontend]
-    if: github.ref == 'refs/head/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
- 
+
+      - name: Lowercase image owner
+        run: echo "OWNER_LC=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_ENV"
+
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
- 
+
       - name: Build and push backend image
         uses: docker/build-push-action@v6
         with:
           context: ./API
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/cloudecommerce:latest
-            ghcr.io/${{ github.repository_owner }}/cloudecommerce-backend:${{ github.sha }}
- 
+            ghcr.io/${{ env.OWNER_LC }}/cloudecommerce-backend:latest
+            ghcr.io/${{ env.OWNER_LC }}/cloudecommerce-backend:${{ github.sha }}
+
       - name: Build and push frontend image
         uses: docker/build-push-action@v6
         with:
           context: ./front-end
           push: true
           build-args: |
-           NEXT_PUBLIC_API_URL=${{ secrets.PUBLIC_API_URL }}
+            NEXT_PUBLIC_API_URL=${{ secrets.PUBLIC_API_URL }}
           tags: |
-            ghcr.io/${{ github.repository_owner }}/cloudecommerce-frontend:latest
-            ghcr.io/${{ github.repository_owner }}/cloudecommerce-frontend:${{ github.sha }}
- 
+            ghcr.io/${{ env.OWNER_LC }}/cloudecommerce-frontend:latest
+            ghcr.io/${{ env.OWNER_LC }}/cloudecommerce-frontend:${{ github.sha }}
+
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
- 
+
     steps:
       - name: SSH and redeploy
         uses: appleboy/ssh-action@v1
@@ -116,6 +117,5 @@ jobs:
           script: |
             cd ~/cloud_ecommerce
             git pull origin main
-            docker compose -f docker-compose.prod.yml pull
-            docker compose -f docker-compose.prod.yml up -d
- 
+            docker compose -f docker-compose.yml pull
+            docker compose -f docker-compose.yml up -d
