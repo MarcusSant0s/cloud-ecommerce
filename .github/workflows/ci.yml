@@ -62,3 +62,59 @@ jobs:
 
       - name: Build
         run: npm run build
+  
+  build-and-push:
+    needs: [backend, frontend]
+    if: github.ref == 'refs/head/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      content: read
+      packages: write
+    
+    steps:
+     - name: Checkout code
+     - uses: actions/checkout@v4
+
+     - name: log in to GHCR
+       uses: docker/login-action@v3
+       with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+     - name: Build and push bacckend images
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/betaproject-backend:latest
+              ghcr.io/${{ github.repository_owner }}/betaproject-backend:${{ github.sha }
+     - name: Build and push frontend image
+          uses: docker/build-push-action@v6
+          with:
+            context: ./frontend
+            push: true
+            tags: |
+              ghcr.io/${{ github.repository_owner }}/betaproject-frontend:latest
+              ghcr.io/${{ github.repository_owner }}/betaproject-frontend:${{ github.sha }}
+ 
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+ 
+    steps:
+      - name: SSH and redeploy
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/betaProject
+            git pull origin main
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d
+
+
+             
