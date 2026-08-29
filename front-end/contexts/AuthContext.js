@@ -51,7 +51,7 @@ const [loading, setLoading] = useState(true);
     }
 
     async function login(email, password){
-        const res = await api.post("auth/login", {email, password})
+        const res = await api.post("/auth/login", {email, password})
         const jwt = res.data.token; 
 
          localStorage.setItem('token', jwt)
@@ -79,7 +79,7 @@ const [loading, setLoading] = useState(true);
     }
 
 async function register(firstName, lastName, email, password, street, city, cep, numberAddress, bairro, phone) {
-        const res = await api.post("auth/register", {
+        const res = await api.post("/auth/register", {
     firstName, lastName, email, password,
     street, city, cep, numberAddress, bairro, phone
   });
