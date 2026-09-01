@@ -80,6 +80,12 @@ public class OrderServiceImp implements OrderService {
                 .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
 
 
+        boolean hasNonPositiveQuantity = cart.getCartItem().stream()
+                .anyMatch(cartItem -> cartItem.getQuantity() <= 0);
+        if (hasNonPositiveQuantity) {
+            throw new IllegalArgumentException("Carrinho contém item com quantidade inválida");
+        }
+
         //cart
         Map<Long, Integer> requestedMap = cart.getCartItem().stream()
                 .collect(Collectors.toMap(
@@ -167,8 +173,10 @@ public class OrderServiceImp implements OrderService {
         order.setPaidAt(LocalDateTime.now());
         order.setMercadoPagoPreferenceId("demo-pref-" + order.getId());
         order.setMercadoPagoPaymentId("demo-pay-" + order.getId());
-        order.getItems().forEach(item ->
-                productRepository.decrementStock(item.getProductId(), item.getQuantity()));
+        order.getItems().stream()
+                .filter(item -> item.getQuantity() > 0)
+                .forEach(item ->
+                        productRepository.decrementStock(item.getProductId(), item.getQuantity()));
         orderRepository.save(order);
 
         if (cart != null) {
@@ -193,6 +201,13 @@ public class OrderServiceImp implements OrderService {
         Order order = new Order();
 
         for(CartItem cartItem : cartItems){
+            // A non-positive quantity passes validateStockAvailability (stock < -3 is
+            // false) and then multiplies into a negative subtotal, so it has to be
+            // rejected on its own terms.
+            if (cartItem.getQuantity() <= 0) {
+                throw new IllegalArgumentException(
+                        "Quantidade inválida no carrinho para o produto " + cartItem.getProduct().getId());
+            }
             validateStockAvailability(cartItem.getProduct().getId(), cartItem.getQuantity());
 
             OrderItem orderItem = new OrderItem(
@@ -329,9 +344,10 @@ public class OrderServiceImp implements OrderService {
                 order.setStatus(OrderStatus.PAID);
                 order.setMercadoPagoPaymentId(mpPaymentId);
                 order.setPaidAt(LocalDateTime.now());
-                order.getItems().forEach(item ->
-                        productRepository.decrementStock(item.getProductId(), item.getQuantity())
-                );
+                order.getItems().stream()
+                        .filter(item -> item.getQuantity() > 0)
+                        .forEach(item ->
+                                productRepository.decrementStock(item.getProductId(), item.getQuantity()));
                 cartRepository.findByUserIdAndStatus(order.getUser().getId(), CartStatus.CHECKOUT)
                         .ifPresent(cartRepository::delete);
             }

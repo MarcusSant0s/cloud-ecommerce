@@ -34,7 +34,7 @@ public class UserController {
     }
 
     @PutMapping("/UpdateMe")
-    public ResponseEntity<?> updateUser(@AuthenticationPrincipal User user,
+    public ResponseEntity<SingleUserRequest> updateUser(@AuthenticationPrincipal User user,
                                            @Valid @RequestBody UpdateUserRequest request){
 
 
