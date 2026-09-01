@@ -31,7 +31,7 @@ A full-stack e-commerce platform with JWT authentication, product & cart managem
 |----------|------------|
 | Frontend | Next.js 16 (App Router), React 19, TailwindCSS v4, Radix UI, Framer Motion, Axios |
 | Backend  | Spring Boot 4, Java 21, Spring Security (JWT), Spring Data JPA |
-| Database | PostgreSQL 16 |
+| Database | PostgreSQL 16 (schema managed by Flyway) |
 | Storage  | AWS S3 (product images) |
 | Payments | Mercado Pago SDK |
 | Infra    | Docker Compose, Nginx (reverse proxy) |
@@ -76,7 +76,7 @@ A full-stack e-commerce platform with JWT authentication, product & cart managem
 
 ### Run the full stack with Docker
 
-1. Create a `.env` file in the project root (see [Environment Variables](#environment-variables)).
+1. Copy `.env.example` to `.env` in the project root and fill it in (see [Environment Variables](#environment-variables)).
 2. Build and start everything:
 
    ```bash
@@ -102,7 +102,22 @@ npm install
 npm run dev
 ```
 
-> The frontend expects the API at `http://localhost:8080`. Run the backend (and a Postgres instance) before starting it.
+> The frontend expects the API at `http://localhost:8080` (see `front-end/.env.example`). Run the backend (and a Postgres instance) before starting it:
+>
+> ```bash
+> docker compose -f docker-compose.local.yml up -d   # Postgres on :5432
+> ```
+
+### Database schema
+
+The schema is owned by Flyway (`API/src/main/resources/db/migration`), not by Hibernate.
+`ddl-auto` is `validate` in every profile, so the app refuses to start if the migrated
+schema and the JPA entities have drifted apart.
+
+- **Changing an entity?** Add a new `V<n>__description.sql` alongside it. Never edit
+  an applied migration — Flyway checksums them and will fail on the next boot.
+- **Existing database** created by the old `ddl-auto=update`? `baseline-on-migrate`
+  stamps it at V1 rather than replaying the baseline against it, so no data is touched.
 
 ## Environment Variables
 
@@ -114,14 +129,13 @@ Defined in the root `.env` and consumed by `docker-compose.yml`:
 | `JWT_SECRET_KEY` | Secret used to sign JWT tokens |
 | `MP_ACCESS_TOKEN` | Mercado Pago access token |
 | `MP_WEBHOOK_SECRET` | Mercado Pago webhook signing secret ("assinatura secreta") used to verify `POST /order/webhook`. Blank => signature check skipped (logs a warning). Required in prod for real payments. |
-| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_KEY` | AWS credentials for S3 (region `sa-east-1`) |
+| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | AWS credentials for S3 (region `sa-east-1`). These exact names are what the AWS SDK's default credential chain reads. |
 | `EMAIL_ADMIN` / `PASSWORD_ADMIN` | Credentials for the auto-seeded admin user |
 | `APP_BASE_URL` | Public HTTPS base URL (scheme + host, e.g. `https://ecommerce-marcus.duckdns.org`). Builds the frontend's `NEXT_PUBLIC_API_URL`, the MP webhook notification URL, and the MP back URLs. |
 | `APP_SEED_DEMO_DATA` | `true` to seed the demo dataset (products, users, orders) on startup. Default `false`. Idempotent — skips if products already exist. |
-| `DDL_AUTO` | Hibernate `ddl-auto` for prod. Default `validate`; use `update` on a fresh demo DB so the schema is created before seeding. |
 | `PAYMENTS_DEMO_MODE` | `true` to skip Mercado Pago at checkout and simulate an approved payment (order marked PAID, stock decremented, cart cleared). Default `false`. Use on demos without a real MP token. |
 
-> **Note:** never commit real secrets. Keep `.env` out of version control.
+> **Note:** never commit real secrets. Keep `.env` out of version control — copy `.env.example` and fill it in.
 
 ## API Overview
 
@@ -145,4 +159,24 @@ cd API
 ./mvnw test
 ```
 
-The backend includes tests for the cart cleanup scheduler, user service, cart/order flow, and shipping service. The frontend has no test suite configured.
+43 tests covering the auth layer (`AuthService`, `JwtService`, `JwtAuthFilter`), the
+cart cleanup scheduler, user service, cart/order flow, Mercado Pago webhook validation,
+and the shipping service. A JaCoCo coverage report is written to `API/target/site/jacoco`
+by `mvn verify` and uploaded as a CI artifact.
+
+CI also runs a **smoke job** that boots the packaged jar with the `prod` profile against a
+real Postgres and asserts the migration applied, `/actuator/health` reports `UP`, and the
+authorization rules answer 401/200/400 as expected. That is what catches a broken migration
+or a bean that only fails to wire at runtime.
+
+The frontend has no test suite configured.
+
+## Operations
+
+| Concern | Where |
+|---------|-------|
+| Health check | `GET /actuator/health` — used by the container healthcheck and the deploy gate. Blocked at nginx, so it is not reachable from the internet. |
+| Rate limiting | nginx, per IP: 30 req/min on `/api/auth/` (login and register), 10 req/s elsewhere. Returns `429`. |
+| Schema migrations | Flyway, on startup. See [Database schema](#database-schema). |
+| Logs | `json-file` driver capped at 10MB x 3 per container, so a long-running box cannot fill its disk with logs. |
+| Deploy | CI waits for `commerce-api` to report healthy before declaring success, and dumps the backend logs and fails the job if it does not. |

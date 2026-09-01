@@ -2,6 +2,7 @@ package com.project.API.user;
 
 
 import com.project.API.user.dto.AllUsersRequest;
+import jakarta.validation.Valid;
 import com.project.API.user.dto.SingleUserRequest;
 import com.project.API.user.dto.UpdateUserRequest;
 import org.springframework.http.ResponseEntity;
@@ -33,8 +34,8 @@ public class UserController {
     }
 
     @PutMapping("/UpdateMe")
-    public ResponseEntity<?> updateUser(@AuthenticationPrincipal User user,
-                                           @RequestBody UpdateUserRequest request){
+    public ResponseEntity<SingleUserRequest> updateUser(@AuthenticationPrincipal User user,
+                                           @Valid @RequestBody UpdateUserRequest request){
 
 
         return ResponseEntity.ok(userService.updateUser(request, user.getId()));

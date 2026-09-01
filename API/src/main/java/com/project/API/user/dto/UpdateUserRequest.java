@@ -11,6 +11,7 @@ public record UpdateUserRequest(
         String firstName,
         @NotBlank
         String lastName,
+        @NotBlank
         @Email
         String email,
         @NotBlank
@@ -27,13 +28,15 @@ public record UpdateUserRequest(
 
     public User applyTo(User user){
 
-        System.out.print(user);
         if(this.firstName != null) user.setFirstName(firstName);
         if(this.lastName != null) user.setLastName(lastName);
         if(this.email != null) user.setEmail(email);
 
 
         UserAdress adress = user.getUserAdress();
+        // Callers are expected to have attached an address already; bail out rather
+        // than dereference null if one hasn't been.
+        if (adress == null) return user;
 
         if(this.street != null) adress.setStreet(street);
         if(this.city != null) adress.setCity(city);

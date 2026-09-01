@@ -1,5 +1,10 @@
 package com.project.API.product.dto;
 
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
@@ -10,10 +15,22 @@ import java.util.Set;
 
 public class CreateProduct {
 
+    @NotBlank
     private String name;
+
+    @NotBlank
     private String description;
+
+    @PositiveOrZero
     private int quantity;
+
+    @NotNull
+    @DecimalMin(value = "0.0", inclusive = false)
     private BigDecimal priceOriginal;
+
+    // Discount percentage, e.g. 5% -> 0.05. Mirrors Product.priceDiscount.
+    @DecimalMin("0.01")
+    @DecimalMax("0.9")
     private BigDecimal priceDiscount;
 
     private Set<Long> categoryIds = new HashSet<>();

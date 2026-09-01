@@ -29,6 +29,8 @@ import com.project.API.user.User;
 import com.project.API.user.UserAdress;
 
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -45,6 +47,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class OrderServiceImp implements OrderService {
+
+    private static final Logger log = LoggerFactory.getLogger(OrderServiceImp.class);
 
     private final OrderRepository orderRepository;
     private final CartRepository cartRepository;
@@ -75,6 +79,12 @@ public class OrderServiceImp implements OrderService {
         Cart cart = cartRepository.findByUserIdAndStatus(userId, CartStatus.ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
 
+
+        boolean hasNonPositiveQuantity = cart.getCartItem().stream()
+                .anyMatch(cartItem -> cartItem.getQuantity() <= 0);
+        if (hasNonPositiveQuantity) {
+            throw new IllegalArgumentException("Carrinho contém item com quantidade inválida");
+        }
 
         //cart
         Map<Long, Integer> requestedMap = cart.getCartItem().stream()
@@ -163,8 +173,10 @@ public class OrderServiceImp implements OrderService {
         order.setPaidAt(LocalDateTime.now());
         order.setMercadoPagoPreferenceId("demo-pref-" + order.getId());
         order.setMercadoPagoPaymentId("demo-pay-" + order.getId());
-        order.getItems().forEach(item ->
-                productRepository.decrementStock(item.getProductId(), item.getQuantity()));
+        order.getItems().stream()
+                .filter(item -> item.getQuantity() > 0)
+                .forEach(item ->
+                        productRepository.decrementStock(item.getProductId(), item.getQuantity()));
         orderRepository.save(order);
 
         if (cart != null) {
@@ -189,6 +201,13 @@ public class OrderServiceImp implements OrderService {
         Order order = new Order();
 
         for(CartItem cartItem : cartItems){
+            // A non-positive quantity passes validateStockAvailability (stock < -3 is
+            // false) and then multiplies into a negative subtotal, so it has to be
+            // rejected on its own terms.
+            if (cartItem.getQuantity() <= 0) {
+                throw new IllegalArgumentException(
+                        "Quantidade inválida no carrinho para o produto " + cartItem.getProduct().getId());
+            }
             validateStockAvailability(cartItem.getProduct().getId(), cartItem.getQuantity());
 
             OrderItem orderItem = new OrderItem(
@@ -286,8 +305,8 @@ public class OrderServiceImp implements OrderService {
                 cart.setStatus(CartStatus.ACTIVE);
             }
             orderRepository.delete(order);
-            System.out.println("Status: " + e.getStatusCode());
-            System.out.println("Response: " + e.getApiResponse().getContent());
+            log.error("Mercado Pago rejected the preference for order {} (HTTP {})",
+                    order.getId(), e.getStatusCode(), e);
             throw e;
 
 
@@ -325,9 +344,10 @@ public class OrderServiceImp implements OrderService {
                 order.setStatus(OrderStatus.PAID);
                 order.setMercadoPagoPaymentId(mpPaymentId);
                 order.setPaidAt(LocalDateTime.now());
-                order.getItems().forEach(item ->
-                        productRepository.decrementStock(item.getProductId(), item.getQuantity())
-                );
+                order.getItems().stream()
+                        .filter(item -> item.getQuantity() > 0)
+                        .forEach(item ->
+                                productRepository.decrementStock(item.getProductId(), item.getQuantity()));
                 cartRepository.findByUserIdAndStatus(order.getUser().getId(), CartStatus.CHECKOUT)
                         .ifPresent(cartRepository::delete);
             }

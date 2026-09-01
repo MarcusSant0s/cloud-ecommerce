@@ -14,12 +14,44 @@ const api = axios.create({
   timeout: REQUEST_TIMEOUT,
 });
 
-// api.interceptors.request.use(config => {
-//   const token = localStorage.getItem("token");
-//   if (token) {
-//     config.headers.Authorization = `Bearer ${token}`;
-//   }
-//   return config;
-// });
+// Read the token per request rather than relying on api.defaults being set at
+// login: a full page load reaches components before AuthContext has rehydrated,
+// so the first calls used to go out unauthenticated.
+api.interceptors.request.use((config) => {
+  if (typeof window === "undefined") return config;
+  const token = window.localStorage.getItem("token");
+  if (token && !config.headers.Authorization) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Called by AuthContext so a rejected token clears the same state a manual
+// logout would, instead of this module reaching into React's state itself.
+let onUnauthorized = null;
+export function setUnauthorizedHandler(handler) {
+  onUnauthorized = handler;
+}
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error?.response?.status;
+    const url = error?.config?.url || "";
+
+    // A 401 from the login/register endpoints is the expected answer to bad
+    // credentials — the form shows it. Only a 401 on an already-authenticated
+    // call means the stored token expired or was revoked.
+    const isAuthAttempt = url.includes("/auth/");
+
+    if (status === 401 && !isAuthAttempt && typeof window !== "undefined") {
+      window.localStorage.removeItem("token");
+      delete api.defaults.headers.common["Authorization"];
+      if (onUnauthorized) onUnauthorized();
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 export default api;

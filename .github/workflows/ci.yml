@@ -35,6 +35,120 @@ jobs:
           name: backend-surefire-reports
           path: API/target/surefire-reports
 
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-jacoco-report
+          path: API/target/site/jacoco
+
+      - name: Upload jar for the smoke test
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-jar
+          path: API/target/*.jar
+          retention-days: 1
+
+  # Boots the packaged jar with the prod profile against a real Postgres. This is
+  # what catches a broken migration, a schema that no longer matches the entities
+  # (ddl-auto=validate), or a bean that only fails to wire at runtime — none of
+  # which the unit tests can see.
+  backend-smoke:
+    needs: backend
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: commerce
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Download jar
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-jar
+
+      - name: Boot with the prod profile and wait for health
+        env:
+          DB_HOST: localhost
+          POSTGRES_DB: commerce
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          MP_ACCESS_TOKEN: TEST-ci-token
+          MP_WEBHOOK_SECRET: ''
+          APP_BASE_URL: https://ci.example
+          JWT_SECRET_KEY: a-ci-only-signing-key-long-enough-for-hs256-abcdef
+          EMAIL_ADMIN: admin@ci.example
+          PASSWORD_ADMIN: ci-password
+        run: |
+          java -jar ./*.jar --spring.profiles.active=prod --server.port=8080 > app.log 2>&1 &
+          echo $! > app.pid
+
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:8080/actuator/health | grep -q '"status":"UP"'; then
+              echo "Application is UP"
+              healthy=1
+              break
+            fi
+            sleep 2
+          done
+
+          if [ "$healthy" != "1" ]; then
+            echo "::error::Application never became healthy"
+            tail -100 app.log
+            exit 1
+          fi
+
+      - name: Verify Flyway applied the schema
+        run: |
+          PGPASSWORD=postgres psql -h localhost -U postgres -d commerce \
+            -c "select version, description, success from flyway_schema_history;"
+          count=$(PGPASSWORD=postgres psql -h localhost -U postgres -d commerce -tAc \
+            "select count(*) from flyway_schema_history where success = true")
+          if [ "$count" -lt 1 ]; then
+            echo "::error::No successful Flyway migration recorded"
+            exit 1
+          fi
+
+      - name: Smoke-test the auth and authorization rules
+        run: |
+          set -e
+          # A protected route without a token must be 401, not 403 or 500.
+          code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/users/me)
+          [ "$code" = "401" ] || { echo "::error::expected 401 on /users/me, got $code"; exit 1; }
+
+          # A public route stays public.
+          code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/product)
+          [ "$code" = "200" ] || { echo "::error::expected 200 on /product, got $code"; exit 1; }
+
+          # Bean validation must reject a malformed registration with 400.
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:8080/auth/register \
+            -H 'Content-Type: application/json' \
+            -d '{"firstName":"","lastName":"X","email":"nope","password":""}')
+          [ "$code" = "400" ] || { echo "::error::expected 400 on invalid register, got $code"; exit 1; }
+
+          echo "Auth smoke tests passed"
+
+      - name: Stop the application
+        if: always()
+        run: kill "$(cat app.pid)" 2>/dev/null || true
+
   frontend:
     runs-on: ubuntu-latest
     defaults:
@@ -62,7 +176,7 @@ jobs:
         run: npm run build
 
   build-and-push:
-    needs: [backend, frontend]
+    needs: [backend, backend-smoke, frontend]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
@@ -72,6 +186,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Lowercase image owner
         run: echo "OWNER_LC=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_ENV"
@@ -88,6 +205,8 @@ jobs:
         with:
           context: ./API
           push: true
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,scope=backend,mode=max
           tags: |
             ghcr.io/${{ env.OWNER_LC }}/cloudecommerce-backend:latest
             ghcr.io/${{ env.OWNER_LC }}/cloudecommerce-backend:${{ github.sha }}
@@ -97,6 +216,8 @@ jobs:
         with:
           context: ./front-end
           push: true
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,scope=frontend,mode=max
           build-args: |
             NEXT_PUBLIC_API_URL=${{ secrets.PUBLIC_API_URL }}
           tags: |
@@ -105,6 +226,7 @@ jobs:
 
   deploy:
     needs: build-and-push
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
@@ -115,7 +237,30 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            set -e
             cd ~/cloud-ecommerce
             git pull origin main
             docker compose -f docker-compose.yml pull
             docker compose -f docker-compose.yml up -d
+
+            # Don't report a green deploy until the API actually answers. Compose
+            # returns as soon as the containers are created, which is well before
+            # Flyway and the JPA bootstrap have finished.
+            echo "Waiting for the API to report healthy..."
+            for i in $(seq 1 30); do
+              status=$(docker inspect -f '{{.State.Health.Status}}' commerce-api 2>/dev/null || echo starting)
+              echo "  attempt $i: $status"
+              [ "$status" = "healthy" ] && break
+              sleep 10
+            done
+
+            if [ "$status" != "healthy" ]; then
+              echo "Deploy failed: commerce-api is '$status' after 5 minutes"
+              docker compose -f docker-compose.yml logs --tail=120 backend
+              exit 1
+            fi
+
+            echo "Deploy healthy."
+            # A small EC2 box fills up fast otherwise: every deploy leaves the
+            # previous image behind.
+            docker image prune -f

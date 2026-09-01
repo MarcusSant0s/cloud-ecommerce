@@ -1,12 +1,15 @@
 package com.project.API.cart;
 
 import com.project.API.cart.dto.CartResponseDTO;
+import jakarta.validation.constraints.Positive;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.http.ResponseEntity;
  import org.springframework.web.bind.annotation.*;
 
 @RestController
+@Validated
 @RequestMapping("/cart")
 public class CartController {
 
@@ -20,7 +23,7 @@ public class CartController {
     public ResponseEntity<Void> addItem(
             @PathVariable Long userId,
             @RequestParam Long productId,
-            @RequestParam int quantity) {
+            @RequestParam @Positive int quantity) {
         cartService.addItem(userId, productId, quantity);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }

@@ -1,7 +1,7 @@
 'use client'
 
 import { useContext, useEffect, createContext, useState} from "react";
-import api from "@/services/api"; 
+import api, { setUnauthorizedHandler } from "@/services/api";
 import { useRouter } from "next/navigation";
 const authContext = createContext(null);
 
@@ -30,6 +30,19 @@ const [loading, setLoading] = useState(true);
             loadUser();
         // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount to rehydrate the session
     }, [])
+
+    // An expired or revoked token surfaces as a 401 on any authenticated call, not
+    // just on the next login. The interceptor has already cleared the stored token
+    // by the time this runs; this drops the matching React state so the UI stops
+    // rendering a signed-in shell for a session the server has stopped honouring.
+    useEffect(() => {
+        setUnauthorizedHandler(() => {
+            setToken(null);
+            setUser(null);
+            router.push('/');
+        });
+        return () => setUnauthorizedHandler(null);
+    }, [router])
 
     async function fetchMe(tokenParam){
         try{

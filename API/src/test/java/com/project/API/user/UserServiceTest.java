@@ -5,15 +5,14 @@ import com.project.API.user.dto.UpdateUserRequest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import com.project.API.user.dto.SingleUserRequest;
 
 import java.util.Optional;
 
 public class UserServiceTest {
 
     @Test
-    void shouldReturnResponseEntityAccepted() {
+    void shouldReturnTheUpdatedUser() {
         UserRepository userRepository = Mockito.mock(UserRepository.class);
         CartRepository cartRepository = Mockito.mock(CartRepository.class);
         UserAdressRepository adressRepository = Mockito.mock(UserAdressRepository.class);
@@ -35,9 +34,10 @@ public class UserServiceTest {
                 .thenReturn(Optional.of(user));
 
         UserService userService = new UserService(userRepository, cartRepository, adressRepository);
-        ResponseEntity<Object> result = userService.updateUser(request, 1L);
+        SingleUserRequest result = userService.updateUser(request, 1L);
 
-        Assertions.assertEquals(HttpStatus.ACCEPTED,  result.getStatusCode());
+        Assertions.assertEquals("Admin", result.firstName());
+        Assertions.assertEquals("admin@test.com", result.email());
     }
 
 }

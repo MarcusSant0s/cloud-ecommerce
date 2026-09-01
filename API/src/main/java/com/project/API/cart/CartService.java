@@ -34,6 +34,15 @@ public class CartService {
     @Transactional
     public void addItem(Long userId, Long id_product, int quantity){
 
+        // `quantity` comes straight off a request parameter. A non-positive value
+        // used to be stored as-is, and nothing downstream rejects it: the cart
+        // subtotal is price x quantity (so it goes negative), the checkout stock
+        // check is `stock < requested` (so -3 passes), and decrementStock runs
+        // `quantity = quantity - :qty`, which for a negative qty *adds* stock.
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("Quantidade deve ser maior que zero");
+        }
+
         Cart cart = getOrCreateCart(userId);
 
         Optional<CartItem> existingCartItem = cart.getCartItem().stream()
@@ -41,11 +50,19 @@ public class CartService {
                 .findFirst();
 
         if(existingCartItem.isPresent()){
-            updateQuantity(userId, existingCartItem.get().getId(), true);
+            // Add the requested amount. This used to delegate to updateQuantity(),
+            // which increments by exactly 1 — so "add 4 more" added 1.
+            CartItem cartItem = existingCartItem.get();
+            int newQuantity = cartItem.getQuantity() + quantity;
+            validateStockAvailability(id_product, newQuantity);
+            cartItem.setQuantity(newQuantity);
         }else{
 
             Product  product = productRepository.findById(id_product)
                     .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado com o id " + id_product));
+
+            // The first add was never stock-checked; only the increment path was.
+            validateStockAvailability(id_product, quantity);
 
             CartItem cartItem = new CartItem();
             cartItem.setProduct(product);
@@ -196,9 +213,13 @@ public class CartService {
 
         return cartrepository.findByUserIdAndStatus(userId, CartStatus.ACTIVE)
                 .map(cart -> {
-                    // remove items whose product no longer exists
+                    // Drop lines that can no longer be honoured: the product is gone,
+                    // stock fell below what the cart holds, or the quantity is not
+                    // positive. The last case self-heals carts written before addItem
+                    // started rejecting a non-positive quantity.
                     cart.getCartItem().removeIf(cartItem ->
-                            productRepository.findQuantityById(cartItem.getProduct().getId())
+                            cartItem.getQuantity() <= 0
+                            || productRepository.findQuantityById(cartItem.getProduct().getId())
                                     .map(stock -> stock < cartItem.getQuantity())
                                     .orElse(true)
                     );
