@@ -1,7 +1,14 @@
 package com.project.API.auth.dto;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+
 public class LoginRequest   {
+    @NotBlank
+    @Email
     String email;
+
+    @NotBlank
     String password;
 
 

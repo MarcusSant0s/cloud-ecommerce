@@ -9,6 +9,7 @@ public class CreateUserRequest {
     public String firstName;
     @NotBlank
     public String lastName;
+    @NotBlank
     @Email
     public String email;
     @NotBlank

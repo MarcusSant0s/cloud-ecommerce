@@ -29,6 +29,8 @@ import com.project.API.user.User;
 import com.project.API.user.UserAdress;
 
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -45,6 +47,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class OrderServiceImp implements OrderService {
+
+    private static final Logger log = LoggerFactory.getLogger(OrderServiceImp.class);
 
     private final OrderRepository orderRepository;
     private final CartRepository cartRepository;
@@ -286,8 +290,8 @@ public class OrderServiceImp implements OrderService {
                 cart.setStatus(CartStatus.ACTIVE);
             }
             orderRepository.delete(order);
-            System.out.println("Status: " + e.getStatusCode());
-            System.out.println("Response: " + e.getApiResponse().getContent());
+            log.error("Mercado Pago rejected the preference for order {} (HTTP {})",
+                    order.getId(), e.getStatusCode(), e);
             throw e;
 
 

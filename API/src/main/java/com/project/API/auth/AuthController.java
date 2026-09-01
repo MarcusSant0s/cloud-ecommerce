@@ -2,6 +2,7 @@ package com.project.API.auth;
 
 
 import com.project.API.auth.dto.CreateUserRequest;
+import jakarta.validation.Valid;
 import com.project.API.auth.dto.LoginRequest;
 import com.project.API.auth.dto.AuthResponse;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,13 +23,13 @@ private final AuthService authService;
 
 
         @PostMapping("/register")
-    public AuthResponse register(@RequestBody CreateUserRequest request){
+    public AuthResponse register(@Valid @RequestBody CreateUserRequest request){
         return authService.register(request);
     }
 
 
     @PostMapping("/login")
-    public AuthResponse login(@RequestBody LoginRequest request) {
+    public AuthResponse login(@Valid @RequestBody LoginRequest request) {
         return authService.login(request);
     }
 }

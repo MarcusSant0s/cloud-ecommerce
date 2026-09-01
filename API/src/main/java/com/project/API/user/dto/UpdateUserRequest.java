@@ -11,6 +11,7 @@ public record UpdateUserRequest(
         String firstName,
         @NotBlank
         String lastName,
+        @NotBlank
         @Email
         String email,
         @NotBlank
@@ -27,7 +28,6 @@ public record UpdateUserRequest(
 
     public User applyTo(User user){
 
-        System.out.print(user);
         if(this.firstName != null) user.setFirstName(firstName);
         if(this.lastName != null) user.setLastName(lastName);
         if(this.email != null) user.setEmail(email);
