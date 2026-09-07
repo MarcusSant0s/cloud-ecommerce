@@ -21,13 +21,15 @@ class CartCleanupSchedulerTest {
 
     private OrderRepository orderRepository;
     private CartRepository cartRepository;
+    private CartService cartService;
     private CartCleanupScheduler scheduler;
 
     @BeforeEach
     void setUp() {
         orderRepository = Mockito.mock(OrderRepository.class);
         cartRepository = Mockito.mock(CartRepository.class);
-        scheduler = new CartCleanupScheduler(orderRepository, cartRepository);
+        cartService = Mockito.mock(CartService.class);
+        scheduler = new CartCleanupScheduler(orderRepository, cartRepository, cartService);
     }
 
     @Test
@@ -45,8 +47,7 @@ class CartCleanupSchedulerTest {
         scheduler.cancelAbandonedOrders();
 
         assertEquals(OrderStatus.CANCELLED, staleOrder.getStatus());
-        verify(checkoutCart).setStatus(CartStatus.ACTIVE);
-        verify(cartRepository).save(checkoutCart);
+        verify(cartService).restoreToActive(checkoutCart);
         verify(orderRepository).save(staleOrder);
     }
 
@@ -78,7 +79,7 @@ class CartCleanupSchedulerTest {
         scheduler.cancelAbandonedOrders();
 
         verify(orderRepository, never()).save(any());
-        verify(cartRepository, never()).save(any());
+        verify(cartService, never()).restoreToActive(any());
     }
 
     @Test
@@ -95,8 +96,7 @@ class CartCleanupSchedulerTest {
 
         scheduler.cancelAbandonedOrders();
 
-        verify(orphanedCart).setStatus(CartStatus.ACTIVE);
-        verify(cartRepository).save(orphanedCart);
+        verify(cartService).restoreToActive(orphanedCart);
     }
 
     @Test
@@ -114,6 +114,6 @@ class CartCleanupSchedulerTest {
         scheduler.cancelAbandonedOrders();
 
         verify(activeCheckoutCart, never()).setStatus(any());
-        verify(cartRepository, never()).save(any());
+        verify(cartService, never()).restoreToActive(any());
     }
 }

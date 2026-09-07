@@ -14,6 +14,7 @@ import com.mercadopago.resources.preference.Preference;
 import com.project.API.cart.CartItem;
 import com.project.API.cart.CartStatus;
 import com.project.API.cart.CartRepository;
+import com.project.API.cart.CartService;
 import com.project.API.cart.exception.InsufficientStockException;
 import com.project.API.commom.exception.CartInconsistencyException;
 import com.project.API.commom.exception.OrderNotPayableException;
@@ -54,6 +55,7 @@ public class OrderServiceImp implements OrderService {
     private final CartRepository cartRepository;
     private final ProductRepository productRepository;
     private final ShippingService shippingService;
+    private final CartService cartService;
 
     @Value("${mercadopago.notification.url}")
     private String notificationUrl;
@@ -66,11 +68,12 @@ public class OrderServiceImp implements OrderService {
     @Value("${app.payments.demo-mode:false}")
     private boolean paymentsDemoMode;
 
-    public OrderServiceImp(OrderRepository orderRepository, CartRepository cartRepository, ProductRepository productRepository, ShippingService shippingService){
+    public OrderServiceImp(OrderRepository orderRepository, CartRepository cartRepository, ProductRepository productRepository, ShippingService shippingService, CartService cartService){
         this.orderRepository = orderRepository;
         this.cartRepository = cartRepository;
         this.productRepository = productRepository;
         this.shippingService = shippingService;
+        this.cartService = cartService;
     }
 
 
@@ -335,7 +338,10 @@ public class OrderServiceImp implements OrderService {
         } catch (MPApiException e) {
 
             if (cart != null) {
-                cart.setStatus(CartStatus.ACTIVE);
+                // repayOrder hands us a cart that was already CHECKOUT, and MPApiException
+                // is checked — jakarta's @Transactional does not roll back on it — so this
+                // revert really does commit and has to go through the same reconciliation.
+                cartService.restoreToActive(cart);
             }
             orderRepository.delete(order);
             log.error("Mercado Pago rejected the preference for order {} (HTTP {})",
@@ -387,10 +393,7 @@ public class OrderServiceImp implements OrderService {
             case "rejected" -> {
                 order.setStatus(OrderStatus.CANCELLED);
                 cartRepository.findByUserIdAndStatus(order.getUser().getId(), CartStatus.CHECKOUT)
-                        .ifPresent(cart -> {
-                            cart.setStatus(CartStatus.ACTIVE);
-                            cartRepository.save(cart);
-                        });
+                        .ifPresent(cartService::restoreToActive);
             }
             case "pending" -> order.setStatus(OrderStatus.PENDING);
         }

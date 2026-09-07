@@ -2,6 +2,7 @@ package com.project.API.order;
 
 import com.project.API.cart.Cart;
 import com.project.API.cart.CartRepository;
+import com.project.API.cart.CartService;
 import com.project.API.cart.CartStatus;
 import com.project.API.order.interfaces.QuantityChecks;
 import com.project.API.product.ProductRepository;
@@ -33,6 +34,7 @@ class OrderQuantityEdgeCaseTest {
     private CartRepository cartRepository;
     private ProductRepository productRepository;
     private ShippingService shippingService;
+    private CartService cartService;
     private OrderServiceImp orderService;
 
     @BeforeEach
@@ -41,7 +43,8 @@ class OrderQuantityEdgeCaseTest {
         cartRepository = Mockito.mock(CartRepository.class);
         productRepository = Mockito.mock(ProductRepository.class);
         shippingService = Mockito.mock(ShippingService.class);
-        orderService = new OrderServiceImp(orderRepository, cartRepository, productRepository, shippingService);
+        cartService = Mockito.mock(CartService.class);
+        orderService = new OrderServiceImp(orderRepository, cartRepository, productRepository, shippingService, cartService);
 
         when(shippingService.calculate(anyString())).thenReturn(new BigDecimal("15.00"));
         when(orderRepository.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));

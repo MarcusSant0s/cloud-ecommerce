@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -141,6 +142,75 @@ public class CartService {
 //             }
 //         }        ;
 //     }
+
+
+    /**
+     * Hands a CHECKOUT cart back to the user after its order fell through.
+     *
+     * <p>Deliberately not a plain status flip. Nothing stops a user from building a
+     * new cart while an order sits pending — {@link #getOrCreateCart} mints one the
+     * moment they open the cart page — so flipping the old cart straight back to
+     * ACTIVE can leave the account holding two. Every cart read goes through
+     * {@code findByUserIdAndStatus}, which returns an {@code Optional}, so a second
+     * ACTIVE row turns every cart request for that user into a 500 that nothing
+     * short of a manual database edit clears.
+     *
+     * <p>When the user already has an ACTIVE cart the abandoned lines are folded
+     * into it and the CHECKOUT cart is deleted, so nothing the buyer picked is lost.
+     */
+    @Transactional
+    public void restoreToActive(Cart checkoutCart) {
+        Cart activeCart = cartrepository
+                .findByUserIdAndStatus(checkoutCart.getUser().getId(), CartStatus.ACTIVE)
+                .orElse(null);
+
+        // No competing cart, or the query found this very cart because the caller had
+        // not flushed its CHECKOUT status yet: a flip is all that is needed.
+        if (activeCart == null || Objects.equals(activeCart.getId(), checkoutCart.getId())) {
+            checkoutCart.setStatus(CartStatus.ACTIVE);
+            cartrepository.save(checkoutCart);
+            return;
+        }
+
+        for (CartItem abandoned : checkoutCart.getCartItem()) {
+            mergeIntoCart(activeCart, abandoned);
+        }
+
+        cartrepository.save(activeCart);
+        // Cascade plus orphanRemoval take the emptied lines with it.
+        cartrepository.delete(checkoutCart);
+    }
+
+    /**
+     * Folds one abandoned line into the cart the user is using now, capped at what is
+     * actually in stock: getOrCreateCart drops a line whose quantity outruns stock, so
+     * summing past it would lose the whole line instead of trimming it.
+     */
+    private void mergeIntoCart(Cart target, CartItem abandoned) {
+        Long productId = abandoned.getProduct().getId();
+        int stock = productRepository.findQuantityById(productId).orElse(0);
+
+        Optional<CartItem> existing = target.getCartItem().stream()
+                .filter(item -> item.getProduct().getId().equals(productId))
+                .findFirst();
+
+        int quantity = Math.min(existing.map(CartItem::getQuantity).orElse(0) + abandoned.getQuantity(), stock);
+        if (quantity <= 0) {
+            return;
+        }
+
+        if (existing.isPresent()) {
+            existing.get().setQuantity(quantity);
+            return;
+        }
+
+        // A fresh line rather than re-parenting the old one: moving a CartItem out of
+        // the CHECKOUT cart's collection makes orphanRemoval delete it mid-flush.
+        CartItem moved = new CartItem();
+        moved.setProduct(abandoned.getProduct());
+        moved.setQuantity(quantity);
+        target.addCartItem(moved);
+    }
 
 
      // Helpers methods

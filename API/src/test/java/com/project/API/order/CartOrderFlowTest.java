@@ -2,6 +2,7 @@ package com.project.API.order;
 
 import com.project.API.cart.Cart;
 import com.project.API.cart.CartRepository;
+import com.project.API.cart.CartService;
 import com.project.API.cart.CartStatus;
 import com.project.API.commom.exception.CartInconsistencyException;
 import com.project.API.order.interfaces.QuantityChecks;
@@ -25,6 +26,7 @@ class CartOrderFlowTest {
     private CartRepository cartRepository;
     private ProductRepository productRepository;
     private ShippingService shippingService;
+    private CartService cartService;
     private OrderServiceImp orderService;
 
     @BeforeEach
@@ -33,7 +35,8 @@ class CartOrderFlowTest {
         cartRepository = Mockito.mock(CartRepository.class);
         productRepository = Mockito.mock(ProductRepository.class);
         shippingService = Mockito.mock(ShippingService.class);
-        orderService = new OrderServiceImp(orderRepository, cartRepository, productRepository, shippingService);
+        cartService = Mockito.mock(CartService.class);
+        orderService = new OrderServiceImp(orderRepository, cartRepository, productRepository, shippingService, cartService);
     }
 
     // ── checkout() validation ─────────────────────────────────────────────────
@@ -110,8 +113,9 @@ class CartOrderFlowTest {
         orderService.handlePaymentResult("1", "rejected", null);
 
         assertEquals(OrderStatus.CANCELLED, order.getStatus());
-        verify(checkoutCart).setStatus(CartStatus.ACTIVE);
-        verify(cartRepository).save(checkoutCart);
+        // Handed back via CartService, which reconciles with any cart the user built
+        // while the payment was pending instead of flipping this one to a second ACTIVE.
+        verify(cartService).restoreToActive(checkoutCart);
         verify(productRepository, never()).decrementStock(anyLong(), anyInt());
     }
 

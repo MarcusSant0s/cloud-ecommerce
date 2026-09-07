@@ -16,10 +16,13 @@ CartCleanupScheduler {
 
     private final OrderRepository orderRepository;
     private final CartRepository cartRepository;
+    private final CartService cartService;
 
-    public CartCleanupScheduler(OrderRepository orderRepository, CartRepository cartRepository) {
+    public CartCleanupScheduler(OrderRepository orderRepository, CartRepository cartRepository,
+                                CartService cartService) {
         this.orderRepository = orderRepository;
         this.cartRepository = cartRepository;
+        this.cartService = cartService;
     }
 
     @Scheduled(fixedDelayString = "${cart.cleanup.interval-ms:3600000}")
@@ -33,11 +36,11 @@ CartCleanupScheduler {
             order.setStatus(OrderStatus.CANCELLED);
             orderRepository.save(order);
 
+            // Via restoreToActive, not a bare status flip: the user may well have
+            // started a new cart while this order sat pending, and two ACTIVE carts
+            // break every subsequent cart read for them.
             cartRepository.findByUserIdAndStatus(order.getUser().getId(), CartStatus.CHECKOUT)
-                    .ifPresent(cart -> {
-                        cart.setStatus(CartStatus.ACTIVE);
-                        cartRepository.save(cart);
-                    });
+                    .ifPresent(cartService::restoreToActive);
         }
 
         // Revert CHECKOUT carts with no associated PENDING order
@@ -48,8 +51,7 @@ CartCleanupScheduler {
                     .findByUserIdAndStatus(cart.getUser().getId(), OrderStatus.PENDING)
                     .isPresent();
             if (!hasPendingOrder) {
-                cart.setStatus(CartStatus.ACTIVE);
-                cartRepository.save(cart);
+                cartService.restoreToActive(cart);
             }
         }
     }
