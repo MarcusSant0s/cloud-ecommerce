@@ -143,10 +143,12 @@ export function CartProvider({ children }) {
     updateQuantity,
     removeItem,
     clearCart,
+    // Exposed so a cancelled order can pull the restored cart back in.
+    refreshCart: fetchCart,
     itemCount: items.reduce((t, i) => t + i.quantity, 0),
     subtotal: items.reduce((t, i) => t + (i.price * i.quantity), 0),
     isLoading
-  }), [items, addItem, updateQuantity, removeItem, clearCart, isLoading]);
+  }), [items, addItem, updateQuantity, removeItem, clearCart, fetchCart, isLoading]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

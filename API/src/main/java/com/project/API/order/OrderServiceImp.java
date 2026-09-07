@@ -200,6 +200,42 @@ public class OrderServiceImp implements OrderService {
     }
 
     /**
+     * Cancels a PENDING order at the buyer's own request and hands the cart back.
+     *
+     * <p>Walking away from the Mercado Pago checkout leaves the order PENDING and the
+     * cart in CHECKOUT. Nothing is lost — repayOrder reopens the same preference — but
+     * until CartCleanupScheduler sweeps an hour later the store shows the buyer an empty
+     * cart, because getOrCreateCart mints a fresh one when no ACTIVE cart exists. This
+     * lets them undo it on the spot rather than wait for the sweep.
+     *
+     * <p>Only ever driven by the buyer: nothing here runs automatically, so an order is
+     * never cancelled out from under someone still paying in another tab.
+     */
+    @Transactional
+    @Override
+    public void cancelOrder(Long userId, Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+
+        // Don't leak the existence of other users' orders.
+        if (order.getUser() == null || !order.getUser().getId().equals(userId)) {
+            throw new ResourceNotFoundException("Order not found");
+        }
+
+        if (order.getStatus() != OrderStatus.PENDING) {
+            throw new OrderNotPayableException("Somente pedidos pendentes podem ser cancelados.");
+        }
+
+        order.setStatus(OrderStatus.CANCELLED);
+        orderRepository.save(order);
+
+        // restoreToActive, not a bare flip: the buyer may already have started a new cart
+        // while this order sat pending.
+        cartRepository.findByUserIdAndStatus(userId, CartStatus.CHECKOUT)
+                .ifPresent(cartService::restoreToActive);
+    }
+
+    /**
      * Simulates an approved payment for demo deploys: marks the order PAID,
      * decrements stock and clears the cart — the same effect the Mercado Pago
      * "approved" webhook would have — then sends the user to the success page.

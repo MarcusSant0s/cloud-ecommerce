@@ -22,6 +22,8 @@ public interface OrderService {
 
      String repayOrder(Long userId, Long orderId) throws MPException, MPApiException;
 
+     void cancelOrder(Long userId, Long orderId);
+
     @Transactional
     Order createOrder(Long userId, Cart cart);
 

@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Package, CheckCircle2, Clock, XCircle, ArrowLeft, ChevronLeft, ChevronRight, CreditCard, Loader2 } from "lucide-react";
+import { Package, CheckCircle2, Clock, XCircle, ArrowLeft, ChevronLeft, ChevronRight, CreditCard, Loader2, Ban } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/services/api";
 import { useAuth } from "@/contexts/AuthContext";
@@ -62,12 +62,30 @@ function SectionSkeleton({ count = 3 }) {
   );
 }
 
-function OrderCard({ order }) {
+function OrderCard({ order, onChanged }) {
   const firstItem = order.items?.[0];
   const extraCount = (order.items?.length ?? 0) - 1;
   const date = order.createdAt ? DATE_FORMAT.format(new Date(order.createdAt)) : null;
   const isPending = order.status?.toUpperCase() === "PENDING";
   const [paying, setPaying] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+
+  const handleCancel = async () => {
+    try {
+      setCancelling(true);
+      await api.post(`/order/${order.id}/cancel`);
+      toast.success("Pedido cancelado. Os itens voltaram para o seu carrinho.");
+      onChanged?.();
+    } catch (err) {
+      const code = err?.response?.data?.code;
+      toast.error(code === "ORDER_NOT_PAYABLE"
+        ? "Este pedido não pode mais ser cancelado."
+        : "Não foi possível cancelar o pedido. Tente novamente.");
+    } finally {
+      // Unlike handlePay this does not navigate away, so the button has to come back.
+      setCancelling(false);
+    }
+  };
 
   const handlePay = async () => {
     try {
@@ -125,14 +143,24 @@ function OrderCard({ order }) {
         <div className="mt-2 flex items-center justify-between gap-3">
           <p className="text-lg font-bold text-primary">{CURRENCY.format(order.total)}</p>
           {isPending && (
-            <button
-              onClick={handlePay}
-              disabled={paying}
-              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-sm bg-foreground px-4 py-2 text-[0.65rem] font-medium uppercase tracking-[0.15em] text-background transition hover:bg-foreground/90 disabled:opacity-60"
-            >
-              {paying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CreditCard className="h-3.5 w-3.5" />}
-              {paying ? "Redirecionando" : "Pagar agora"}
-            </button>
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                onClick={handleCancel}
+                disabled={paying || cancelling}
+                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-sm border px-3 py-2 text-[0.65rem] font-medium uppercase tracking-[0.15em] text-muted-foreground transition hover:bg-accent disabled:opacity-60"
+              >
+                {cancelling ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Ban className="h-3.5 w-3.5" />}
+                Cancelar
+              </button>
+              <button
+                onClick={handlePay}
+                disabled={paying || cancelling}
+                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-sm bg-foreground px-4 py-2 text-[0.65rem] font-medium uppercase tracking-[0.15em] text-background transition hover:bg-foreground/90 disabled:opacity-60"
+              >
+                {paying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CreditCard className="h-3.5 w-3.5" />}
+                {paying ? "Redirecionando" : "Pagar agora"}
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -283,7 +311,7 @@ export default function OrdersPage() {
                   Aguardando Pagamento
                 </h2>
                 <div className="flex flex-col gap-3">
-                  {pending.map((order) => <OrderCard key={order.id} order={order} />)}
+                  {pending.map((order) => <OrderCard key={order.id} order={order} onChanged={() => fetchOrders(page)} />)}
                 </div>
               </section>
             )}
@@ -293,7 +321,7 @@ export default function OrdersPage() {
                   Pedidos Anteriores
                 </h2>
                 <div className="flex flex-col gap-3">
-                  {others.map((order) => <OrderCard key={order.id} order={order} />)}
+                  {others.map((order) => <OrderCard key={order.id} order={order} onChanged={() => fetchOrders(page)} />)}
                 </div>
               </section>
             )}

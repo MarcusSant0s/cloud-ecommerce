@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Minus, Plus, ShoppingCart, X, Trash2, Loader2 } from "lucide-react";
+import { Minus, Plus, ShoppingCart, X, Trash2, Loader2, Clock, CreditCard, Ban } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import * as React from "react";
@@ -50,6 +50,7 @@ export function CartClient({ className }) {
     removeItem, 
     updateQuantity, 
     clearCart,
+    refreshCart,
     isLoading
   } = useCart();
 
@@ -60,6 +61,11 @@ export function CartClient({ className }) {
   const [isCheckingOut, setIsCheckingOut] = React.useState(false);
   const [shipping, setShipping] = React.useState(null); // { region, cost }
   const [shippingStatus, setShippingStatus] = React.useState("idle"); // idle | loading | ready | no-address | error
+  // An order the buyer started but never paid. While it exists the cart they had is
+  // parked in CHECKOUT, so getOrCreateCart hands them a brand new empty one — the cart
+  // looks wiped even though nothing was lost. Surfacing the order explains the gap.
+  const [pendingOrder, setPendingOrder] = React.useState(null);
+  const [pendingAction, setPendingAction] = React.useState(null); // null | "paying" | "cancelling"
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   React.useEffect(() => {
@@ -84,6 +90,46 @@ export function CartClient({ className }) {
       });
     return () => { cancelled = true; };
   }, [isOpen, user, items.length]);
+
+  // Deliberately not gated on items.length: the empty cart is exactly when this matters.
+  React.useEffect(() => {
+    if (!isOpen || !user) return;
+    let cancelled = false;
+    api.get("/order?page=0&size=5")
+      .then((res) => {
+        if (cancelled) return;
+        const found = (res.data?.content ?? [])
+          .find((order) => order.status?.toUpperCase() === "PENDING");
+        setPendingOrder(found ?? null);
+      })
+      .catch(() => { if (!cancelled) setPendingOrder(null); });
+    return () => { cancelled = true; };
+  }, [isOpen, user]);
+
+  const handlePayPending = async () => {
+    try {
+      setPendingAction("paying");
+      const res = await api.post(`/order/${pendingOrder.id}/pay`);
+      window.location.href = res.data.checkoutUrl;
+    } catch {
+      toast.error("Não foi possível reabrir o pagamento. Tente novamente.");
+      setPendingAction(null);
+    }
+  };
+
+  const handleCancelPending = async () => {
+    try {
+      setPendingAction("cancelling");
+      await api.post(`/order/${pendingOrder.id}/cancel`);
+      setPendingOrder(null);
+      await refreshCart();
+      toast.success("Pedido cancelado. Os itens voltaram para o seu carrinho.");
+    } catch {
+      toast.error("Não foi possível cancelar o pedido. Tente novamente.");
+    } finally {
+      setPendingAction(null);
+    }
+  };
 
   const freteCost = shippingStatus === "ready" && shipping ? Number(shipping.cost) : 0;
   const total = subtotal + freteCost;
@@ -147,6 +193,42 @@ export function CartClient({ className }) {
       </div>
 
       <div className="flex-1 overflow-y-auto px-6">
+        {pendingOrder && (
+          <div className="mt-4 rounded-sm border border-amber-200 bg-amber-50 p-4">
+            <div className="flex items-start gap-2">
+              <Clock className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-amber-900">Pedido aguardando pagamento</p>
+                <p className="mt-1 text-xs text-amber-800">
+                  O pedido #{pendingOrder.id} ficou pendente e os itens dele estão reservados,
+                  fora deste carrinho. Conclua o pagamento ou cancele para trazê-los de volta.
+                </p>
+              </div>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                onClick={handleCancelPending}
+                disabled={pendingAction !== null}
+                className="w-full rounded-sm text-[0.65rem] uppercase tracking-[0.15em]"
+              >
+                {pendingAction === "cancelling"
+                  ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  : <><Ban className="mr-1.5 h-3.5 w-3.5" />Cancelar</>}
+              </Button>
+              <Button
+                onClick={handlePayPending}
+                disabled={pendingAction !== null}
+                className="w-full rounded-sm text-[0.65rem] uppercase tracking-[0.15em]"
+              >
+                {pendingAction === "paying"
+                  ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  : <><CreditCard className="mr-1.5 h-3.5 w-3.5" />Pagar</>}
+              </Button>
+            </div>
+          </div>
+        )}
+
         <AnimatePresence mode="popLayout">
           {items.length === 0 ? (
             <motion.div

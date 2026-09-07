@@ -47,6 +47,15 @@ public class OrderController {
         return ResponseEntity.ok(Map.of("checkoutUrl", checkoutUrl));
     }
 
+    @PostMapping("/{orderId}/cancel")
+    public ResponseEntity<Void> cancel(
+            @AuthenticationPrincipal User user,
+            @PathVariable Long orderId
+    ) {
+        orderService.cancelOrder(user.getId(), orderId);
+        return ResponseEntity.noContent().build();
+    }
+
     @PatchMapping("/{orderId}/status")
     public ResponseEntity<OrderStatus> changeOrderStatus(
             @PathVariable Long orderId,

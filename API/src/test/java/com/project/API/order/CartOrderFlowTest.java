@@ -5,6 +5,8 @@ import com.project.API.cart.CartRepository;
 import com.project.API.cart.CartService;
 import com.project.API.cart.CartStatus;
 import com.project.API.commom.exception.CartInconsistencyException;
+import com.project.API.commom.exception.OrderNotPayableException;
+import com.project.API.commom.exception.ResourceNotFoundException;
 import com.project.API.order.interfaces.QuantityChecks;
 import com.project.API.product.ProductRepository;
 import com.project.API.shipping.ShippingService;
@@ -172,5 +174,50 @@ class CartOrderFlowTest {
             public Long getId() { return id; }
             public int getQuantity() { return qty; }
         };
+    }
+
+    // ── cancelOrder() ─────────────────────────────────────────────────────────
+
+    @Test
+    void cancelOrder_shouldCancelPendingOrder_andHandTheCartBack() {
+        User user = OrderFactory.mockUser(1L);
+        Order order = OrderFactory.orderWithItems(user, OrderStatus.PENDING, List.of());
+        Cart checkoutCart = mock(Cart.class);
+
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(cartRepository.findByUserIdAndStatus(1L, CartStatus.CHECKOUT)).thenReturn(Optional.of(checkoutCart));
+
+        orderService.cancelOrder(1L, 1L);
+
+        assertEquals(OrderStatus.CANCELLED, order.getStatus());
+        verify(orderRepository).save(order);
+        verify(cartService).restoreToActive(checkoutCart);
+    }
+
+    @Test
+    void cancelOrder_shouldRejectAnOrderThatIsNoLongerPending() {
+        User user = OrderFactory.mockUser(1L);
+        Order paid = OrderFactory.orderWithItems(user, OrderStatus.PAID, List.of());
+
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(paid));
+
+        assertThrows(OrderNotPayableException.class, () -> orderService.cancelOrder(1L, 1L));
+
+        assertEquals(OrderStatus.PAID, paid.getStatus());
+        verify(cartService, never()).restoreToActive(any());
+    }
+
+    @Test
+    void cancelOrder_shouldNotLetOneUserCancelAnotherUsersOrder() {
+        User owner = OrderFactory.mockUser(1L);
+        Order order = OrderFactory.orderWithItems(owner, OrderStatus.PENDING, List.of());
+
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+
+        // Reported as not-found rather than forbidden, so it does not confirm the order exists.
+        assertThrows(ResourceNotFoundException.class, () -> orderService.cancelOrder(99L, 1L));
+
+        assertEquals(OrderStatus.PENDING, order.getStatus());
+        verify(cartService, never()).restoreToActive(any());
     }
 }
