@@ -119,8 +119,7 @@ public class OrderServiceImp implements OrderService {
         }
 
         if (order.getMercadoPagoPreferenceId() != null) {
-            return "https://sandbox.mercadopago.com.br/checkout/v1/redirect?pref_id="
-                    + order.getMercadoPagoPreferenceId();
+            return resolveCheckoutUrl(order, cart);
         }
 
         return createCheckout(order, cart);
@@ -147,19 +146,53 @@ public class OrderServiceImp implements OrderService {
             throw new OrderNotPayableException("Somente pedidos pendentes podem ser pagos.");
         }
 
+        // A pending order already moved its cart to CHECKOUT. It can be missing
+        // entirely (the user emptied it), which every path below tolerates.
+        Cart cart = cartRepository.findByUserIdAndStatus(userId, CartStatus.CHECKOUT).orElse(null);
+
         if (paymentsDemoMode) {
-            return completeDemoCheckout(order,
-                    cartRepository.findByUserIdAndStatus(userId, CartStatus.CHECKOUT).orElse(null));
+            return completeDemoCheckout(order, cart);
         }
 
         if (order.getMercadoPagoPreferenceId() != null) {
-            return "https://sandbox.mercadopago.com.br/checkout/v1/redirect?pref_id="
-                    + order.getMercadoPagoPreferenceId();
+            return resolveCheckoutUrl(order, cart);
         }
 
         // No preference yet (checkout was interrupted before Mercado Pago responded):
-        // build one now. The cart is already in CHECKOUT for a pending order.
-        Cart cart = cartRepository.findByUserIdAndStatus(userId, CartStatus.CHECKOUT).orElse(null);
+        // build one now.
+        return createCheckout(order, cart);
+    }
+
+    /**
+     * Returns the Mercado Pago checkout link for an order that already has a
+     * preference.
+     *
+     * <p>The link has to come from MP's own {@code init_point}: a hand-built
+     * sandbox URL only ever works under test credentials, so with a production
+     * access token it sends the buyer to a checkout that cannot find the
+     * preference. Reading the preference back also keeps working if MP changes
+     * the redirect host.
+     *
+     * <p>A preference MP no longer recognises — created under different
+     * credentials, or expired — is discarded and rebuilt rather than handed to
+     * the buyer as a dead link.
+     */
+    private String resolveCheckoutUrl(Order order, Cart cart) throws MPException, MPApiException {
+        String preferenceId = order.getMercadoPagoPreferenceId();
+
+        try {
+            String initPoint = new PreferenceClient().get(preferenceId).getInitPoint();
+            if (initPoint != null && !initPoint.isBlank()) {
+                return initPoint;
+            }
+            log.warn("Mercado Pago returned preference {} without an init_point for order {}; rebuilding it",
+                    preferenceId, order.getId());
+        } catch (MPApiException e) {
+            log.warn("Mercado Pago rejected a lookup of preference {} for order {} (HTTP {}); rebuilding it",
+                    preferenceId, order.getId(), e.getStatusCode());
+        }
+
+        order.setMercadoPagoPreferenceId(null);
         return createCheckout(order, cart);
     }
 
