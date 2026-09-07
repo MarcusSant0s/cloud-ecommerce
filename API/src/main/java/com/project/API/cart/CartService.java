@@ -146,39 +146,59 @@ public class CartService {
 
     /**
      * Hands a CHECKOUT cart back to the user after its order fell through.
-     *
-     * <p>Deliberately not a plain status flip. Nothing stops a user from building a
-     * new cart while an order sits pending — {@link #getOrCreateCart} mints one the
-     * moment they open the cart page — so flipping the old cart straight back to
-     * ACTIVE can leave the account holding two. Every cart read goes through
-     * {@code findByUserIdAndStatus}, which returns an {@code Optional}, so a second
-     * ACTIVE row turns every cart request for that user into a 500 that nothing
-     * short of a manual database edit clears.
-     *
-     * <p>When the user already has an ACTIVE cart the abandoned lines are folded
-     * into it and the CHECKOUT cart is deleted, so nothing the buyer picked is lost.
      */
     @Transactional
-    public void restoreToActive(Cart checkoutCart) {
-        Cart activeCart = cartrepository
-                .findByUserIdAndStatus(checkoutCart.getUser().getId(), CartStatus.ACTIVE)
+    public Cart restoreToActive(Cart checkoutCart) {
+        return moveToStatus(checkoutCart, CartStatus.ACTIVE);
+    }
+
+    /**
+     * Parks the user's cart while its order waits for payment.
+     */
+    @Transactional
+    public Cart parkForCheckout(Cart activeCart) {
+        return moveToStatus(activeCart, CartStatus.CHECKOUT);
+    }
+
+    /**
+     * Moves a cart between statuses, reconciling with whatever cart the user already
+     * holds in the target status instead of creating a second one.
+     *
+     * <p>A user must never hold two carts in the same status, in either direction.
+     * Every cart read goes through {@code findByUserIdAndStatus}, which returns an
+     * {@code Optional}, so a second row turns the operation into a 500 —
+     * "Query did not return a unique result" — that nothing short of a database edit
+     * clears. Two ACTIVE carts break the cart page; two CHECKOUT carts break cancelling
+     * and reopening a payment.
+     *
+     * <p>Both are reachable without anything unusual, because {@link #getOrCreateCart}
+     * mints a cart the moment the user opens the cart page with their previous one
+     * parked in CHECKOUT. So this merges rather than flips: the moving cart's lines are
+     * folded into the cart already sitting in the target status, and the now-empty one
+     * is deleted, so nothing the buyer picked is lost.
+     *
+     * @return the surviving cart, which is not always the one passed in
+     */
+    private Cart moveToStatus(Cart cart, CartStatus target) {
+        Cart existing = cartrepository
+                .findByUserIdAndStatus(cart.getUser().getId(), target)
                 .orElse(null);
 
-        // No competing cart, or the query found this very cart because the caller had
-        // not flushed its CHECKOUT status yet: a flip is all that is needed.
-        if (activeCart == null || Objects.equals(activeCart.getId(), checkoutCart.getId())) {
-            checkoutCart.setStatus(CartStatus.ACTIVE);
-            cartrepository.save(checkoutCart);
-            return;
+        // Nothing to reconcile with, or the query found this very cart because the
+        // caller had not flushed its status yet: a flip is all that is needed.
+        if (existing == null || Objects.equals(existing.getId(), cart.getId())) {
+            cart.setStatus(target);
+            return cartrepository.save(cart);
         }
 
-        for (CartItem abandoned : checkoutCart.getCartItem()) {
-            mergeIntoCart(activeCart, abandoned);
+        for (CartItem moving : cart.getCartItem()) {
+            mergeIntoCart(existing, moving);
         }
 
-        cartrepository.save(activeCart);
+        cartrepository.save(existing);
         // Cascade plus orphanRemoval take the emptied lines with it.
-        cartrepository.delete(checkoutCart);
+        cartrepository.delete(cart);
+        return existing;
     }
 
     /**

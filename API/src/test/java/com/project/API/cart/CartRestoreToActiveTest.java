@@ -164,4 +164,39 @@ class CartRestoreToActiveTest {
         assertEquals(1, checkoutCart.getCartItem().size(), "it must not merge into itself");
         verify(cartRepository, never()).delete(any(Cart.class));
     }
+
+    // ── parkForCheckout(): the same reconciliation, in the other direction ────
+
+    @Test
+    @DisplayName("with no cart already parked, the active one simply moves to CHECKOUT")
+    void park_shouldFlip_whenNothingIsParkedYet() {
+        Cart activeCart = cart(1L, CartStatus.ACTIVE);
+        when(cartRepository.findByUserIdAndStatus(USER_ID, CartStatus.CHECKOUT)).thenReturn(Optional.empty());
+
+        cartService.parkForCheckout(activeCart);
+
+        assertEquals(CartStatus.CHECKOUT, activeCart.getStatus());
+        verify(cartRepository, never()).delete(any(Cart.class));
+    }
+
+    @Test
+    @DisplayName("a cart already parked absorbs the new one, so cancel and repay keep working")
+    void park_shouldMergeIntoTheParkedCart_ratherThanCreatingASecondCheckoutCart() {
+        Product bicycle = product(10L, 10);
+
+        Cart parked = cart(2L, CartStatus.CHECKOUT);
+        addLine(parked, bicycle, 1);
+
+        Cart activeCart = cart(1L, CartStatus.ACTIVE);
+        addLine(activeCart, bicycle, 2);
+
+        when(cartRepository.findByUserIdAndStatus(USER_ID, CartStatus.CHECKOUT)).thenReturn(Optional.of(parked));
+
+        Cart surviving = cartService.parkForCheckout(activeCart);
+
+        assertSame(parked, surviving, "the caller must keep using the cart that survived");
+        verify(cartRepository).delete(activeCart);
+        assertEquals(1, parked.getCartItem().size());
+        assertEquals(3, parked.getCartItem().getFirst().getQuantity());
+    }
 }

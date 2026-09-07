@@ -365,7 +365,9 @@ public class OrderServiceImp implements OrderService {
 
 
             if (cart != null) {
-                cart.setStatus(CartStatus.CHECKOUT);
+                // Through CartService so a cart already parked in CHECKOUT absorbs this
+                // one instead of becoming a second, which breaks cancel and repay.
+                cart = cartService.parkForCheckout(cart);
             }
 
 
