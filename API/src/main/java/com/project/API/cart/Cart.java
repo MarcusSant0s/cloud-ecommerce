@@ -3,7 +3,6 @@ package com.project.API.cart;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.project.API.user.User;
 import jakarta.persistence.*;
-import org.springframework.data.annotation.CreatedDate;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -17,7 +16,10 @@ public class Cart {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @CreatedDate
+    // Set by @PrePersist below, not by Spring Data's @CreatedDate: that annotation
+    // only fires with JPA auditing enabled, which this application never turned on,
+    // so it silently left the column NULL on every cart.
+    @Column(nullable = false, updatable = false)
     private Instant createdDate;
 
     @Enumerated(EnumType.STRING)
@@ -33,6 +35,13 @@ public class Cart {
     private List<CartItem> cartItem = new ArrayList<>();
 
     // Methods
+
+    @PrePersist
+    protected void onCreate() {
+        if (createdDate == null) {
+            createdDate = Instant.now();
+        }
+    }
 
     public User getUser() {
         return user;
