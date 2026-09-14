@@ -60,6 +60,18 @@ public class GlobalExceptionHandler {
                 .body(new ApiError(409, "DUPLICATE_RESOURCE", ex.getMessage(), null));
     }
 
+    @ExceptionHandler(UserNotDeletableException.class)
+    public ResponseEntity<ApiError> handleUserNotDeletable(UserNotDeletableException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiError(409, "USER_NOT_DELETABLE", ex.getMessage(), null));
+    }
+
+    @ExceptionHandler(RoleChangeNotAllowedException.class)
+    public ResponseEntity<ApiError> handleRoleChangeNotAllowed(RoleChangeNotAllowedException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiError(409, "ROLE_CHANGE_NOT_ALLOWED", ex.getMessage(), null));
+    }
+
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ApiError> handleBadCredentials(BadCredentialsException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)

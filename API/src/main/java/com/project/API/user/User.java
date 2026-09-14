@@ -102,6 +102,10 @@ public class User implements UserDetails {
         return id;
     }
 
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
     public String getFirstName(){
         return firstName;
     }

@@ -1,6 +1,7 @@
 package com.project.API.user;
 
 import com.project.API.cart.CartRepository;
+import com.project.API.order.OrderRepository;
 import com.project.API.user.dto.SingleUserRequest;
 import com.project.API.user.dto.UpdateUserRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,6 +25,7 @@ class UserServiceEdgeCaseTest {
     private UserRepository userRepository;
     private CartRepository cartRepository;
     private UserAdressRepository adressRepository;
+    private OrderRepository orderRepository;
     private UserService userService;
 
     @BeforeEach
@@ -31,7 +33,8 @@ class UserServiceEdgeCaseTest {
         userRepository = Mockito.mock(UserRepository.class);
         cartRepository = Mockito.mock(CartRepository.class);
         adressRepository = Mockito.mock(UserAdressRepository.class);
-        userService = new UserService(userRepository, cartRepository, adressRepository);
+        orderRepository = Mockito.mock(OrderRepository.class);
+        userService = new UserService(userRepository, cartRepository, adressRepository, orderRepository);
     }
 
     /** Exactly what AdminSeeder builds: no address. */

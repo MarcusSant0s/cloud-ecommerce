@@ -1,6 +1,7 @@
 package com.project.API.user;
 
 import com.project.API.cart.CartRepository;
+import com.project.API.order.OrderRepository;
 import com.project.API.user.dto.UpdateUserRequest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ public class UserServiceTest {
         UserRepository userRepository = Mockito.mock(UserRepository.class);
         CartRepository cartRepository = Mockito.mock(CartRepository.class);
         UserAdressRepository adressRepository = Mockito.mock(UserAdressRepository.class);
+        OrderRepository orderRepository = Mockito.mock(OrderRepository.class);
 
         User user = UserFactory.createValidUser();
         UpdateUserRequest request = new UpdateUserRequest(
@@ -33,7 +35,7 @@ public class UserServiceTest {
         Mockito.when(userRepository.findById(Mockito.any()))
                 .thenReturn(Optional.of(user));
 
-        UserService userService = new UserService(userRepository, cartRepository, adressRepository);
+        UserService userService = new UserService(userRepository, cartRepository, adressRepository, orderRepository);
         SingleUserRequest result = userService.updateUser(request, 1L);
 
         Assertions.assertEquals("Admin", result.firstName());
