@@ -56,6 +56,7 @@ public class OrderServiceImp implements OrderService {
     private final ProductRepository productRepository;
     private final ShippingService shippingService;
     private final CartService cartService;
+    private final PaymentResultHandler paymentResultHandler;
 
     @Value("${mercadopago.notification.url}")
     private String notificationUrl;
@@ -68,12 +69,13 @@ public class OrderServiceImp implements OrderService {
     @Value("${app.payments.demo-mode:false}")
     private boolean paymentsDemoMode;
 
-    public OrderServiceImp(OrderRepository orderRepository, CartRepository cartRepository, ProductRepository productRepository, ShippingService shippingService, CartService cartService){
+    public OrderServiceImp(OrderRepository orderRepository, CartRepository cartRepository, ProductRepository productRepository, ShippingService shippingService, CartService cartService, PaymentResultHandler paymentResultHandler){
         this.orderRepository = orderRepository;
         this.cartRepository = cartRepository;
         this.productRepository = productRepository;
         this.shippingService = shippingService;
         this.cartService = cartService;
+        this.paymentResultHandler = paymentResultHandler;
     }
 
 
@@ -404,39 +406,15 @@ public class OrderServiceImp implements OrderService {
         }
     }
 
+    // A busca do pagamento no Mercado Pago fica fora da transação, e a aplicação do
+    // resultado vai para outro bean — chamada via proxy, que é o que faz
+    // @Transactional valer. Ver PaymentResultHandler.
     @Override
     public void processPayment(String paymentId) throws MPException, MPApiException {
         PaymentClient paymentClient = new PaymentClient();
         Payment payment = paymentClient.get(Long.parseLong(paymentId));
-        handlePaymentResult(payment.getExternalReference(), payment.getStatus(), paymentId);
-    }
-
-    @Transactional
-    void handlePaymentResult(String orderId, String mpStatus, String mpPaymentId) {
-        Order order = orderRepository.findById(Long.parseLong(orderId))
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
-
-        switch (mpStatus) {
-            case "approved" -> {
-                order.setStatus(OrderStatus.PAID);
-                order.setMercadoPagoPaymentId(mpPaymentId);
-                order.setPaidAt(LocalDateTime.now());
-                order.getItems().stream()
-                        .filter(item -> item.getQuantity() > 0)
-                        .forEach(item ->
-                                productRepository.decrementStock(item.getProductId(), item.getQuantity()));
-                cartRepository.findByUserIdAndStatus(order.getUser().getId(), CartStatus.CHECKOUT)
-                        .ifPresent(cartRepository::delete);
-            }
-            case "rejected" -> {
-                order.setStatus(OrderStatus.CANCELLED);
-                cartRepository.findByUserIdAndStatus(order.getUser().getId(), CartStatus.CHECKOUT)
-                        .ifPresent(cartService::restoreToActive);
-            }
-            case "pending" -> order.setStatus(OrderStatus.PENDING);
-        }
-
-        orderRepository.save(order);
+        paymentResultHandler.handlePaymentResult(
+                payment.getExternalReference(), payment.getStatus(), paymentId);
     }
 
 @Override

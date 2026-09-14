@@ -29,6 +29,7 @@ class CartOrderFlowTest {
     private ProductRepository productRepository;
     private ShippingService shippingService;
     private CartService cartService;
+    private PaymentResultHandler paymentResultHandler;
     private OrderServiceImp orderService;
 
     @BeforeEach
@@ -38,7 +39,10 @@ class CartOrderFlowTest {
         productRepository = Mockito.mock(ProductRepository.class);
         shippingService = Mockito.mock(ShippingService.class);
         cartService = Mockito.mock(CartService.class);
-        orderService = new OrderServiceImp(orderRepository, cartRepository, productRepository, shippingService, cartService);
+        // O handler é um bean à parte justamente para que @Transactional passe pelo
+        // proxy do Spring; aqui é instanciado direto com os mesmos mocks.
+        paymentResultHandler = new PaymentResultHandler(orderRepository, cartRepository, productRepository, cartService);
+        orderService = new OrderServiceImp(orderRepository, cartRepository, productRepository, shippingService, cartService, paymentResultHandler);
     }
 
     // ── checkout() validation ─────────────────────────────────────────────────
@@ -91,7 +95,7 @@ class CartOrderFlowTest {
         when(productRepository.findQuantityById(10L)).thenReturn(Optional.of(10));
         when(cartRepository.findByUserIdAndStatus(1L, CartStatus.CHECKOUT)).thenReturn(Optional.of(checkoutCart));
 
-        orderService.handlePaymentResult("1", "approved", "mp_payment_123");
+        paymentResultHandler.handlePaymentResult("1", "approved", "mp_payment_123");
 
         assertEquals(OrderStatus.PAID, order.getStatus());
         assertEquals("mp_payment_123", order.getMercadoPagoPaymentId());
@@ -112,7 +116,7 @@ class CartOrderFlowTest {
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
         when(cartRepository.findByUserIdAndStatus(1L, CartStatus.CHECKOUT)).thenReturn(Optional.of(checkoutCart));
 
-        orderService.handlePaymentResult("1", "rejected", null);
+        paymentResultHandler.handlePaymentResult("1", "rejected", null);
 
         assertEquals(OrderStatus.CANCELLED, order.getStatus());
         // Handed back via CartService, which reconciles with any cart the user built
@@ -128,7 +132,7 @@ class CartOrderFlowTest {
 
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
 
-        orderService.handlePaymentResult("1", "pending", null);
+        paymentResultHandler.handlePaymentResult("1", "pending", null);
 
         assertEquals(OrderStatus.PENDING, order.getStatus());
         verify(cartRepository, never()).findByUserIdAndStatus(anyLong(), any());
@@ -144,7 +148,7 @@ class CartOrderFlowTest {
         when(productRepository.findQuantityById(10L)).thenReturn(Optional.of(5));
         when(cartRepository.findByUserIdAndStatus(1L, CartStatus.CHECKOUT)).thenReturn(Optional.empty());
 
-        orderService.handlePaymentResult("1", "approved", "mp_pay_456");
+        paymentResultHandler.handlePaymentResult("1", "approved", "mp_pay_456");
 
         assertEquals(OrderStatus.PAID, order.getStatus());
         verify(productRepository).decrementStock(10L, 1);

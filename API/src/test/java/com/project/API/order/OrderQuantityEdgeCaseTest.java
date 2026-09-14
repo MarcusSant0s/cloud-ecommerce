@@ -35,6 +35,7 @@ class OrderQuantityEdgeCaseTest {
     private ProductRepository productRepository;
     private ShippingService shippingService;
     private CartService cartService;
+    private PaymentResultHandler paymentResultHandler;
     private OrderServiceImp orderService;
 
     @BeforeEach
@@ -44,7 +45,10 @@ class OrderQuantityEdgeCaseTest {
         productRepository = Mockito.mock(ProductRepository.class);
         shippingService = Mockito.mock(ShippingService.class);
         cartService = Mockito.mock(CartService.class);
-        orderService = new OrderServiceImp(orderRepository, cartRepository, productRepository, shippingService, cartService);
+        // O handler é um bean à parte justamente para que @Transactional passe pelo
+        // proxy do Spring; aqui é instanciado direto com os mesmos mocks.
+        paymentResultHandler = new PaymentResultHandler(orderRepository, cartRepository, productRepository, cartService);
+        orderService = new OrderServiceImp(orderRepository, cartRepository, productRepository, shippingService, cartService, paymentResultHandler);
 
         when(shippingService.calculate(anyString())).thenReturn(new BigDecimal("15.00"));
         when(orderRepository.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -108,7 +112,7 @@ class OrderQuantityEdgeCaseTest {
         when(productRepository.findQuantityById(10L)).thenReturn(Optional.of(10));
         when(cartRepository.findByUserIdAndStatus(1L, CartStatus.CHECKOUT)).thenReturn(Optional.empty());
 
-        orderService.handlePaymentResult("1", "approved", "mp_pay_1");
+        paymentResultHandler.handlePaymentResult("1", "approved", "mp_pay_1");
 
         // "quantity = quantity - (-3)" adds stock, and the "quantity >= qty" guard
         // in the UPDATE is always true for a negative qty.
