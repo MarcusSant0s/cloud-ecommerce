@@ -3,13 +3,17 @@
 import { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Package, CheckCircle2, Clock, XCircle, ArrowLeft, ChevronLeft, ChevronRight, CreditCard, Loader2, Ban } from "lucide-react";
+import { Package, CheckCircle2, Clock, XCircle, ArrowLeft, ChevronLeft, ChevronRight, CreditCard, Loader2, Ban, ChevronDown, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/services/api";
 import { useAuth } from "@/contexts/AuthContext";
 
 const CURRENCY = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const DATE_FORMAT = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+
+// Com algum pedido pendente a lista se relê neste intervalo. Mais espaçado que o
+// das telas de retorno: aqui o usuário não está parado esperando a confirmação.
+const ORDERS_POLL_INTERVAL_MS = 15000;
 
 const STATUS_CONFIG = {
   PAID: { label: "Pago", icon: CheckCircle2, className: "text-emerald-600 bg-emerald-50 border-emerald-200" },
@@ -62,6 +66,116 @@ function SectionSkeleton({ count = 3 }) {
   );
 }
 
+const DATE_TIME_FORMAT = new Intl.DateTimeFormat("pt-BR", {
+  day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
+});
+
+function formatCep(cep) {
+  if (!cep) return null;
+  const digits = String(cep).replace(/\D/g, "");
+  return digits.length === 8 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : cep;
+}
+
+function OrderDetails({ order }) {
+  const items = order.items ?? [];
+  const shipping = Number(order.shippingCost ?? 0);
+  const total = Number(order.total ?? 0);
+  const subtotal = total - shipping;
+  const address = order.shippingAddress;
+
+  return (
+    <div className="border-t px-4 pb-5 pt-4 sm:px-5">
+      <div className="grid gap-6 sm:grid-cols-2">
+        <div>
+          <h4 className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            Itens
+          </h4>
+          <ul className="flex flex-col gap-2.5">
+            {items.map((item, i) => (
+              <li key={item.id ?? `${item.productId}-${i}`} className="flex items-start gap-3">
+                <div className="relative h-11 w-11 flex-shrink-0 overflow-hidden rounded-lg border bg-muted">
+                  {item.url ? (
+                    <Image src={item.url} alt={item.productName} fill sizes="44px" className="object-cover" />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center">
+                      <Package className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm leading-tight line-clamp-2">{item.productName}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground tabular-nums">
+                      {item.quantity} × {CURRENCY.format(item.unitPrice ?? 0)}
+                    </p>
+                  </div>
+                  <span className="shrink-0 text-sm font-medium tabular-nums">
+                    {CURRENCY.format((item.unitPrice ?? 0) * (item.quantity ?? 0))}
+                  </span>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          <dl className="mt-4 flex flex-col gap-1 border-t pt-3 text-sm">
+            <div className="flex justify-between text-muted-foreground">
+              <dt>Subtotal</dt>
+              <dd className="tabular-nums">{CURRENCY.format(subtotal)}</dd>
+            </div>
+            <div className="flex justify-between text-muted-foreground">
+              <dt>Frete</dt>
+              <dd className="tabular-nums">{CURRENCY.format(shipping)}</dd>
+            </div>
+            <div className="flex justify-between font-semibold">
+              <dt>Total</dt>
+              <dd className="tabular-nums">{CURRENCY.format(total)}</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div className="flex flex-col gap-5">
+          <div>
+            <h4 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              <MapPin className="h-3.5 w-3.5" /> Entrega
+            </h4>
+            {address ? (
+              <address className="text-sm not-italic leading-relaxed text-muted-foreground">
+                <span className="block text-foreground">
+                  {address.street}{address.number ? `, ${address.number}` : ""}
+                </span>
+                {address.bairro && <span className="block">{address.bairro}</span>}
+                <span className="block">{address.city}</span>
+                {formatCep(address.cep) && <span className="block">CEP {formatCep(address.cep)}</span>}
+                {address.phone && <span className="block">{address.phone}</span>}
+              </address>
+            ) : (
+              <p className="text-sm text-muted-foreground">Nenhum endereço cadastrado.</p>
+            )}
+          </div>
+
+          <div>
+            <h4 className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              Histórico
+            </h4>
+            <dl className="flex flex-col gap-1 text-sm text-muted-foreground">
+              <div className="flex justify-between gap-3">
+                <dt>Pedido feito</dt>
+                <dd>{order.createdAt ? DATE_TIME_FORMAT.format(new Date(order.createdAt)) : "—"}</dd>
+              </div>
+              {order.paidAt && (
+                <div className="flex justify-between gap-3">
+                  <dt>Pagamento</dt>
+                  <dd className="text-emerald-600">{DATE_TIME_FORMAT.format(new Date(order.paidAt))}</dd>
+                </div>
+              )}
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function OrderCard({ order, onChanged }) {
   const firstItem = order.items?.[0];
   const extraCount = (order.items?.length ?? 0) - 1;
@@ -69,6 +183,7 @@ function OrderCard({ order, onChanged }) {
   const isPending = order.status?.toUpperCase() === "PENDING";
   const [paying, setPaying] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const handleCancel = async () => {
     try {
@@ -107,63 +222,77 @@ function OrderCard({ order, onChanged }) {
   };
 
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border bg-card p-4 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 sm:flex-row sm:items-center sm:p-5">
-      <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl border bg-muted sm:h-20 sm:w-20">
-        {firstItem?.url ? (
-          <Image src={firstItem.url} alt={firstItem.productName} fill sizes="80px" className="object-cover" />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center">
-            <Package className="h-8 w-8 text-muted-foreground" />
-          </div>
-        )}
-        {extraCount > 0 && (
-          <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/50 text-sm font-bold text-white">
-            +{extraCount}
-          </div>
-        )}
-      </div>
-
-      <div className="flex flex-1 flex-col gap-1 min-w-0">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <p className="font-semibold leading-tight line-clamp-1">
-              {firstItem?.productName}
-              {extraCount > 0 && (
-                <span className="ml-1 text-muted-foreground font-normal text-sm">e mais {extraCount}</span>
-              )}
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Pedido #{order.id}
-              {date && <span className="ml-2">· {date}</span>}
-            </p>
-          </div>
-          <StatusBadge status={order.status} />
-        </div>
-
-        <div className="mt-2 flex items-center justify-between gap-3">
-          <p className="text-lg font-bold text-primary">{CURRENCY.format(order.total)}</p>
-          {isPending && (
-            <div className="flex shrink-0 items-center gap-2">
-              <button
-                onClick={handleCancel}
-                disabled={paying || cancelling}
-                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-sm border px-3 py-2 text-[0.65rem] font-medium uppercase tracking-[0.15em] text-muted-foreground transition hover:bg-accent disabled:opacity-60"
-              >
-                {cancelling ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Ban className="h-3.5 w-3.5" />}
-                Cancelar
-              </button>
-              <button
-                onClick={handlePay}
-                disabled={paying || cancelling}
-                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-sm bg-foreground px-4 py-2 text-[0.65rem] font-medium uppercase tracking-[0.15em] text-background transition hover:bg-foreground/90 disabled:opacity-60"
-              >
-                {paying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CreditCard className="h-3.5 w-3.5" />}
-                {paying ? "Redirecionando" : "Pagar agora"}
-              </button>
+    <div className="rounded-2xl border bg-card shadow-sm transition-shadow hover:shadow-md">
+      <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:p-5">
+        <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl border bg-muted sm:h-20 sm:w-20">
+          {firstItem?.url ? (
+            <Image src={firstItem.url} alt={firstItem.productName} fill sizes="80px" className="object-cover" />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center">
+              <Package className="h-8 w-8 text-muted-foreground" />
+            </div>
+          )}
+          {extraCount > 0 && (
+            <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/50 text-sm font-bold text-white">
+              +{extraCount}
             </div>
           )}
         </div>
+
+        <div className="flex flex-1 flex-col gap-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <p className="font-semibold leading-tight line-clamp-1">
+                {firstItem?.productName}
+                {extraCount > 0 && (
+                  <span className="ml-1 text-muted-foreground font-normal text-sm">e mais {extraCount}</span>
+                )}
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Pedido #{order.id}
+                {date && <span className="ml-2">· {date}</span>}
+              </p>
+            </div>
+            <StatusBadge status={order.status} />
+          </div>
+
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <p className="text-lg font-bold text-primary">{CURRENCY.format(order.total)}</p>
+              <button
+                onClick={() => setExpanded(v => !v)}
+                aria-expanded={expanded}
+                className="inline-flex items-center gap-1 rounded-sm text-xs font-medium text-muted-foreground transition hover:text-foreground"
+              >
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expanded ? "rotate-180" : ""}`} />
+                {expanded ? "Ocultar detalhes" : "Ver detalhes"}
+              </button>
+            </div>
+            {isPending && (
+              <div className="flex shrink-0 items-center gap-2">
+                <button
+                  onClick={handleCancel}
+                  disabled={paying || cancelling}
+                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-sm border px-3 py-2 text-[0.65rem] font-medium uppercase tracking-[0.15em] text-muted-foreground transition hover:bg-accent disabled:opacity-60"
+                >
+                  {cancelling ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Ban className="h-3.5 w-3.5" />}
+                  Cancelar
+                </button>
+                <button
+                  onClick={handlePay}
+                  disabled={paying || cancelling}
+                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-sm bg-foreground px-4 py-2 text-[0.65rem] font-medium uppercase tracking-[0.15em] text-background transition hover:bg-foreground/90 disabled:opacity-60"
+                >
+                  {paying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CreditCard className="h-3.5 w-3.5" />}
+                  {paying ? "Redirecionando" : "Pagar agora"}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
+
+      {expanded && <OrderDetails order={order} />}
     </div>
   );
 }
@@ -242,24 +371,63 @@ export default function OrdersPage() {
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
 
-  const fetchOrders = useCallback(async (pageNum = 0) => {
+  // `silent` recarrega sem trocar para o esqueleto: o polling e o retorno à aba
+  // atualizam os cards no lugar, sem piscar a tela inteira.
+  const fetchOrders = useCallback(async (pageNum = 0, { silent = false } = {}) => {
     if (!user?.id) return;
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       setError(false);
       const res = await api.get(`/order?page=${pageNum}&size=10`);
       setOrders(res.data.content ?? []);
       setTotalPages(res.data.totalPages ?? 0);
       setTotalElements(res.data.totalElements ?? 0);
     } catch {
-      setError(true);
+      // Uma falha no polling não deve apagar a lista que já está na tela.
+      if (!silent) setError(true);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [user?.id]);
 
   useEffect(() => {
     if (!authLoading) fetchOrders(page);
+  }, [authLoading, page, fetchOrders]);
+
+  const hasPending = orders.some(o => o.status?.toUpperCase() === "PENDING");
+
+  // Pix confirma depois que o usuário já voltou do Mercado Pago. Enquanto algum
+  // pedido estiver pendente a lista se relê sozinha, para o status virar "Pago"
+  // sem ninguém precisar recarregar a página.
+  useEffect(() => {
+    if (authLoading || !hasPending) return;
+
+    const timer = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        fetchOrders(page, { silent: true });
+      }
+    }, ORDERS_POLL_INTERVAL_MS);
+
+    return () => clearInterval(timer);
+  }, [authLoading, hasPending, page, fetchOrders]);
+
+  // Voltar para a aba (ou do Mercado Pago) mostra o estado atual na hora, em vez
+  // de esperar o próximo ciclo do polling.
+  useEffect(() => {
+    if (authLoading) return;
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        fetchOrders(page, { silent: true });
+      }
+    };
+
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+    };
   }, [authLoading, page, fetchOrders]);
 
   const handlePageChange = (newPage) => {

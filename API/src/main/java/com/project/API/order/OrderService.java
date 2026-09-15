@@ -16,6 +16,8 @@ public interface OrderService {
 
      Page<OrderResponse> getOrdersByUser(Long userId, Pageable pageable);
 
+     OrderResponse getOrderForUser(Long userId, Long orderId);
+
      Page<AdminOrderResponse> getAllOrders(Pageable pageable);
 
      String checkout(Long userId) throws MPException, MPApiException;

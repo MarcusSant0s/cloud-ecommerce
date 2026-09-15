@@ -423,6 +423,23 @@ public class OrderServiceImp implements OrderService {
                 .map(OrderResponse::fromEntity);
     }
 
+    /**
+     * Um pedido do próprio usuário. Serve à tela de detalhes e ao polling das
+     * páginas de retorno do Mercado Pago, que precisam saber quando o Pix
+     * finalmente caiu.
+     *
+     * Pedido de outro dono responde 404, não 403: quem não é dono não precisa
+     * nem saber que o pedido existe.
+     */
+    @Override
+    public OrderResponse getOrderForUser(Long userId, Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .filter(o -> o.getUser() != null && o.getUser().getId().equals(userId))
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+
+        return OrderResponse.fromEntity(order);
+    }
+
     @Override
     public Page<AdminOrderResponse> getAllOrders(Pageable pageable) {
         return orderRepository.findAll(pageable)
