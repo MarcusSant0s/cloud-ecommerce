@@ -17,9 +17,10 @@ const POLL_TIMEOUT_MS = 5 * 60 * 1000;
  * status de tempos em tempos e se atualiza sozinha quando o pagamento cai.
  *
  * Estados: "loading" (primeira consulta), "waiting" (ainda PENDING),
- * "settled" (saiu de PENDING), "timeout" (desistimos de esperar), "error".
+ * "settled" (saiu de PENDING), "timeout" (desistimos de esperar),
+ * "notfound" (pedido não existe ou não é deste usuário), "error".
  */
-export function useOrderStatus(orderId) {
+export function useOrderStatus(orderId, { poll = true } = {}) {
   const [order, setOrder] = useState(null);
   const [state, setState] = useState("loading");
   const timerRef = useRef(null);
@@ -39,7 +40,7 @@ export function useOrderStatus(orderId) {
         setOrder(res.data);
 
         const status = res.data?.status?.toUpperCase();
-        if (status && status !== "PENDING") {
+        if (!poll || (status && status !== "PENDING")) {
           setState("settled");
           return;
         }
@@ -51,14 +52,22 @@ export function useOrderStatus(orderId) {
 
         setState("waiting");
         timerRef.current = setTimeout(check, POLL_INTERVAL_MS);
-      } catch {
-        // Uma falha de rede isolada não deve encerrar a espera; só desiste
-        // quando não há mais o que esperar.
+      } catch (err) {
         if (cancelledRef.current) return;
-        if (Date.now() - startedAt >= POLL_TIMEOUT_MS) {
-          setState("timeout");
+
+        // 404 é definitivo: o pedido não existe ou é de outro dono. Insistir só
+        // produziria uma confirmação falsa na tela.
+        if (err?.response?.status === 404) {
+          setState("notfound");
           return;
         }
+
+        // Falha de rede é transitória — segue tentando até o teto.
+        if (!poll || Date.now() - startedAt >= POLL_TIMEOUT_MS) {
+          setState(prev => (prev === "loading" ? "error" : "timeout"));
+          return;
+        }
+
         setState(prev => (prev === "loading" ? "error" : prev));
         timerRef.current = setTimeout(check, POLL_INTERVAL_MS);
       }
@@ -70,9 +79,9 @@ export function useOrderStatus(orderId) {
       cancelledRef.current = true;
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [orderId]);
+  }, [orderId, poll]);
 
   // Sem id na URL não há o que consultar. Derivado no render em vez de setado
   // dentro do efeito, que dispararia um render em cascata à toa.
-  return { order, state: orderId ? state : "error" };
+  return { order, state: orderId ? state : "notfound" };
 }
