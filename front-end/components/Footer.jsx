@@ -57,10 +57,22 @@ const Footer = async () => {
           <div>
             <h3 className={colHead}>Suporte</h3>
             <ul className="space-y-3">
-              <li><Link className={colLink} href="/pecas">Central de Ajuda</Link></li>
-              <li><Link className={colLink} href="/pecas">Entrega e Frete</Link></li>
-              <li><Link className={colLink} href="/pecas">Trocas e Devoluções</Link></li>
-              <li><Link className={colLink} href="/pecas">Fale Conosco</Link></li>
+              <li><Link className={colLink} href="/guia-de-tamanhos">Guia de Tamanhos</Link></li>
+              <li><Link className={colLink} href="/cuidados">Cuidados com a Peça</Link></li>
+              <li><Link className={colLink} href="/garantia">Garantia</Link></li>
+              <li><Link className={colLink} href="/entrega">Entrega e Frete</Link></li>
+              <li><Link className={colLink} href="/trocas">Trocas e Devoluções</Link></li>
+              <li>
+                {/* Link externo: sai do app, então <a> e não <Link>. */}
+                <a
+                  className={colLink}
+                  href="https://wa.me/message/WRRZNW4WUYWVJ1"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Fale Conosco
+                </a>
+              </li>
             </ul>
           </div>
         </div>
