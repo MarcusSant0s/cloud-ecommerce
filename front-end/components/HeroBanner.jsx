@@ -1,9 +1,35 @@
+"use client";
+
+import { useRef } from "react";
 import Link from "next/link";
+import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
 
 export default function HeroBanner() {
+  const ref = useRef(null);
+  const reduceMotion = useReducedMotion();
+
+  // Progresso de 0 a 1 enquanto o hero sai da tela. Escopo na própria seção, não
+  // no scroll global: assim o efeito não depende de onde o hero está na página.
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start start", "end start"],
+  });
+
+  // Encolhe e desvanece conforme sobe. Só transform e opacity — ambos rodam na
+  // GPU, sem recalcular layout a cada frame.
+  const scale = useTransform(scrollYProgress, [0, 1], [1, 0.88]);
+  const opacity = useTransform(scrollYProgress, [0, 0.75], [1, 0]);
+  // A dica de rolagem cumpriu o papel no instante em que a pessoa rolou.
+  const hintOpacity = useTransform(scrollYProgress, [0, 0.12], [1, 0]);
+
+  // Movimento ligado a rolagem é dos que mais incomodam quem tem sensibilidade
+  // vestibular — com reduced motion, a seção fica parada.
+  const motionStyle = reduceMotion ? undefined : { scale, opacity };
+
   return (
     <section
-      className="relative flex min-h-[92vh] flex-col items-center justify-center overflow-hidden text-center"
+      ref={ref}
+      className="relative flex h-dvh flex-col items-center justify-center overflow-hidden text-center md:h-auto md:min-h-[92vh]"
       style={{ background: "var(--bn-black)" }}
     >
       {/* Ambient gradients */}
@@ -17,7 +43,10 @@ export default function HeroBanner() {
       />
 
       {/* Content */}
-      <div className="relative z-10 flex flex-col items-center px-6">
+      <motion.div
+        className="relative z-10 flex flex-col items-center px-6"
+        style={motionStyle}
+      >
         {/* BN Monogram */}
         <div className="mb-8 w-[clamp(80px,14vw,130px)]">
           <svg
@@ -91,10 +120,10 @@ export default function HeroBanner() {
             Ver Novidades
           </Link>
         </div>
-      </div>
+      </motion.div>
 
       {/* Bottom scroll hint */}
-      <div
+      <motion.div
         aria-hidden
         className="absolute bottom-8 left-1/2 -translate-x-1/2"
         style={{
@@ -104,10 +133,11 @@ export default function HeroBanner() {
           letterSpacing: "0.3em",
           textTransform: "uppercase",
           color: "rgba(247,243,241,0.2)",
+          ...(reduceMotion ? null : { opacity: hintOpacity }),
         }}
       >
         Deslize para explorar
-      </div>
+      </motion.div>
     </section>
   );
 }

@@ -8,7 +8,8 @@ export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Início",
-  description: "Encontre os melhores produtos com entrega rápida e preços imbatíveis. Explore categorias, promoções e destaques.",
+  description:
+    "Semijoias com banho de ouro 18k e prata 925. Brincos, colares, anéis e pulseiras escolhidos peça a peça.",
 };
 
 export default  function Home() {
