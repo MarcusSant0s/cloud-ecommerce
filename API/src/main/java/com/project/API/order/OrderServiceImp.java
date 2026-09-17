@@ -454,6 +454,18 @@ public class OrderServiceImp implements OrderService {
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
         order.setStatus(orderStatus);
+
+        // paidAt precisa acompanhar o status, senão o override do admin deixa uma
+        // data de pagamento órfã num pedido que voltou a ficar em aberto.
+        // REFUNDED mantém a data: o pedido foi pago de fato, e depois devolvido.
+        if (orderStatus == OrderStatus.PAID) {
+            if (order.getPaidAt() == null) {
+                order.setPaidAt(LocalDateTime.now());
+            }
+        } else if (orderStatus == OrderStatus.PENDING || orderStatus == OrderStatus.CANCELLED) {
+            order.setPaidAt(null);
+        }
+
         return  orderRepository.save(order);
     }
 
