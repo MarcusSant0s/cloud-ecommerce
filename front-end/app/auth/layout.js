@@ -1,7 +1,7 @@
 export const metadata = {
   title: {
     default: "Acesso",
-    template: "%s | Loja",
+    template: "%s | Brenda Nunes",
   },
 };
 

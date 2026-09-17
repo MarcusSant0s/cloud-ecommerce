@@ -65,7 +65,7 @@ export default function SignInPageClient() {
         <div className="w-full max-w-md space-y-4">
           <div className="space-y-2 text-center md:text-left">
             <span className="text-[0.65rem] font-medium uppercase tracking-[0.25em] text-muted-foreground">
-              Loja
+              Brenda Nunes
             </span>
             <h2 className="font-display text-3xl font-normal uppercase tracking-[0.12em]">Entrar</h2>
             <p className="text-sm text-muted-foreground">

@@ -18,8 +18,8 @@ const Footer = async () => {
           {/* Brand */}
           <div className="col-span-2 space-y-4 md:col-span-1">
             <Link href="/" className="inline-block">
-              <span className="font-display text-2xl font-normal uppercase tracking-[0.3em] text-foreground">
-                Loja
+              <span className="font-display text-lg font-light uppercase tracking-[0.25em] text-foreground">
+                Brenda Nunes
               </span>
             </Link>
             <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">
@@ -31,10 +31,10 @@ const Footer = async () => {
           <div>
             <h3 className={colHead}>Coleções</h3>
             <ul className="space-y-3">
-              <li><Link className={colLink} href="/products">Todos os Produtos</Link></li>
+              <li><Link className={colLink} href="/pecas">Todas as Peças</Link></li>
               {categories.map((category) => (
                 <li key={category.id}>
-                  <Link className={`${colLink} capitalize`} href={`/products?categoryId=${category.id}`}>
+                  <Link className={`${colLink} capitalize`} href={`/pecas?categoryId=${category.id}`}>
                     {category.name}
                   </Link>
                 </li>
@@ -57,10 +57,10 @@ const Footer = async () => {
           <div>
             <h3 className={colHead}>Suporte</h3>
             <ul className="space-y-3">
-              <li><Link className={colLink} href="/products">Central de Ajuda</Link></li>
-              <li><Link className={colLink} href="/products">Entrega e Frete</Link></li>
-              <li><Link className={colLink} href="/products">Trocas e Devoluções</Link></li>
-              <li><Link className={colLink} href="/products">Fale Conosco</Link></li>
+              <li><Link className={colLink} href="/pecas">Central de Ajuda</Link></li>
+              <li><Link className={colLink} href="/pecas">Entrega e Frete</Link></li>
+              <li><Link className={colLink} href="/pecas">Trocas e Devoluções</Link></li>
+              <li><Link className={colLink} href="/pecas">Fale Conosco</Link></li>
             </ul>
           </div>
         </div>
@@ -68,7 +68,7 @@ const Footer = async () => {
         {/* Legal band */}
         <div className="mt-14 flex flex-col items-center justify-between gap-4 border-t border-border/60 pt-6 sm:flex-row">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Loja. Todos os direitos reservados.
+            © {new Date().getFullYear()} Brenda Nunes. Todos os direitos reservados.
           </p>
           <div className="flex items-center gap-6 text-xs uppercase tracking-[0.15em] text-muted-foreground">
             <Link className="transition-colors hover:text-foreground" href="/privacidade">Privacidade</Link>

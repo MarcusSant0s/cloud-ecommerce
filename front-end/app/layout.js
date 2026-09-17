@@ -38,31 +38,46 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 5,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: light)", color: "#F7F3F1" },
     { media: "(prefers-color-scheme: dark)", color: "#09090b" },
   ],
 };
 
+const BRAND = "Brenda Nunes";
+const TAGLINE = "Semijoias";
+const DESCRIPTION =
+  "Semijoias com banho de ouro 18k e prata 925, escolhidas peça a peça. " +
+  "Elegância não é ser notada — é ser lembrada.";
+
 export const metadata = {
   title: {
-    default: "Loja | Produtos de qualidade com os melhores preços",
-    template: "%s | Loja",
+    default: `${BRAND} | ${TAGLINE}`,
+    template: `%s | ${BRAND}`,
   },
-  description: "Encontre os melhores produtos com entrega rápida e preços imbatíveis. Eletrônicos, acessórios, roupas e muito mais.",
-  keywords: ["loja online", "compras", "eletrônicos", "acessórios", "promoções"],
-  authors: [{ name: "Loja" }],
-  creator: "Loja",
+  description: DESCRIPTION,
+  keywords: [
+    "semijoias",
+    "banho de ouro 18k",
+    "prata 925",
+    "brincos",
+    "colares",
+    "anéis",
+    "pulseiras",
+    "joias femininas",
+  ],
+  authors: [{ name: BRAND }],
+  creator: BRAND,
   openGraph: {
     type: "website",
     locale: "pt_BR",
-    title: "Loja | Produtos de qualidade com os melhores preços",
-    description: "Encontre os melhores produtos com entrega rápida e preços imbatíveis.",
-    siteName: "Loja",
+    title: `${BRAND} | ${TAGLINE}`,
+    description: DESCRIPTION,
+    siteName: BRAND,
   },
   twitter: {
     card: "summary_large_image",
-    title: "Loja | Produtos de qualidade",
-    description: "Encontre os melhores produtos com entrega rápida e preços imbatíveis.",
+    title: `${BRAND} | ${TAGLINE}`,
+    description: DESCRIPTION,
   },
   robots: {
     index: true,

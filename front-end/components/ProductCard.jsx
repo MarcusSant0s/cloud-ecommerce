@@ -46,7 +46,7 @@ const ProductCard = ({ product, priority = false }) => {
   };
 
   return (
-    <Link href={`/products/${id}`} className="group block">
+    <Link href={`/pecas/${id}`} className="group block">
       <div className="relative flex h-full flex-col overflow-hidden rounded-sm border border-border/60 bg-card transition-colors duration-300 hover:border-foreground/30">
         {/* Image */}
         <div className="relative aspect-[4/5] overflow-hidden bg-muted">

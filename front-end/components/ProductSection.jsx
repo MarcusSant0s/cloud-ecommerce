@@ -19,7 +19,7 @@ const ProductSection = async () => {
             Seleção
           </span>
           <h2 className="mt-3 font-display text-3xl font-normal uppercase leading-tight tracking-[0.12em] md:text-4xl">
-            Produtos em Destaque
+            Peças em Destaque
           </h2>
           <div className="mt-4 h-px w-12 bg-foreground/30" />
           <p className="mt-4 max-w-2xl text-center text-sm text-muted-foreground">

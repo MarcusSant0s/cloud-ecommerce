@@ -179,7 +179,7 @@ function Actions({ router, showPayAgain = false }) {
         {showPayAgain ? "Pagar novamente" : "Ver meus pedidos"}
       </Link>
       <button
-        onClick={() => router.push("/products")}
+        onClick={() => router.push("/pecas")}
         className="w-full rounded-xl border px-5 py-2.5 text-sm font-medium transition hover:bg-accent sm:w-auto"
       >
         Continuar comprando

@@ -4,7 +4,7 @@ import { fetchJson } from "@/lib/server-api";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Produtos",
+  title: "Peças",
   description: "Explore nosso catálogo completo de produtos. Filtre por categoria ou coleção e encontre o que você precisa.",
 };
 

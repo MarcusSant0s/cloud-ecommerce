@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export const metadata = {
   title: "Termos de Uso",
-  description: "Condições de uso da Loja.",
+  description: "Condições de uso da Brenda Nunes.",
 };
 
 const h2 = "font-display text-xl font-normal uppercase tracking-[0.12em] text-foreground";
@@ -13,7 +13,7 @@ export default function TermosPage() {
     <main className="container mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
       <header className="mb-12 space-y-3">
         <span className="text-[0.65rem] font-medium uppercase tracking-[0.25em] text-muted-foreground">
-          Loja
+          Brenda Nunes
         </span>
         <h1 className="font-display text-3xl font-normal uppercase tracking-[0.12em] text-foreground">
           Termos de Uso
@@ -30,7 +30,7 @@ export default function TermosPage() {
         <section className="space-y-3">
           <h2 className={h2}>1. Aceitação</h2>
           <p className={p}>
-            Ao criar uma conta ou navegar pela Loja, você concorda com estes
+            Ao criar uma conta ou navegar pela Brenda Nunes, você concorda com estes
             Termos de Uso e com a nossa{" "}
             <Link
               href="/privacidade"

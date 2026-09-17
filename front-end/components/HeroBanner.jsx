@@ -81,12 +81,12 @@ export default function HeroBanner() {
 
         {/* CTA buttons */}
         <div className="flex flex-wrap items-center justify-center gap-4">
-          <Link className="bn-btn bn-btn-gold" href="/products">
+          <Link className="bn-btn bn-btn-gold" href="/pecas">
             Explorar Coleção
           </Link>
           <Link
             className="bn-btn bn-btn-ghost"
-            href="/products"
+            href="/pecas"
           >
             Ver Novidades
           </Link>

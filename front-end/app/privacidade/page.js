@@ -3,7 +3,7 @@ import Link from "next/link";
 export const metadata = {
   title: "Política de Privacidade",
   description:
-    "Como a Loja coleta, usa e protege seus dados pessoais, em conformidade com a LGPD (Lei nº 13.709/2018).",
+    "Como a Brenda Nunes coleta, usa e protege seus dados pessoais, em conformidade com a LGPD (Lei nº 13.709/2018).",
 };
 
 const h2 = "font-display text-xl font-normal uppercase tracking-[0.12em] text-foreground";
@@ -15,7 +15,7 @@ export default function PrivacidadePage() {
     <main className="container mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
       <header className="mb-12 space-y-3">
         <span className="text-[0.65rem] font-medium uppercase tracking-[0.25em] text-muted-foreground">
-          Loja
+          Brenda Nunes
         </span>
         <h1 className="font-display text-3xl font-normal uppercase tracking-[0.12em] text-foreground">
           Política de Privacidade
@@ -35,7 +35,7 @@ export default function PrivacidadePage() {
         <section className="space-y-3">
           <h2 className={h2}>1. Controlador dos dados</h2>
           <p className={p}>
-            A Loja é a controladora dos dados pessoais tratados neste site.
+            A Brenda Nunes é a controladora dos dados pessoais tratados neste site.
             Para exercer seus direitos ou tirar dúvidas sobre esta política,
             utilize o canal indicado na seção &ldquo;Contato&rdquo;.
           </p>

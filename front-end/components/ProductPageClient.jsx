@@ -47,7 +47,7 @@ export default function ProductPageClient({ categories, collections = [], produc
               <span className="text-[0.65rem] font-medium uppercase tracking-[0.25em] text-muted-foreground">
                 Catálogo
               </span>
-              <h1 className="mt-2 font-display text-3xl font-normal uppercase tracking-[0.12em] md:text-4xl">Produtos</h1>
+              <h1 className="mt-2 font-display text-3xl font-normal uppercase tracking-[0.12em] md:text-4xl">Peças</h1>
               <p className="mt-2 text-sm text-muted-foreground">
                 Explore nossas coleções e encontre algo que você vai amar.
               </p>

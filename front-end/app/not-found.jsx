@@ -11,7 +11,7 @@ export default function NotFound() {
       eyebrow="Erro 404"
       homeHref="/"
       homeLabel="Voltar para a home"
-      secondaryHref="/products"
+      secondaryHref="/pecas"
       secondaryLabel="Ver todos os produtos"
       title="Página não encontrada"
     />

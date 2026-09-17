@@ -244,8 +244,8 @@ export function CartClient({ className }) {
                 Você ainda não adicionou produtos.
               </p>
               <SheetClose asChild>
-                <Link href="/products">
-                  <Button className="rounded-sm text-[0.7rem] uppercase tracking-[0.15em]" onClick={() => setIsOpen(false)}>Ver Produtos</Button>
+                <Link href="/pecas">
+                  <Button className="rounded-sm text-[0.7rem] uppercase tracking-[0.15em]" onClick={() => setIsOpen(false)}>Ver Peças</Button>
                 </Link>
               </SheetClose>
             </motion.div>
@@ -273,7 +273,7 @@ export function CartClient({ className }) {
                   <div className="flex flex-1 flex-col justify-between">
                     <div className="flex justify-between gap-2">
                       <Link
-                        href={`/products/${item.productId}`}
+                        href={`/pecas/${item.productId}`}
                         onClick={() => setIsOpen(false)}
                         className="line-clamp-2 font-display text-sm leading-snug tracking-[0.02em] transition-colors hover:text-muted-foreground"
                       >

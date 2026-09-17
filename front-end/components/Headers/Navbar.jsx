@@ -47,9 +47,10 @@ export default function Navbar({ categories = [] }) {
           {/* Left */}
           <div className="flex items-center gap-10">
             <Link href="/" className="shrink-0">
-              <span className="font-display text-2xl font-normal uppercase tracking-[0.3em] text-foreground">
-                Loja
-              </span>
+              {/* .bn-navbar-brand: 1.1rem / peso 300 / 0.25em — dimensionada no
+                  design system para o nome inteiro, que é bem mais longo que o
+                  "Loja" que estava aqui. */}
+              <span className="bn-navbar-brand">Brenda Nunes</span>
             </Link>
 
             <nav className="hidden md:flex">
@@ -93,7 +94,7 @@ export default function Navbar({ categories = [] }) {
                               {categories.map((category) => (
                                 <li key={category.id}>
                                   <Link
-                                    href={`/products?categoryId=${category.id}`}
+                                    href={`/pecas?categoryId=${category.id}`}
                                     onClick={() => setCatOpen(false)}
                                     className="group flex items-center justify-between py-2.5 text-foreground/80 transition-colors hover:text-foreground"
                                   >
@@ -104,7 +105,7 @@ export default function Navbar({ categories = [] }) {
                               ))}
                             </ul>
                             <Link
-                              href="/products"
+                              href="/pecas"
                               onClick={() => setCatOpen(false)}
                               className="mt-4 inline-block text-[0.65rem] font-medium uppercase tracking-[0.2em] text-foreground underline-offset-4 hover:underline"
                             >
@@ -115,7 +116,7 @@ export default function Navbar({ categories = [] }) {
                           {/* Featured collection */}
                           {featured && (
                             <Link
-                              href={`/products?categoryId=${featured.id}`}
+                              href={`/pecas?categoryId=${featured.id}`}
                               onClick={() => setCatOpen(false)}
                               className="group relative hidden w-48 shrink-0 self-stretch min-h-[16rem] overflow-hidden rounded-sm sm:block"
                             >
@@ -142,8 +143,8 @@ export default function Navbar({ categories = [] }) {
                 )}
 
                 <li>
-                  <Link href="/products" className={navLink}>
-                    Produtos
+                  <Link href="/pecas" className={navLink}>
+                    Peças
                     <span className={underline} />
                   </Link>
                 </li>
@@ -252,7 +253,7 @@ export default function Navbar({ categories = [] }) {
           <div className="md:hidden -mx-4 border-t border-border/60 sm:-mx-6">
             <div className="flex gap-2 overflow-x-auto px-4 py-2.5 scrollbar-none sm:px-6">
               <Link
-                href="/products"
+                href="/pecas"
                 className="shrink-0 rounded-sm border border-border px-3 py-1 text-[0.65rem] font-medium uppercase tracking-[0.12em] text-muted-foreground transition-colors hover:text-foreground"
               >
                 Tudo
@@ -260,7 +261,7 @@ export default function Navbar({ categories = [] }) {
               {categories.map((category) => (
                 <Link
                   key={category.id}
-                  href={`/products?categoryId=${category.id}`}
+                  href={`/pecas?categoryId=${category.id}`}
                   className="shrink-0 rounded-sm border border-border px-3 py-1 text-[0.65rem] font-medium uppercase tracking-[0.12em] text-muted-foreground transition-colors hover:text-foreground"
                 >
                   {category.name}
@@ -280,8 +281,8 @@ export default function Navbar({ categories = [] }) {
                 </Link>
               </li>
               <li>
-                <Link href="/products" className="block rounded-sm px-3 py-2 text-xs font-medium uppercase tracking-[0.15em] hover:bg-muted" onClick={() => setMobileMenuOpen(false)}>
-                  Produtos
+                <Link href="/pecas" className="block rounded-sm px-3 py-2 text-xs font-medium uppercase tracking-[0.15em] hover:bg-muted" onClick={() => setMobileMenuOpen(false)}>
+                  Peças
                 </Link>
               </li>
             </ul>
@@ -296,7 +297,7 @@ export default function Navbar({ categories = [] }) {
                   {categories.map((category) => (
                     <li key={category.id}>
                       <Link
-                        href={`/products?categoryId=${category.id}`}
+                        href={`/pecas?categoryId=${category.id}`}
                         className="flex items-center gap-2 rounded-sm px-3 py-2 text-xs font-medium uppercase tracking-[0.1em] capitalize hover:bg-muted"
                         onClick={() => setMobileMenuOpen(false)}
                       >

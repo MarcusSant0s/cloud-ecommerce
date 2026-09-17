@@ -7,7 +7,7 @@ export default function Error({ error, reset }) {
     <ErrorState
       description="Não conseguimos buscar os detalhes deste item. Tente novamente em instantes."
       error={error}
-      homeHref="/products"
+      homeHref="/pecas"
       homeLabel="Ver todos os produtos"
       reset={reset}
       title="Não foi possível carregar este produto"

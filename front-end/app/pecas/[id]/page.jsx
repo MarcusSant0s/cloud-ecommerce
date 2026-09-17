@@ -112,8 +112,8 @@ export default function ProductDetailPage() {
   if (!product) {
     return (
       <div className="container mx-auto max-w-7xl px-4 py-24 text-center sm:px-6 lg:px-8">
-        <h1 className="font-display text-3xl font-normal uppercase tracking-[0.12em]">Produto não encontrado</h1>
-        <Button className="mt-8 rounded-sm text-[0.7rem] uppercase tracking-[0.15em]" onClick={() => router.push("/products")}>
+        <h1 className="font-display text-3xl font-normal uppercase tracking-[0.12em]">Peça não encontrada</h1>
+        <Button className="mt-8 rounded-sm text-[0.7rem] uppercase tracking-[0.15em]" onClick={() => router.push("/pecas")}>
           Voltar para produtos
         </Button>
       </div>

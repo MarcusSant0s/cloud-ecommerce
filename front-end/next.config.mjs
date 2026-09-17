@@ -17,6 +17,14 @@ const nextConfig = {
       },
     ],
   },
+  // A vitrine morava em /products antes de a loja adotar o vocabulário de
+  // joalheria. Redirect permanente para não quebrar link já compartilhado.
+  async redirects() {
+    return [
+      { source: "/products", destination: "/pecas", permanent: true },
+      { source: "/products/:id", destination: "/pecas/:id", permanent: true },
+    ];
+  },
 }
 
 export default nextConfig;
