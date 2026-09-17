@@ -92,6 +92,12 @@
   --radius-md: 2px;
   --radius-lg: 4px;
   --radius-xl: 4px;
+  /* A escala inteira mora aqui. Os degraus maiores existem porque primitivos do
+     shadcn os usam (card, drawer); ficam contidos para não virar canto arredondado
+     de marketplace no meio de uma vitrine de canto reto. */
+  --radius-2xl: 6px;
+  --radius-3xl: 8px;
+  --radius-4xl: 12px;
 }
 
 /* ── Base overrides ───────────────────────────────────────── */
