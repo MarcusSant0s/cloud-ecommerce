@@ -67,6 +67,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/collection").permitAll()
                         .requestMatchers(HttpMethod.GET, "/collection/**").permitAll()
 
+                        // Avaliações do Google alimentam a home, que é pública.
+                        .requestMatchers(HttpMethod.GET, "/reviews").permitAll()
+
                         .requestMatchers(HttpMethod.POST, "/product/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/product/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/product/**").hasRole("ADMIN")

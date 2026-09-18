@@ -15,6 +15,11 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        // Fotos de perfil de quem avalia no Google.
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
     ],
   },
   // A vitrine morava em /products antes de a loja adotar o vocabulário de

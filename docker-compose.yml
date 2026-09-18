@@ -35,6 +35,8 @@ services:
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       MP_ACCESS_TOKEN: ${MP_ACCESS_TOKEN}
       MP_WEBHOOK_SECRET: ${MP_WEBHOOK_SECRET:-}
+      GOOGLE_PLACES_API_KEY: ${GOOGLE_PLACES_API_KEY:-}
+      GOOGLE_PLACES_PLACE_ID: ${GOOGLE_PLACES_PLACE_ID:-}
       APP_BASE_URL: ${APP_BASE_URL}
       # The AWS SDK's default credential chain reads exactly these two names.
       # This used to pass AWS_SECRET_KEY, which the chain ignores, so S3 fell back
