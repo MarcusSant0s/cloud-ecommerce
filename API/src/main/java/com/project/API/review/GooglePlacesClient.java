@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
 
 import java.util.List;
 
@@ -73,12 +74,68 @@ public class GooglePlacesClient {
 
             return new ReviewsResponse(reviews, details.rating(), details.userRatingCount());
 
+        } catch (RestClientResponseException e) {
+            // 4xx do Google é quase sempre configuração, não falha momentânea, e
+            // se repetiria a cada expiração do cache. Stack trace não ajuda a
+            // resolver nenhum destes; a mensagem do Google, sim.
+            log.error("Google recusou a requisição de avaliações ({}): {}{}",
+                    e.getStatusCode(), googleMessage(e), hintFor(e));
+            return ReviewsResponse.empty();
+
         } catch (Exception e) {
-            // A home não pode cair porque o Google respondeu mal. Sem avaliações,
-            // a seção simplesmente não é renderizada.
+            // Rede, timeout, resposta ilegível. A home não pode cair por isso —
+            // sem avaliações, a seção simplesmente não é renderizada.
             log.error("Falha ao buscar avaliações do Google", e);
             return ReviewsResponse.empty();
         }
+    }
+
+    private static String googleMessage(RestClientResponseException e) {
+        try {
+            GoogleError body = e.getResponseBodyAs(GoogleError.class);
+            if (body != null && body.error() != null && body.error().message() != null) {
+                return body.error().message();
+            }
+        } catch (Exception ignored) {
+            // Corpo fora do formato esperado — cai no genérico abaixo.
+        }
+        return e.getStatusText();
+    }
+
+    /**
+     * As três recusas que de fato acontecem, e o que fazer com cada uma. Sem
+     * isto, quem lê o log vê "403 Forbidden" e não sabe que o problema está no
+     * tipo de restrição da chave, não no código.
+     */
+    private static String hintFor(RestClientResponseException e) {
+        String body = e.getResponseBodyAsString();
+
+        if (body.contains("API_KEY_HTTP_REFERRER_BLOCKED")) {
+            return "  → A chave está restrita por referenciador HTTP, que é o tipo para uso"
+                    + " no navegador. Esta chamada sai do servidor e não envia Referer."
+                    + " No Google Cloud Console, troque a restrição da chave para"
+                    + " endereços IP e informe o IP de saída do servidor.";
+        }
+        if (body.contains("API_KEY_IP_ADDRESS_BLOCKED")) {
+            return "  → A chave está restrita a IPs que não incluem o IP de saída deste"
+                    + " servidor. Confira qual IP o container usa para sair"
+                    + " (atrás de NAT costuma não ser o do host) e adicione-o à chave.";
+        }
+        if (body.contains("API_KEY_SERVICE_BLOCKED") || body.contains("SERVICE_DISABLED")) {
+            return "  → A chave não tem permissão para a Places API (New), ou a API não está"
+                    + " habilitada no projeto. Habilite \"Places API (New)\" e inclua-a nas"
+                    + " restrições de API da chave.";
+        }
+        if (body.contains("API_KEY_INVALID")) {
+            return "  → GOOGLE_PLACES_API_KEY não é uma chave válida.";
+        }
+        return "";
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    record GoogleError(ErrorDetail error) {
+        @JsonIgnoreProperties(ignoreUnknown = true)
+        record ErrorDetail(Integer code, String message, String status) {}
     }
 
     private static GoogleReview toReview(Review r) {
