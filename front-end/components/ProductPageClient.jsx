@@ -39,7 +39,11 @@ export default function ProductPageClient({ categories, collections = [], produc
   return (
     <div className="flex min-h-screen flex-col">
       <main className="flex-1 py-8 md:py-10">
-        <div className="container px-4 md:px-6">
+        {/* mx-auto é obrigatório: no Tailwind v4 `container` só limita a largura,
+            não centraliza (o center:true do v3 deixou de existir). Sem ele a
+            vitrine encostava à esquerda em qualquer tela acima de 640px.
+            Gutters iguais aos da página da peça, para não haver salto ao navegar. */}
+        <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
           {/* Heading & filters */}
           <div className="mb-6 flex flex-col gap-4">

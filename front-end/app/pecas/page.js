@@ -5,7 +5,8 @@ export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Peças",
-  description: "Explore nosso catálogo completo de produtos. Filtre por categoria ou coleção e encontre o que você precisa.",
+  description:
+    "Brincos, colares, anéis e pulseiras em banho de ouro 18k e prata 925. Filtre por categoria ou coleção.",
 };
 
 export default async function Page({ searchParams }) {

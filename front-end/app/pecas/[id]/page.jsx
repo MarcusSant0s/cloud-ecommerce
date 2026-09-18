@@ -103,7 +103,7 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-      <div className="container flex h-[60vh] items-center justify-center">
+      <div className="container mx-auto flex h-[60vh] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-foreground" />
       </div>
     );
