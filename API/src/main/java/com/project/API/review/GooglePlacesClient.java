@@ -32,6 +32,10 @@ public class GooglePlacesClient {
     // que não se pede seria desperdício, já que o preço varia por campo.
     private static final String FIELD_MASK = "reviews,rating,userRatingCount";
 
+    // A vitrine mostra o que recomenda a loja. Avaliações abaixo disto continuam
+    // no perfil do Google, onde a média e a contagem já as refletem.
+    private static final int MIN_RATING = 4;
+
     private final RestClient restClient = RestClient.create();
 
     @Value("${google.places.api-key:}")
@@ -68,6 +72,7 @@ public class GooglePlacesClient {
             }
 
             List<GoogleReview> reviews = details.reviews().stream()
+                    .filter(r -> r.rating() >= MIN_RATING)
                     .filter(r -> r.text() != null && r.text().text() != null && !r.text().text().isBlank())
                     .map(GooglePlacesClient::toReview)
                     .toList();
