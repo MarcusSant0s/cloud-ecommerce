@@ -1,5 +1,6 @@
 package com.project.API.product;
 
+import com.project.API.cart.CartItemRepository;
 import com.project.API.commom.exception.ResourceNotFoundException;
 import com.project.API.file.S3StorageService;
 import com.project.API.product.dto.*;
@@ -32,10 +33,12 @@ import java.util.Set;
         private final CategoryRepository categoryRepository;
         private final ProductCollectionRepository collectionRepository;
         private final ProductRepository repository;
+        private final CartItemRepository cartItemRepository;
         private final S3StorageService storage;
 
-        public ProductServiceImpl(ProductRepository repository, S3StorageService s3StorageService, CategoryRepository categoryRepository, ProductCollectionRepository collectionRepository) {
+        public ProductServiceImpl(ProductRepository repository, S3StorageService s3StorageService, CategoryRepository categoryRepository, ProductCollectionRepository collectionRepository, CartItemRepository cartItemRepository) {
             this.categoryRepository = categoryRepository;
+            this.cartItemRepository = cartItemRepository;
             this.collectionRepository = collectionRepository;
             this.repository = repository;
             this.storage = s3StorageService;
@@ -107,6 +110,15 @@ import java.util.Set;
             List<String> keys = product.getImages().stream()
                     .map(ProductImage::getS3Key)
                     .toList();
+
+            // product.main_image_id points at one of the images being cascaded away, and
+            // Hibernate deletes those before the product row — the FK rejected every delete.
+            product.setMainImage(null);
+            repository.flush();
+
+            // cart_item has an FK to product. Orders keep their own snapshot of the line,
+            // so dropping cart lines for a product that no longer exists loses nothing.
+            cartItemRepository.deleteByProductId(id);
 
             repository.delete(product);
             repository.flush();

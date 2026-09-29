@@ -5,8 +5,9 @@ import { fetchJson } from '@/lib/server-api';
 const ProductSection = async () => {
 
   // fetchJson returns null when the API is down or times out — degrade gracefully.
+  // Not cached: an admin edit or delete has to show up on the next visit, not minutes later.
   const data = await fetchJson('/product?size=10', {
-    next: { revalidate: 300 },
+    cache: 'no-store',
   });
   const products = Array.isArray(data?.content) ? data.content : [];
 
