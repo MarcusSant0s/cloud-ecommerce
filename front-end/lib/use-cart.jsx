@@ -67,9 +67,9 @@ export function CartProvider({ children }) {
         params: { productId: product.id, quantity: qty }
       });
       await fetchCart();
-      toast.success("Produto adicionado!");
+      toast.success(product.name ? `${product.name} adicionado ao carrinho!` : "Produto adicionado!");
     } catch (err) {
-      const errorData = err?.content?.data;
+      const errorData = err?.response?.data;
 
       if(errorData?.code == "INSUFFICIENT_STOCK"){
         return toast.error("Estoque Insuficiente")

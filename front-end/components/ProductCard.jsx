@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { ShoppingBag, Loader2 } from "lucide-react";
 import { useCart } from "@/lib/use-cart";
-import { toast } from "sonner";
 
 const ProductCard = ({ product, priority = false }) => {
   const [isAdding, setIsAdding] = useState(false);
@@ -35,11 +34,9 @@ const ProductCard = ({ product, priority = false }) => {
   const handleAddToCart = async (e) => {
     e.preventDefault();
     setIsAdding(true);
+    // addItem reports success or failure itself.
     try {
-      await addItem({ id: product.id, quantity: 1 });
-      toast.success(`${name} adicionado ao carrinho!`);
-    } catch {
-      toast.error("Não foi possível adicionar ao carrinho.");
+      await addItem({ id: product.id, name, quantity: 1 });
     } finally {
       setIsAdding(false);
     }

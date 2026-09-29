@@ -81,7 +81,8 @@ export default function ProductDetailPage() {
     if (!product) return;
     setIsAdding(true);
 
-    addItem(
+    // addItem reports success or failure itself.
+    await addItem(
       {
         id: product.id,
         name: product.name,
@@ -92,8 +93,6 @@ export default function ProductDetailPage() {
       quantity
     );
 
-    toast.success(`${product.name} adicionado ao carrinho!`);
-    await new Promise((r) => setTimeout(r, 400));
     setIsAdding(false);
   };
 
