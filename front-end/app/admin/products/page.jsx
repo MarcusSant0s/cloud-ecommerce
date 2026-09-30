@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, Fragment } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   Plus, Pencil, Trash2, Star, Upload, ChevronLeft, ChevronRight, Loader2, Search, X, Check,
@@ -56,6 +57,7 @@ function validateForm(form, editingId, existingCount = 0) {
 }
 
 export default function AdminProducts() {
+  const router = useRouter();
   const [products, setProducts] = useState([]);
   const [totalPages, setTotalPages] = useState(0);
   const [page, setPage] = useState(0);
@@ -284,6 +286,7 @@ export default function AdminProducts() {
 
       setFormOpen(false);
       fetchProducts(page, search, filterCategory);
+      router.refresh();
     } catch (err) {
       toast.error(err?.response?.data?.message ?? "Falha ao salvar o produto.");
     } finally {
@@ -298,6 +301,10 @@ export default function AdminProducts() {
       toast.success("Produto excluído.");
       setConfirmId(null);
       fetchProducts(page, search, filterCategory);
+      // The API is called straight from the browser, so Next never learns the catalogue
+      // changed and its client router cache keeps serving the /pecas and home it already
+      // rendered — a deleted product stayed on screen. refresh() drops that whole cache.
+      router.refresh();
     } catch {
       toast.error("Falha ao excluir o produto.");
     }
@@ -327,6 +334,7 @@ export default function AdminProducts() {
       toast.success("Imagem excluída.");
       await fetchImages(editingId);
       fetchProducts(page, search, filterCategory);
+      router.refresh();
     } catch {
       toast.error("Falha ao excluir a imagem.");
     }
@@ -338,6 +346,7 @@ export default function AdminProducts() {
       toast.success("Imagem principal atualizada.");
       await fetchImages(editingId);
       fetchProducts(page, search, filterCategory);
+      router.refresh();
     } catch {
       toast.error("Falha ao definir a imagem principal.");
     }
