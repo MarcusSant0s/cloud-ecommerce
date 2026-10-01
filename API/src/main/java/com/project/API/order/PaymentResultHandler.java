@@ -4,7 +4,6 @@ import com.project.API.cart.CartRepository;
 import com.project.API.cart.CartService;
 import com.project.API.cart.CartStatus;
 import com.project.API.commom.exception.ResourceNotFoundException;
-import com.project.API.product.ProductRepository;
 
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
@@ -35,19 +34,19 @@ public class PaymentResultHandler {
 
     private final OrderRepository orderRepository;
     private final CartRepository cartRepository;
-    private final ProductRepository productRepository;
     private final CartService cartService;
+    private final StockReservation stockReservation;
 
     public PaymentResultHandler(
             OrderRepository orderRepository,
             CartRepository cartRepository,
-            ProductRepository productRepository,
-            CartService cartService
+            CartService cartService,
+            StockReservation stockReservation
     ) {
         this.orderRepository = orderRepository;
         this.cartRepository = cartRepository;
-        this.productRepository = productRepository;
         this.cartService = cartService;
+        this.stockReservation = stockReservation;
     }
 
     @Transactional
@@ -68,16 +67,9 @@ public class PaymentResultHandler {
                 order.setStatus(OrderStatus.PAID);
                 order.setMercadoPagoPaymentId(mpPaymentId);
                 order.setPaidAt(LocalDateTime.now());
-                for (OrderItem item : order.getItems()) {
-                    // A negative quantity would add stock: the query does quantity - :qty.
-                    if (item.getQuantity() <= 0) continue;
-                    int rowsUpdated = productRepository.decrementStock(item.getProductId(), item.getQuantity());
-                    if (rowsUpdated == 0) {
-                        int available = productRepository.findQuantityById(item.getProductId()).orElse(0);
-                        log.error("Pedido {} pago sem baixa de estoque: produto {} pediu {}, disponível {}",
-                                order.getId(), item.getProductId(), item.getQuantity(), available);
-                    }
-                }
+                // O estoque já saiu na criação do pedido. Só pedido sem reserva (anterior a
+                // ela, ou cancelado e pago mesmo assim) baixa aqui — e loga o que faltar.
+                stockReservation.reserveForPaidOrder(order);
 
                 cartRepository.findByUserIdAndStatus(order.getUser().getId(), CartStatus.CHECKOUT)
                         .ifPresent(cartRepository::delete);

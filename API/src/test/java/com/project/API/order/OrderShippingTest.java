@@ -46,7 +46,8 @@ class OrderShippingTest {
                 Mockito.mock(ProductRepository.class),
                 Mockito.mock(ShippingService.class),
                 Mockito.mock(CartService.class),
-                Mockito.mock(PaymentResultHandler.class));
+                Mockito.mock(PaymentResultHandler.class),
+                Mockito.mock(StockReservation.class));
         ReflectionTestUtils.setField(orderService, "shippingSlaDays", 2);
         ReflectionTestUtils.setField(orderService, "transitAlertDays", 10);
 

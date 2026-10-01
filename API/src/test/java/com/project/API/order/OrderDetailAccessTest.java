@@ -38,7 +38,8 @@ class OrderDetailAccessTest {
                 Mockito.mock(ProductRepository.class),
                 Mockito.mock(ShippingService.class),
                 Mockito.mock(CartService.class),
-                Mockito.mock(PaymentResultHandler.class));
+                Mockito.mock(PaymentResultHandler.class),
+                Mockito.mock(StockReservation.class));
     }
 
     private Order orderOwnedBy(Long userId) {

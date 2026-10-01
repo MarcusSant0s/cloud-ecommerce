@@ -3,6 +3,8 @@ package com.project.API.cart;
 import com.project.API.order.Order;
 import com.project.API.order.OrderRepository;
 import com.project.API.order.OrderStatus;
+import com.project.API.order.StockReservation;
+import com.project.API.product.ProductRepository;
 import com.project.API.order.OrderFactory;
 import com.project.API.user.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +24,7 @@ class CartCleanupSchedulerTest {
     private OrderRepository orderRepository;
     private CartRepository cartRepository;
     private CartService cartService;
+    private ProductRepository productRepository;
     private CartCleanupScheduler scheduler;
 
     @BeforeEach
@@ -29,7 +32,9 @@ class CartCleanupSchedulerTest {
         orderRepository = Mockito.mock(OrderRepository.class);
         cartRepository = Mockito.mock(CartRepository.class);
         cartService = Mockito.mock(CartService.class);
-        scheduler = new CartCleanupScheduler(orderRepository, cartRepository, cartService);
+        productRepository = Mockito.mock(ProductRepository.class);
+        scheduler = new CartCleanupScheduler(orderRepository, cartRepository, cartService,
+                new StockReservation(productRepository));
     }
 
     @Test

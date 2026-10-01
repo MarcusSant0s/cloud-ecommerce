@@ -47,8 +47,8 @@ class OrderQuantityEdgeCaseTest {
         cartService = Mockito.mock(CartService.class);
         // O handler é um bean à parte justamente para que @Transactional passe pelo
         // proxy do Spring; aqui é instanciado direto com os mesmos mocks.
-        paymentResultHandler = new PaymentResultHandler(orderRepository, cartRepository, productRepository, cartService);
-        orderService = new OrderServiceImp(orderRepository, cartRepository, productRepository, shippingService, cartService, paymentResultHandler);
+        paymentResultHandler = new PaymentResultHandler(orderRepository, cartRepository, cartService, new StockReservation(productRepository));
+        orderService = new OrderServiceImp(orderRepository, cartRepository, productRepository, shippingService, cartService, paymentResultHandler, new StockReservation(productRepository));
 
         when(shippingService.calculate(anyString())).thenReturn(new BigDecimal("15.00"));
         when(orderRepository.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -127,7 +127,8 @@ class OrderQuantityEdgeCaseTest {
         var item = OrderFactory.mockCartItem(1L, product, 2);
         Cart cart = OrderFactory.mockCart(1L, user, CartStatus.ACTIVE, List.of(item));
 
-        when(productRepository.findQuantityById(10L)).thenReturn(Optional.of(10));
+        // The order reserves its units on creation; the UPDATE finds them in stock.
+        when(productRepository.decrementStock(10L, 2)).thenReturn(1);
 
         Order order = orderService.createOrder(1L, cart);
 

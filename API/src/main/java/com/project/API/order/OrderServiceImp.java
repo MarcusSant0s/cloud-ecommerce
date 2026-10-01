@@ -15,7 +15,6 @@ import com.project.API.cart.CartItem;
 import com.project.API.cart.CartStatus;
 import com.project.API.cart.CartRepository;
 import com.project.API.cart.CartService;
-import com.project.API.cart.exception.InsufficientStockException;
 import com.project.API.commom.exception.CartInconsistencyException;
 import com.project.API.commom.exception.InvalidOrderTransitionException;
 import com.project.API.commom.exception.OrderNotPayableException;
@@ -62,6 +61,7 @@ public class OrderServiceImp implements OrderService {
     private final ShippingService shippingService;
     private final CartService cartService;
     private final PaymentResultHandler paymentResultHandler;
+    private final StockReservation stockReservation;
 
     @Value("${mercadopago.notification.url}")
     private String notificationUrl;
@@ -82,13 +82,14 @@ public class OrderServiceImp implements OrderService {
     @Value("${app.orders.transit-alert-days:10}")
     private int transitAlertDays;
 
-    public OrderServiceImp(OrderRepository orderRepository, CartRepository cartRepository, ProductRepository productRepository, ShippingService shippingService, CartService cartService, PaymentResultHandler paymentResultHandler){
+    public OrderServiceImp(OrderRepository orderRepository, CartRepository cartRepository, ProductRepository productRepository, ShippingService shippingService, CartService cartService, PaymentResultHandler paymentResultHandler, StockReservation stockReservation){
         this.orderRepository = orderRepository;
         this.cartRepository = cartRepository;
         this.productRepository = productRepository;
         this.shippingService = shippingService;
         this.cartService = cartService;
         this.paymentResultHandler = paymentResultHandler;
+        this.stockReservation = stockReservation;
     }
 
 
@@ -241,6 +242,9 @@ public class OrderServiceImp implements OrderService {
             throw new OrderNotPayableException("Somente pedidos pendentes podem ser cancelados.");
         }
 
+        // Before the cart comes back: restoreToActive caps each line at stock, and these
+        // units are part of it again.
+        stockReservation.release(order);
         order.setStatus(OrderStatus.CANCELLED);
         orderRepository.save(order);
 
@@ -251,19 +255,18 @@ public class OrderServiceImp implements OrderService {
     }
 
     /**
-     * Simulates an approved payment for demo deploys: marks the order PAID,
-     * decrements stock and clears the cart — the same effect the Mercado Pago
-     * "approved" webhook would have — then sends the user to the success page.
+     * Simulates an approved payment for demo deploys: marks the order PAID and
+     * clears the cart — the same effect the Mercado Pago "approved" webhook would
+     * have — then sends the user to the success page. Stock was already taken when
+     * the order was created; reserveForPaidOrder only acts on an older order that
+     * never held any.
      */
     private String completeDemoCheckout(Order order, Cart cart) {
         order.setStatus(OrderStatus.PAID);
         order.setPaidAt(LocalDateTime.now());
         order.setMercadoPagoPreferenceId("demo-pref-" + order.getId());
         order.setMercadoPagoPaymentId("demo-pay-" + order.getId());
-        order.getItems().stream()
-                .filter(item -> item.getQuantity() > 0)
-                .forEach(item ->
-                        productRepository.decrementStock(item.getProductId(), item.getQuantity()));
+        stockReservation.reserveForPaidOrder(order);
         orderRepository.save(order);
 
         if (cart != null) {
@@ -288,14 +291,12 @@ public class OrderServiceImp implements OrderService {
         Order order = new Order();
 
         for(CartItem cartItem : cartItems){
-            // A non-positive quantity passes validateStockAvailability (stock < -3 is
-            // false) and then multiplies into a negative subtotal, so it has to be
-            // rejected on its own terms.
+            // A non-positive quantity multiplies into a negative subtotal, and the
+            // reservation skips it, so it has to be rejected on its own terms.
             if (cartItem.getQuantity() <= 0) {
                 throw new IllegalArgumentException(
                         "Quantidade inválida no carrinho para o produto " + cartItem.getProduct().getId());
             }
-            validateStockAvailability(cartItem.getProduct().getId(), cartItem.getQuantity());
 
             OrderItem orderItem = new OrderItem(
                     cartItem.getProduct().getId(),
@@ -321,6 +322,12 @@ public class OrderServiceImp implements OrderService {
         BigDecimal shippingCost = resolveShippingCost(cart.getUser());
         order.setShippingCost(shippingCost);
         order.setTotal(subtotal.add(shippingCost));
+
+        // Last, after everything that can still refuse the order. This is the real stock
+        // check: decrementStock only succeeds while the units are there, so two buyers
+        // racing for the last one cannot both get it. Short on any item, it throws and
+        // checkout's transaction puts back the items already taken.
+        stockReservation.reserve(order);
 
        return orderRepository.save(order);
     }
@@ -396,6 +403,9 @@ public class OrderServiceImp implements OrderService {
                 // revert really does commit and has to go through the same reconciliation.
                 cartService.restoreToActive(cart);
             }
+            // Same reason: the checked exception leaves the reservation committed, so the
+            // units go back by hand before the order disappears.
+            stockReservation.release(order);
             orderRepository.delete(order);
             log.error("Mercado Pago rejected the preference for order {} (HTTP {})",
                     order.getId(), e.getStatusCode(), e);
@@ -409,15 +419,6 @@ public class OrderServiceImp implements OrderService {
 
 
 
-
-    private void validateStockAvailability(Long productId, int requestedQuantity) {
-        int stock = productRepository.findQuantityById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
-
-        if (stock < requestedQuantity){
-            throw new InsufficientStockException("Estoque insuficiente: apenas " + stock + " disponíveis");
-        }
-    }
 
     // A busca do pagamento no Mercado Pago fica fora da transação, e a aplicação do
     // resultado vai para outro bean — chamada via proxy, que é o que faz
@@ -479,6 +480,14 @@ public class OrderServiceImp implements OrderService {
             }
         } else if (orderStatus == OrderStatus.PENDING || orderStatus == OrderStatus.CANCELLED) {
             order.setPaidAt(null);
+        }
+
+        // O estoque segue o pedido: cancelado devolve as unidades; reaberto ou pago
+        // volta a segurá-las. Reembolso não mexe — a peça não volta sozinha à prateleira.
+        if (orderStatus == OrderStatus.CANCELLED) {
+            stockReservation.release(order);
+        } else if (orderStatus != OrderStatus.REFUNDED) {
+            stockReservation.reserveForPaidOrder(order);
         }
 
         // Mesma regra para shippedAt: voltar para antes do envio apaga a data, senão o

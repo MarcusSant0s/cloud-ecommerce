@@ -3,6 +3,7 @@ package com.project.API.cart;
 import com.project.API.order.Order;
 import com.project.API.order.OrderRepository;
 import com.project.API.order.OrderStatus;
+import com.project.API.order.StockReservation;
 import jakarta.transaction.Transactional;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -17,12 +18,14 @@ CartCleanupScheduler {
     private final OrderRepository orderRepository;
     private final CartRepository cartRepository;
     private final CartService cartService;
+    private final StockReservation stockReservation;
 
     public CartCleanupScheduler(OrderRepository orderRepository, CartRepository cartRepository,
-                                CartService cartService) {
+                                CartService cartService, StockReservation stockReservation) {
         this.orderRepository = orderRepository;
         this.cartRepository = cartRepository;
         this.cartService = cartService;
+        this.stockReservation = stockReservation;
     }
 
     @Scheduled(fixedDelayString = "${cart.cleanup.interval-ms:3600000}")
@@ -33,6 +36,8 @@ CartCleanupScheduler {
         // Cancel stale PENDING orders and revert their carts
         List<Order> staleOrders = orderRepository.findByStatusAndCreatedAtBefore(OrderStatus.PENDING, cutoff);
         for (Order order : staleOrders) {
+            // Before the cart comes back, which caps its lines at stock.
+            stockReservation.release(order);
             order.setStatus(OrderStatus.CANCELLED);
             orderRepository.save(order);
 

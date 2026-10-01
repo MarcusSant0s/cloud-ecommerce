@@ -263,6 +263,7 @@ public class DataSeeder implements CommandLineRunner {
         o1.setShippedAt(LocalDateTime.now().minusDays(14));
         o1.setTrackingCode("QB123456789BR");
         o1.setMercadoPagoPreferenceId("pref-ana-001");
+        o1.setStockReserved(true);
         o1.setMercadoPagoPaymentId("pay-ana-001");
         o1.addItem(orderItem(notebook, 1));
         o1.addItem(orderItem(fone, 1));
@@ -277,6 +278,7 @@ public class DataSeeder implements CommandLineRunner {
         o2.setShippedAt(LocalDateTime.now().minusDays(7));
         o2.setTrackingCode("QB987654321BR");
         o2.setMercadoPagoPreferenceId("pref-carlos-001");
+        o2.setStockReserved(true);
         o2.setMercadoPagoPaymentId("pay-carlos-001");
         o2.addItem(orderItem(tenis, 2));
         o2.addItem(orderItem(smartphone, 1));
@@ -306,6 +308,7 @@ public class DataSeeder implements CommandLineRunner {
         o5.setCreatedAt(LocalDateTime.now().minusDays(2));
         o5.setPaidAt(LocalDateTime.now().minusDays(2).plusMinutes(5));
         o5.setMercadoPagoPreferenceId("pref-rafael-001");
+        o5.setStockReserved(true);
         o5.setMercadoPagoPaymentId("pay-rafael-001");
         o5.addItem(orderItem(fone, 1));
         o5.setTotal(priceOf(fone));

@@ -38,7 +38,8 @@ class OrderStatusOverrideTest {
                 Mockito.mock(ProductRepository.class),
                 Mockito.mock(ShippingService.class),
                 Mockito.mock(CartService.class),
-                Mockito.mock(PaymentResultHandler.class));
+                Mockito.mock(PaymentResultHandler.class),
+                Mockito.mock(StockReservation.class));
 
         when(orderRepository.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
     }

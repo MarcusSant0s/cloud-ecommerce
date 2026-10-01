@@ -45,7 +45,7 @@ class PaymentIdempotencyTest {
         cartRepository = Mockito.mock(CartRepository.class);
         productRepository = Mockito.mock(ProductRepository.class);
         cartService = Mockito.mock(CartService.class);
-        handler = new PaymentResultHandler(orderRepository, cartRepository, productRepository, cartService);
+        handler = new PaymentResultHandler(orderRepository, cartRepository, cartService, new StockReservation(productRepository));
 
         user = OrderFactory.mockUser(1L);
         checkoutCart = OrderFactory.mockCart(2L, user, CartStatus.CHECKOUT, List.of());

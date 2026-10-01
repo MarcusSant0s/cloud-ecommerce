@@ -41,8 +41,8 @@ class CartOrderFlowTest {
         cartService = Mockito.mock(CartService.class);
         // O handler é um bean à parte justamente para que @Transactional passe pelo
         // proxy do Spring; aqui é instanciado direto com os mesmos mocks.
-        paymentResultHandler = new PaymentResultHandler(orderRepository, cartRepository, productRepository, cartService);
-        orderService = new OrderServiceImp(orderRepository, cartRepository, productRepository, shippingService, cartService, paymentResultHandler);
+        paymentResultHandler = new PaymentResultHandler(orderRepository, cartRepository, cartService, new StockReservation(productRepository));
+        orderService = new OrderServiceImp(orderRepository, cartRepository, productRepository, shippingService, cartService, paymentResultHandler, new StockReservation(productRepository));
     }
 
     // ── checkout() validation ─────────────────────────────────────────────────

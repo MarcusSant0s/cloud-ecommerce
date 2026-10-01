@@ -51,6 +51,11 @@ public class Order {
     @Column(name = "tracking_code", length = 64)
     private String trackingCode;
 
+    // Whether this order's units are currently out of stock on its behalf.
+    // See StockReservation.
+    @Column(name = "stock_reserved", nullable = false)
+    private boolean stockReserved;
+
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {
@@ -141,6 +146,14 @@ public class Order {
 
     public void setTrackingCode(String trackingCode) {
         this.trackingCode = trackingCode;
+    }
+
+    public boolean isStockReserved() {
+        return stockReserved;
+    }
+
+    public void setStockReserved(boolean stockReserved) {
+        this.stockReserved = stockReserved;
     }
 
     public String getMercadoPagoPreferenceId() {
