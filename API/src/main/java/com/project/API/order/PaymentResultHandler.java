@@ -7,9 +7,12 @@ import com.project.API.commom.exception.ResourceNotFoundException;
 import com.project.API.product.ProductRepository;
 
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Aplica o resultado de um pagamento ao pedido, dentro de uma transação.
@@ -27,6 +30,8 @@ import java.time.LocalDateTime;
  */
 @Service
 public class PaymentResultHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(PaymentResultHandler.class);
 
     private final OrderRepository orderRepository;
     private final CartRepository cartRepository;
@@ -47,27 +52,50 @@ public class PaymentResultHandler {
 
     @Transactional
     public void handlePaymentResult(String orderId, String mpStatus, String mpPaymentId) {
-        Order order = orderRepository.findById(Long.parseLong(orderId))
+        Order order = orderRepository.findByIdForUpdate(Long.parseLong(orderId))
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
+        if(order.getStatus() == OrderStatus.PAID || order.getStatus() == OrderStatus.REFUNDED ||
+        order.getStatus() == OrderStatus.SHIPPED || order.getStatus() == OrderStatus.DELIVERED){
+            log.info("Pedido {} já resolvido ({}), notificação '{}' ignorada", orderId, order.getStatus(), mpStatus);
+        return ;
+        }
+
         switch (mpStatus) {
+
+            case "delivered", "paid", "shiped" -> {}
             case "approved" -> {
                 order.setStatus(OrderStatus.PAID);
                 order.setMercadoPagoPaymentId(mpPaymentId);
                 order.setPaidAt(LocalDateTime.now());
-                order.getItems().stream()
-                        .filter(item -> item.getQuantity() > 0)
-                        .forEach(item ->
-                                productRepository.decrementStock(item.getProductId(), item.getQuantity()));
+                for (OrderItem item : order.getItems()) {
+                    // A negative quantity would add stock: the query does quantity - :qty.
+                    if (item.getQuantity() <= 0) continue;
+                    int rowsUpdated = productRepository.decrementStock(item.getProductId(), item.getQuantity());
+                    if (rowsUpdated == 0) {
+                        int available = productRepository.findQuantityById(item.getProductId()).orElse(0);
+                        log.error("Pedido {} pago sem baixa de estoque: produto {} pediu {}, disponível {}",
+                                order.getId(), item.getProductId(), item.getQuantity(), available);
+                    }
+                }
+
                 cartRepository.findByUserIdAndStatus(order.getUser().getId(), CartStatus.CHECKOUT)
                         .ifPresent(cartRepository::delete);
+
             }
             case "rejected" -> {
-                order.setStatus(OrderStatus.CANCELLED);
-                cartRepository.findByUserIdAndStatus(order.getUser().getId(), CartStatus.CHECKOUT)
-                        .ifPresent(cartService::restoreToActive);
+               /*
+               * A rejected attempt should not be deletted
+               * user can use another payment method and if the user
+               * give up, the cleanerSchedule wiil take care or the own
+               * user can /cancel the order
+               * */
+
             }
-            case "pending" -> order.setStatus(OrderStatus.PENDING);
+            case "pending" -> {
+                if (order.getStatus() == OrderStatus.PENDING)
+                    order.setStatus(OrderStatus.PENDING);
+            }
         }
 
         orderRepository.save(order);

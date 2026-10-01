@@ -108,7 +108,7 @@ class OrderQuantityEdgeCaseTest {
         // A negative-quantity line that made it as far as a PENDING order.
         Order order = OrderFactory.orderWithItems(user, OrderStatus.PENDING, OrderFactory.singleItem(10L, -3));
 
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(orderRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(order));
         when(productRepository.findQuantityById(10L)).thenReturn(Optional.of(10));
         when(cartRepository.findByUserIdAndStatus(1L, CartStatus.CHECKOUT)).thenReturn(Optional.empty());
 

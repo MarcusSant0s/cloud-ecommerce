@@ -91,7 +91,7 @@ class CartOrderFlowTest {
         Order order = OrderFactory.orderWithItems(user, OrderStatus.PENDING, OrderFactory.singleItem(10L, 3));
         Cart checkoutCart = OrderFactory.mockCart(2L, user, CartStatus.CHECKOUT, List.of());
 
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(orderRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(order));
         when(productRepository.findQuantityById(10L)).thenReturn(Optional.of(10));
         when(cartRepository.findByUserIdAndStatus(1L, CartStatus.CHECKOUT)).thenReturn(Optional.of(checkoutCart));
 
@@ -106,22 +106,25 @@ class CartOrderFlowTest {
     }
 
     @Test
-    void handlePaymentResult_rejected_shouldCancelOrder_revertCartToActive() {
+    void handlePaymentResult_rejected_shouldKeepOrderPending_andLeaveCartInCheckout() {
+        // A rejected payment is one failed attempt, not the end of the order: in
+        // Checkout Pro the buyer stays on the same screen and may pay with another
+        // card or Pix. Closing the order is left to /cancel or CartCleanupScheduler.
         User user = OrderFactory.mockUser(1L);
         Order order = OrderFactory.orderWithItems(user, OrderStatus.PENDING, OrderFactory.singleItem(10L, 3));
 
         Cart checkoutCart = mock(Cart.class);
         when(checkoutCart.getStatus()).thenReturn(CartStatus.CHECKOUT);
 
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(orderRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(order));
         when(cartRepository.findByUserIdAndStatus(1L, CartStatus.CHECKOUT)).thenReturn(Optional.of(checkoutCart));
 
         paymentResultHandler.handlePaymentResult("1", "rejected", null);
 
-        assertEquals(OrderStatus.CANCELLED, order.getStatus());
-        // Handed back via CartService, which reconciles with any cart the user built
-        // while the payment was pending instead of flipping this one to a second ACTIVE.
-        verify(cartService).restoreToActive(checkoutCart);
+        assertEquals(OrderStatus.PENDING, order.getStatus());
+        verify(orderRepository, never()).delete(any(Order.class));
+        verify(cartService, never()).restoreToActive(any());
+        verify(cartRepository, never()).delete(any(Cart.class));
         verify(productRepository, never()).decrementStock(anyLong(), anyInt());
     }
 
@@ -130,7 +133,7 @@ class CartOrderFlowTest {
         User user = OrderFactory.mockUser(1L);
         Order order = OrderFactory.orderWithItems(user, OrderStatus.PENDING, List.of());
 
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(orderRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(order));
 
         paymentResultHandler.handlePaymentResult("1", "pending", null);
 
@@ -144,7 +147,7 @@ class CartOrderFlowTest {
         User user = OrderFactory.mockUser(1L);
         Order order = OrderFactory.orderWithItems(user, OrderStatus.PENDING, OrderFactory.singleItem(10L, 1));
 
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(orderRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(order));
         when(productRepository.findQuantityById(10L)).thenReturn(Optional.of(5));
         when(cartRepository.findByUserIdAndStatus(1L, CartStatus.CHECKOUT)).thenReturn(Optional.empty());
 
