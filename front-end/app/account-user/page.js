@@ -11,10 +11,11 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-function Field({ label, name, type = "text", value, onChange, error, icon: Icon, disabled }) {
+function Field({ label, name, type = "text", value, onChange, error, icon: Icon, disabled, className = "", ...inputProps }) {
+  const id = `field-${name}`;
   return (
-    <div className="flex flex-col gap-1.5">
-      <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+    <div className={`flex min-w-0 flex-col gap-1.5 ${className}`}>
+      <label htmlFor={id} className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
         {label}
       </label>
       <div className="relative">
@@ -24,13 +25,16 @@ function Field({ label, name, type = "text", value, onChange, error, icon: Icon,
           </div>
         )}
         <input
+          id={id}
           type={type}
           name={name}
           value={value}
           onChange={onChange}
           disabled={disabled}
+          aria-invalid={!!error}
+          {...inputProps}
           className={`
-            w-full rounded-xl border bg-background px-4 py-2.5 text-sm
+            h-11 w-full rounded-xl border bg-background px-4 text-base md:text-sm
             transition-all outline-none
             focus:ring-2 focus:ring-primary/20 focus:border-primary
             disabled:opacity-50 disabled:cursor-not-allowed
@@ -75,7 +79,7 @@ function Skeleton({ className }) {
 
 function PageSkeleton() {
   return (
-    <div className="container mx-auto max-w-2xl px-4 py-10 flex flex-col gap-6">
+    <div className="container mx-auto max-w-2xl px-4 py-6 flex flex-col gap-5 md:py-10">
       <div className="flex items-center gap-4">
         <Skeleton className="h-9 w-9 rounded-full" />
         <div className="flex flex-col gap-2">
@@ -138,7 +142,6 @@ export default function AccountPage() {
   });
 
   useEffect(() => {
-    console.log(user)
     if (user) {
       setForm({
         firstName: user.firstName ?? "",
@@ -156,7 +159,6 @@ export default function AccountPage() {
 
   function handleChange(e) {
     const { name, value } = e.target;
-    console.log(name + ", valor:"+ value)
     setForm(prev => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: undefined }));
   }
@@ -170,8 +172,6 @@ export default function AccountPage() {
     }
 
     try {
-          
-
       setSaving(true);
       await api.put("/users/UpdateMe", form);
       setSuccess(true);
@@ -226,12 +226,13 @@ export default function AccountPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto max-w-2xl px-4 py-8 md:py-10">
+      <div className="container mx-auto max-w-2xl px-4 py-6 md:py-10">
 
         <div className="mb-6 flex items-center gap-4 md:mb-8">
           <Link
             href="/"
-            className="flex h-9 w-9 items-center justify-center rounded-full border bg-background shadow-sm transition hover:bg-accent"
+            aria-label="Voltar"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border bg-background shadow-sm transition hover:bg-accent"
           >
             <ArrowLeft className="h-4 w-4" />
           </Link>
@@ -244,14 +245,16 @@ export default function AccountPage() {
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
 
           {/* Profile summary */}
-          <div className="flex items-center justify-between rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <Avatar firstName={form.firstName} lastName={form.lastName} />
-              <div>
-                <p className="font-semibold text-base leading-tight sm:text-lg">
+          <div className="flex items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
+            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+              <div className="shrink-0">
+                <Avatar firstName={form.firstName} lastName={form.lastName} />
+              </div>
+              <div className="min-w-0">
+                <p className="truncate font-semibold text-base leading-tight sm:text-lg">
                   {form.firstName} {form.lastName}
                 </p>
-                <p className="text-sm text-muted-foreground">{form.email}</p>
+                <p className="truncate text-sm text-muted-foreground">{form.email}</p>
                 {success && (
                   <p className="mt-1 flex items-center gap-1 text-xs text-emerald-600">
                     <CheckCircle2 className="h-3.5 w-3.5" /> Perfil atualizado
@@ -263,7 +266,7 @@ export default function AccountPage() {
               <button
                 type="button"
                 onClick={() => setEditing(true)}
-                className="flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition hover:bg-accent"
+                className="flex h-10 shrink-0 items-center gap-2 rounded-xl border px-3 text-sm font-medium transition hover:bg-accent"
               >
                 <Edit3 className="h-4 w-4" />
                 Editar
@@ -273,7 +276,7 @@ export default function AccountPage() {
 
           {/* Personal info */}
           <SectionCard title="Informações Pessoais" icon={User}>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 min-[380px]:grid-cols-2 min-[380px]:gap-3 sm:gap-4">
               <Field
                 label="Nome"
                 name="firstName"
@@ -281,6 +284,7 @@ export default function AccountPage() {
                 onChange={handleChange}
                 error={errors.firstName}
                 disabled={!editing}
+                autoComplete="given-name"
               />
               <Field
                 label="Sobrenome"
@@ -289,6 +293,7 @@ export default function AccountPage() {
                 onChange={handleChange}
                 error={errors.lastName}
                 disabled={!editing}
+                autoComplete="family-name"
               />
             </div>
             <Field
@@ -300,82 +305,94 @@ export default function AccountPage() {
               error={errors.email}
               icon={Mail}
               disabled={!editing}
+              autoComplete="email"
+              autoCapitalize="none"
+              spellCheck={false}
+            />
+            <Field
+              label="Celular"
+              name="phone"
+              type="tel"
+              inputMode="tel"
+              value={form.phone}
+              onChange={handleChange}
+              error={errors.phone}
+              disabled={!editing}
+              autoComplete="tel-national"
             />
           </SectionCard>
 
-          {/* Address */}
+          {/* Address — CEP e número lado a lado já no mobile: são curtos */}
           <SectionCard title="Endereço" icon={MapPin}>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <Field
-                  label="Rua"
-                  name="street"
-                  value={form.street}
-                  onChange={handleChange}
-                  error={errors.street}
-                  disabled={!editing}
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <Field
-                  label="Bairro"
-                  name="bairro"
-                  value={form.bairro}
-                  onChange={handleChange}
-                  error={errors.bairro}
-                  disabled={!editing}
-                />
-              </div>
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
               <Field
+                label="CEP"
+                name="cep"
+                inputMode="numeric"
+                value={form.cep}
+                onChange={handleChange}
+                error={errors.cep}
+                disabled={!editing}
+                autoComplete="postal-code"
+              />
+              <Field
+                label="Número"
+                name="number"
+                inputMode="numeric"
+                value={form.number}
+                onChange={handleChange}
+                error={errors.number}
+                disabled={!editing}
+                autoComplete="address-line2"
+              />
+              <Field
+                className="col-span-2"
+                label="Rua"
+                name="street"
+                value={form.street}
+                onChange={handleChange}
+                error={errors.street}
+                disabled={!editing}
+                autoComplete="address-line1"
+              />
+              <Field
+                className="col-span-2 sm:col-span-1"
+                label="Bairro"
+                name="bairro"
+                value={form.bairro}
+                onChange={handleChange}
+                error={errors.bairro}
+                disabled={!editing}
+                autoComplete="address-level3"
+              />
+              <Field
+                className="col-span-2 sm:col-span-1"
                 label="Cidade"
                 name="city"
                 value={form.city}
                 onChange={handleChange}
                 error={errors.city}
                 disabled={!editing}
-              />
-              <Field
-                label="CEP"
-                name="cep"
-                value={form.cep}
-                onChange={handleChange}
-                error={errors.cep}
-                disabled={!editing}
-              />
-              <Field
-                label="Número"
-                name="number"
-                value={form.number}
-                onChange={handleChange}
-                error={errors.number}
-                disabled={!editing}
-              />
-              <Field
-                label="Celular"
-                name="phone"
-                value={form.phone}
-                onChange={handleChange}
-                error={errors.phone}
-                disabled={!editing}
+                autoComplete="address-level2"
               />
             </div>
           </SectionCard>
 
-          {/* Actions */}
+          {/* Actions — barra fixa no rodapé no mobile, para salvar sem rolar até o fim */}
           {editing && (
-            <div className="flex gap-3 justify-end">
+            <div className="sticky bottom-0 z-10 -mx-4 flex gap-3 border-t bg-background/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur sm:static sm:mx-0 sm:justify-end sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
               <button
                 type="button"
                 onClick={handleCancel}
                 disabled={saving}
-                className="rounded-xl border px-5 py-2.5 text-sm font-medium transition hover:bg-accent disabled:opacity-50"
+                className="h-11 flex-1 rounded-xl border px-5 text-sm font-medium transition hover:bg-accent disabled:opacity-50 sm:flex-none"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={saving}
-                className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-50"
+                className="flex h-11 flex-[2] items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-medium text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-50 sm:flex-none"
               >
                 {saving ? (
                   <><Loader2 className="h-4 w-4 animate-spin" /> Salvando...</>
@@ -404,7 +421,7 @@ export default function AccountPage() {
               . Esta ação não pode ser desfeita.
             </p>
             {confirmingDelete ? (
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                 <span className="text-sm font-medium text-destructive">
                   Tem certeza? Todos os seus dados serão apagados.
                 </span>
@@ -412,7 +429,7 @@ export default function AccountPage() {
                   type="button"
                   onClick={handleDeleteAccount}
                   disabled={deleting}
-                  className="flex items-center gap-2 rounded-xl bg-destructive px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-destructive/90 disabled:opacity-50"
+                  className="flex h-11 items-center justify-center gap-2 rounded-xl bg-destructive px-4 text-sm font-medium text-white shadow-sm transition hover:bg-destructive/90 disabled:opacity-50"
                 >
                   {deleting ? (
                     <><Loader2 className="h-4 w-4 animate-spin" /> Excluindo...</>
@@ -424,7 +441,7 @@ export default function AccountPage() {
                   type="button"
                   onClick={() => setConfirmingDelete(false)}
                   disabled={deleting}
-                  className="rounded-xl border px-4 py-2 text-sm font-medium transition hover:bg-accent disabled:opacity-50"
+                  className="h-11 rounded-xl border px-4 text-sm font-medium transition hover:bg-accent disabled:opacity-50"
                 >
                   Cancelar
                 </button>
@@ -433,7 +450,7 @@ export default function AccountPage() {
               <button
                 type="button"
                 onClick={() => setConfirmingDelete(true)}
-                className="self-start rounded-xl border border-destructive/40 px-4 py-2 text-sm font-medium text-destructive transition hover:bg-destructive/10"
+                className="h-11 w-full rounded-xl border border-destructive/40 px-4 text-sm sm:w-auto sm:self-start font-medium text-destructive transition hover:bg-destructive/10"
               >
                 Excluir minha conta
               </button>
