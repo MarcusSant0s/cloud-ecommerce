@@ -56,6 +56,7 @@ public class OrderController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{orderId}/status")
     public ResponseEntity<OrderStatus> changeOrderStatus(
             @PathVariable Long orderId,
