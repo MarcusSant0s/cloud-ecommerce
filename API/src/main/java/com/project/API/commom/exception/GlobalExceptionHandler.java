@@ -124,6 +124,12 @@ public class GlobalExceptionHandler {
                 .body(new ApiError(409, "ORDER_NOT_PAYABLE", ex.getMessage(), null));
     }
 
+    @ExceptionHandler(InvalidOrderTransitionException.class)
+    public ResponseEntity<ApiError> handleInvalidOrderTransition(InvalidOrderTransitionException ex){
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiError(409, "INVALID_ORDER_TRANSITION", ex.getMessage(), null));
+    }
+
     @ExceptionHandler(InvalidWebhookSignatureException.class)
     public ResponseEntity<ApiError> handleInvalidWebhookSignature(InvalidWebhookSignatureException ex){
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)

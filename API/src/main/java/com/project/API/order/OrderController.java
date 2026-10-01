@@ -2,6 +2,7 @@ package com.project.API.order;
 
 import com.mercadopago.exceptions.MPApiException;
 import com.mercadopago.exceptions.MPException;
+import com.project.API.order.DTO.AdminOrderAttentionResponse;
 import com.project.API.order.DTO.AdminOrderResponse;
 import com.project.API.order.DTO.OrderResponse;
 import com.project.API.user.User;
@@ -86,6 +87,23 @@ public class OrderController {
     @PreAuthorize("hasRole('ADMIN')")
     public Page<AdminOrderResponse> getAllOrders(Pageable pageable) {
         return orderService.getAllOrders(pageable);
+    }
+
+    // Orders still owed a shipment or a delivery, with what needs a look on each.
+    @GetMapping("/admin/attention")
+    @PreAuthorize("hasRole('ADMIN')")
+    public AdminOrderAttentionResponse getAttention() {
+        return orderService.getAttentionOverview();
+    }
+
+    @PatchMapping("/{orderId}/ship")
+    @PreAuthorize("hasRole('ADMIN')")
+    public AdminOrderResponse ship(
+            @PathVariable Long orderId,
+            @RequestBody(required = false) Map<String, String> body
+    ) {
+        String trackingCode = body == null ? null : body.get("trackingCode");
+        return orderService.shipOrder(orderId, trackingCode);
     }
 
     @PostMapping("/webhook")

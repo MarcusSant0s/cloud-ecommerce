@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Package, CheckCircle2, Clock, XCircle, ArrowLeft, ChevronLeft, ChevronRight, CreditCard, Loader2, Ban, ChevronDown, MapPin } from "lucide-react";
+import { Package, CheckCircle2, Clock, XCircle, ArrowLeft, ChevronLeft, ChevronRight, CreditCard, Loader2, Ban, ChevronDown, MapPin, Truck, PackageCheck, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/services/api";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,7 +18,10 @@ const ORDERS_POLL_INTERVAL_MS = 15000;
 const STATUS_CONFIG = {
   PAID: { label: "Pago", icon: CheckCircle2, className: "text-emerald-600 bg-emerald-50 border-emerald-200" },
   PENDING: { label: "Pendente", icon: Clock, className: "text-amber-600 bg-amber-50 border-amber-200" },
+  SHIPPED: { label: "Enviado", icon: Truck, className: "text-sky-700 bg-sky-50 border-sky-200" },
+  DELIVERED: { label: "Entregue", icon: PackageCheck, className: "text-emerald-700 bg-emerald-50 border-emerald-200" },
   CANCELLED: { label: "Cancelado", icon: XCircle, className: "text-red-500 bg-red-50 border-red-200" },
+  REFUNDED: { label: "Reembolsado", icon: Undo2, className: "text-zinc-600 bg-zinc-50 border-zinc-200" },
 };
 
 function StatusBadge({ status }) {
@@ -166,6 +169,18 @@ function OrderDetails({ order }) {
                 <div className="flex justify-between gap-3">
                   <dt>Pagamento</dt>
                   <dd className="text-emerald-600">{DATE_TIME_FORMAT.format(new Date(order.paidAt))}</dd>
+                </div>
+              )}
+              {order.shippedAt && (
+                <div className="flex justify-between gap-3">
+                  <dt>Envio</dt>
+                  <dd>{DATE_TIME_FORMAT.format(new Date(order.shippedAt))}</dd>
+                </div>
+              )}
+              {order.trackingCode && (
+                <div className="flex justify-between gap-3">
+                  <dt>Rastreio</dt>
+                  <dd className="font-mono text-foreground select-all">{order.trackingCode}</dd>
                 </div>
               )}
             </dl>

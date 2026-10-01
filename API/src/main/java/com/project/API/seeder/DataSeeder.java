@@ -254,24 +254,28 @@ public class DataSeeder implements CommandLineRunner {
         Product tapete        = products.get(8);
         Product liquidificador= products.get(9);
 
-        // Ana — pago: notebook + fone
+        // Ana — entregue: notebook + fone
         Order o1 = new Order();
         o1.setUser(ana);
-        o1.setStatus(OrderStatus.PAID);
+        o1.setStatus(OrderStatus.DELIVERED);
         o1.setCreatedAt(LocalDateTime.now().minusDays(15));
         o1.setPaidAt(LocalDateTime.now().minusDays(15).plusMinutes(30));
+        o1.setShippedAt(LocalDateTime.now().minusDays(14));
+        o1.setTrackingCode("QB123456789BR");
         o1.setMercadoPagoPreferenceId("pref-ana-001");
         o1.setMercadoPagoPaymentId("pay-ana-001");
         o1.addItem(orderItem(notebook, 1));
         o1.addItem(orderItem(fone, 1));
         o1.setTotal(priceOf(notebook).add(priceOf(fone)));
 
-        // Carlos — pago: tênis (×2) + smartphone
+        // Carlos — enviado: tênis (×2) + smartphone
         Order o2 = new Order();
         o2.setUser(carlos);
-        o2.setStatus(OrderStatus.PAID);
+        o2.setStatus(OrderStatus.SHIPPED);
         o2.setCreatedAt(LocalDateTime.now().minusDays(8));
         o2.setPaidAt(LocalDateTime.now().minusDays(8).plusMinutes(10));
+        o2.setShippedAt(LocalDateTime.now().minusDays(7));
+        o2.setTrackingCode("QB987654321BR");
         o2.setMercadoPagoPreferenceId("pref-carlos-001");
         o2.setMercadoPagoPaymentId("pay-carlos-001");
         o2.addItem(orderItem(tenis, 2));
@@ -295,7 +299,7 @@ public class DataSeeder implements CommandLineRunner {
         o4.addItem(orderItem(liquidificador, 3));
         o4.setTotal(priceOf(liquidificador).multiply(new BigDecimal("3")));
 
-        // Rafael — pago recente: fone
+        // Rafael — pago e ainda não enviado (passa do prazo de envio): fone
         Order o5 = new Order();
         o5.setUser(rafael);
         o5.setStatus(OrderStatus.PAID);

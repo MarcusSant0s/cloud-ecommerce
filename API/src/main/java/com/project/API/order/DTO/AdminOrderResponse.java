@@ -17,6 +17,9 @@ public record AdminOrderResponse(
         BigDecimal shippingCost,
         OrderStatus status,
         LocalDateTime createdAt,
+        LocalDateTime paidAt,
+        LocalDateTime shippedAt,
+        String trackingCode,
         Customer customer,
         ShippingAddress shippingAddress
 ) {
@@ -50,6 +53,9 @@ public record AdminOrderResponse(
                 order.getShippingCost(),
                 order.getStatus(),
                 order.getCreatedAt(),
+                order.getPaidAt(),
+                order.getShippedAt(),
+                order.getTrackingCode(),
                 customer,
                 shippingAddress
         );

@@ -44,6 +44,13 @@ public class Order {
     private LocalDateTime createdAt;
     private LocalDateTime paidAt;
 
+    @Column(name = "shipped_at")
+    private LocalDateTime shippedAt;
+
+    // Carrier tracking code (e.g. Correios), optional: some parcels go by hand.
+    @Column(name = "tracking_code", length = 64)
+    private String trackingCode;
+
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {
@@ -118,6 +125,22 @@ public class Order {
 
     public void setPaidAt(LocalDateTime paidAt) {
         this.paidAt = paidAt;
+    }
+
+    public LocalDateTime getShippedAt() {
+        return shippedAt;
+    }
+
+    public void setShippedAt(LocalDateTime shippedAt) {
+        this.shippedAt = shippedAt;
+    }
+
+    public String getTrackingCode() {
+        return trackingCode;
+    }
+
+    public void setTrackingCode(String trackingCode) {
+        this.trackingCode = trackingCode;
     }
 
     public String getMercadoPagoPreferenceId() {

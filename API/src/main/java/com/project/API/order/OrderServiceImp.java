@@ -17,9 +17,13 @@ import com.project.API.cart.CartRepository;
 import com.project.API.cart.CartService;
 import com.project.API.cart.exception.InsufficientStockException;
 import com.project.API.commom.exception.CartInconsistencyException;
+import com.project.API.commom.exception.InvalidOrderTransitionException;
 import com.project.API.commom.exception.OrderNotPayableException;
 import com.project.API.commom.exception.ResourceNotFoundException;
 import com.project.API.commom.exception.ShippingAddressRequiredException;
+import com.project.API.order.DTO.AdminOrderAttentionResponse;
+import com.project.API.order.DTO.AdminOrderAttentionResponse.Alert;
+import com.project.API.order.DTO.AdminOrderAttentionResponse.AttentionOrder;
 import com.project.API.order.DTO.AdminOrderResponse;
 import com.project.API.order.DTO.MissingProducts;
 import com.project.API.order.DTO.OrderResponse;
@@ -40,6 +44,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -68,6 +73,14 @@ public class OrderServiceImp implements OrderService {
     // skips Mercado Pago and simulates an approved payment.
     @Value("${app.payments.demo-mode:false}")
     private boolean paymentsDemoMode;
+
+    // How long a paid order may wait before the dashboard calls it late, and how long a
+    // shipped one may go without being marked delivered.
+    @Value("${app.orders.shipping-sla-days:2}")
+    private int shippingSlaDays;
+
+    @Value("${app.orders.transit-alert-days:10}")
+    private int transitAlertDays;
 
     public OrderServiceImp(OrderRepository orderRepository, CartRepository cartRepository, ProductRepository productRepository, ShippingService shippingService, CartService cartService, PaymentResultHandler paymentResultHandler){
         this.orderRepository = orderRepository;
@@ -458,7 +471,9 @@ public class OrderServiceImp implements OrderService {
         // paidAt precisa acompanhar o status, senão o override do admin deixa uma
         // data de pagamento órfã num pedido que voltou a ficar em aberto.
         // REFUNDED mantém a data: o pedido foi pago de fato, e depois devolvido.
-        if (orderStatus == OrderStatus.PAID) {
+        if (orderStatus == OrderStatus.PAID
+                || orderStatus == OrderStatus.SHIPPED
+                || orderStatus == OrderStatus.DELIVERED) {
             if (order.getPaidAt() == null) {
                 order.setPaidAt(LocalDateTime.now());
             }
@@ -466,8 +481,97 @@ public class OrderServiceImp implements OrderService {
             order.setPaidAt(null);
         }
 
+        // Mesma regra para shippedAt: voltar para antes do envio apaga a data, senão o
+        // painel mediria o tempo em trânsito de um pacote que nunca saiu.
+        if (orderStatus == OrderStatus.SHIPPED || orderStatus == OrderStatus.DELIVERED) {
+            if (order.getShippedAt() == null) {
+                order.setShippedAt(LocalDateTime.now());
+            }
+        } else if (orderStatus != OrderStatus.REFUNDED) {
+            order.setShippedAt(null);
+        }
+
         return  orderRepository.save(order);
     }
 
+    /**
+     * Marks a paid order as sent. Only from PAID: shipping a pending order would hand
+     * out goods nobody paid for, and re-shipping a shipped one would reset its transit
+     * clock. A blank tracking code is stored as none.
+     */
+    @Transactional
+    @Override
+    public AdminOrderResponse shipOrder(Long orderId, String trackingCode) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
+        if (order.getStatus() != OrderStatus.PAID) {
+            throw new InvalidOrderTransitionException("Somente pedidos pagos podem ser enviados.");
+        }
+        if (order.getUser() == null || order.getUser().getUserAdress() == null) {
+            throw new ShippingAddressRequiredException("O cliente não tem endereço de entrega cadastrado.");
+        }
+
+        String code = trackingCode == null || trackingCode.isBlank() ? null : trackingCode.trim();
+        // Caught here: past the column width the insert fails as a generic 409 conflict.
+        if (code != null && code.length() > 64) {
+            throw new IllegalArgumentException("Código de rastreio muito longo (máximo 64 caracteres).");
+        }
+
+        order.setStatus(OrderStatus.SHIPPED);
+        order.setShippedAt(LocalDateTime.now());
+        order.setTrackingCode(code);
+
+        return AdminOrderResponse.fromEntity(orderRepository.save(order));
+    }
+
+    /**
+     * Every order the store still owes something on — paid and not sent, or sent and
+     * not delivered — oldest first, each tagged with what needs a look.
+     *
+     * <p>Unpaged on purpose: this is the working queue, and it only ever holds orders
+     * still in flight, not the store's history.
+     */
+    @Override
+    public AdminOrderAttentionResponse getAttentionOverview() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime shippingDeadline = now.minusDays(shippingSlaDays);
+        LocalDateTime transitDeadline = now.minusDays(transitAlertDays);
+
+        List<Order> inFlight = orderRepository.findByStatusIn(List.of(OrderStatus.PAID, OrderStatus.SHIPPED));
+
+        List<AttentionOrder> awaitingShipment = inFlight.stream()
+                .filter(o -> o.getStatus() == OrderStatus.PAID)
+                .sorted(Comparator.comparing(this::paidOrCreated))
+                .map(o -> {
+                    List<Alert> alerts = new ArrayList<>();
+                    if (paidOrCreated(o).isBefore(shippingDeadline)) alerts.add(Alert.LATE_SHIPMENT);
+                    if (o.getUser() == null || o.getUser().getUserAdress() == null) alerts.add(Alert.NO_ADDRESS);
+                    return new AttentionOrder(AdminOrderResponse.fromEntity(o), alerts);
+                })
+                .toList();
+
+        List<AttentionOrder> inTransit = inFlight.stream()
+                .filter(o -> o.getStatus() == OrderStatus.SHIPPED)
+                .sorted(Comparator.comparing(this::shippedOrPaid))
+                .map(o -> {
+                    List<Alert> alerts = shippedOrPaid(o).isBefore(transitDeadline)
+                            ? List.of(Alert.LONG_IN_TRANSIT)
+                            : List.of();
+                    return new AttentionOrder(AdminOrderResponse.fromEntity(o), alerts);
+                })
+                .toList();
+
+        return new AdminOrderAttentionResponse(shippingSlaDays, transitAlertDays, awaitingShipment, inTransit);
+    }
+
+    // An order set to PAID or SHIPPED by hand before these columns existed may lack the
+    // timestamp; fall back to the previous milestone rather than drop it from the queue.
+    private LocalDateTime paidOrCreated(Order order) {
+        return order.getPaidAt() != null ? order.getPaidAt() : order.getCreatedAt();
+    }
+
+    private LocalDateTime shippedOrPaid(Order order) {
+        return order.getShippedAt() != null ? order.getShippedAt() : paidOrCreated(order);
+    }
 }

@@ -18,6 +18,8 @@ public record OrderResponse(
          OrderStatus status,
          LocalDateTime createdAt,
          LocalDateTime paidAt,
+         LocalDateTime shippedAt,
+         String trackingCode,
          ShippingAddress shippingAddress
         ) {
 
@@ -55,6 +57,8 @@ public record OrderResponse(
                 order.getStatus(),
                 order.getCreatedAt(),
                 order.getPaidAt(),
+                order.getShippedAt(),
+                order.getTrackingCode(),
                 shippingAddress
         );
     }

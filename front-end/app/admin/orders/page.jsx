@@ -8,11 +8,13 @@ import { Button } from "@/primitives/button";
 import { Badge } from "@/primitives/badge";
 import { Skeleton } from "@/primitives/skeleton";
 
-const STATUSES = ["PENDING", "PAID", "CANCELLED", "REFUNDED"];
+const STATUSES = ["PENDING", "PAID", "SHIPPED", "DELIVERED", "CANCELLED", "REFUNDED"];
 
 const STATUS_VARIANT = {
   PENDING: "secondary",
   PAID: "default",
+  SHIPPED: "outline",
+  DELIVERED: "secondary",
   CANCELLED: "destructive",
   REFUNDED: "outline",
 };
@@ -21,6 +23,8 @@ const STATUS_VARIANT = {
 const STATUS_LABELS = {
   PENDING: "Pendente",
   PAID: "Pago",
+  SHIPPED: "Enviado",
+  DELIVERED: "Entregue",
   CANCELLED: "Cancelado",
   REFUNDED: "Reembolsado",
 };
@@ -203,6 +207,11 @@ export default function AdminOrders() {
                                 {addr.bairro && <div>{addr.bairro}</div>}
                                 <div>{addr.city}</div>
                                 <div>CEP {formatCep(addr.cep)}</div>
+                                {order.trackingCode && (
+                                  <div className="mt-1">
+                                    Rastreio <span className="font-mono select-all">{order.trackingCode}</span>
+                                  </div>
+                                )}
                                 {(addr.phone || order.customer?.email) && (
                                   <div className="mt-1 space-y-0.5 text-muted-foreground">
                                     {addr.phone && (

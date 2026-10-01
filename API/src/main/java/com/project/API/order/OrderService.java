@@ -4,6 +4,7 @@ package com.project.API.order;
 import com.mercadopago.exceptions.MPApiException;
 import com.mercadopago.exceptions.MPException;
 import com.project.API.cart.Cart;
+import com.project.API.order.DTO.AdminOrderAttentionResponse;
 import com.project.API.order.DTO.AdminOrderResponse;
 import com.project.API.order.DTO.OrderResponse;
 import jakarta.transaction.Transactional;
@@ -35,4 +36,8 @@ public interface OrderService {
     void processPayment(String paymentId)throws MPException, MPApiException;
 
     Order changeOrderStatus(Long orderId, OrderStatus orderStatus);
+
+    AdminOrderResponse shipOrder(Long orderId, String trackingCode);
+
+    AdminOrderAttentionResponse getAttentionOverview();
 }

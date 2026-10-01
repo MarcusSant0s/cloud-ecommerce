@@ -8,6 +8,11 @@ public enum OrderStatus {
     PENDING,
     @JsonProperty("paid")
     PAID,
+    // Fulfilment, after PAID: the parcel left (SHIPPED) and reached the buyer (DELIVERED).
+    @JsonProperty("shipped")
+    SHIPPED,
+    @JsonProperty("delivered")
+    DELIVERED,
     @JsonProperty("cancelled")
     CANCELLED,
     @JsonProperty("refunded")
