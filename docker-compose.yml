@@ -1,25 +1,25 @@
 services:
-  postgres:
-    image: postgres:16
-    container_name: postgres-db
-    restart: always
-    environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    networks:
-      - app-network
-    logging:
-      driver: "json-file"
-      options: { max-size: "10m", max-file: "3" }
+  # postgres:
+  #   image: postgres:16
+  #   container_name: postgres-db
+  #   restart: always
+  #   environment:
+  #     POSTGRES_DB: ${DB_NAME}
+  #     POSTGRES_USER: ${DB_USER}
+  #     POSTGRES_PASSWORD: ${DB_PASSWORD}
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #     start_period: 30s
+  #   networks:
+  #     - app-network
+  #   logging:
+  #     driver: "json-file"
+  #     options: { max-size: "10m", max-file: "3" }
 
   backend:
     image: ghcr.io/marcussant0s/cloudecommerce-backend:latest
@@ -28,16 +28,18 @@ services:
     environment:
       POSTGRES_DB: ${DB_NAME}
       DB_USER: ${DB_USER}
-      # Defaults to the compose service name so a missing DB_HOST cannot silently
+      RDS_ENDPOINT: ${RDS_ENDPOINT}
+      # Defaults to the compose service name so a missing DB_HOST cannot silent>
       # point the API at nothing.
       DB_HOST: ${DB_HOST:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD}
+      SENHA_RDS: ${DB_PASSWORD}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       MP_ACCESS_TOKEN: ${MP_ACCESS_TOKEN}
       MP_WEBHOOK_SECRET: ${MP_WEBHOOK_SECRET:-}
       GOOGLE_PLACES_API_KEY: ${GOOGLE_PLACES_API_KEY:-}
       GOOGLE_PLACES_PLACE_ID: ${GOOGLE_PLACES_PLACE_ID:-}
       APP_BASE_URL: ${APP_BASE_URL}
+
       # The AWS SDK's default credential chain reads exactly these two names.
       # This used to pass AWS_SECRET_KEY, which the chain ignores, so S3 fell back
       # to unauthenticated calls.
