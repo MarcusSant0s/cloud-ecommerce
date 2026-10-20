@@ -148,7 +148,7 @@ public class OrderServiceImp implements OrderService {
      * Re-opens payment for an existing PENDING order. Unlike {@link #checkout},
      * this does not require an ACTIVE cart — a pending order already moved its
      * cart to CHECKOUT — so it lets the user finish paying an order they
-     * abandoned at the Mercado Pago step.
+     * a bandoned at the Mercado Pago step.
      */
     @Transactional
     @Override

@@ -7,7 +7,6 @@ import com.project.API.cart.Cart;
 import com.project.API.order.DTO.AdminOrderAttentionResponse;
 import com.project.API.order.DTO.AdminOrderResponse;
 import com.project.API.order.DTO.OrderResponse;
-import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -27,10 +26,9 @@ public interface OrderService {
 
      void cancelOrder(Long userId, Long orderId);
 
-    @Transactional
+
     Order createOrder(Long userId, Cart cart);
 
-    @Transactional
     String createCheckout(Order order, Cart cart) throws MPException, MPApiException;
 
     void processPayment(String paymentId)throws MPException, MPApiException;
