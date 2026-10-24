@@ -25,32 +25,10 @@ services:
     image: ghcr.io/marcussant0s/cloudecommerce-backend:latest
     container_name: commerce-api
     restart: always
-    environment:
-      POSTGRES_DB: ${DB_NAME}
-      DB_USER: ${DB_USER}
-      RDS_ENDPOINT: ${RDS_ENDPOINT}
-      # Defaults to the compose service name so a missing DB_HOST cannot silent>
-      # point the API at nothing.
-      DB_HOST: ${DB_HOST:-postgres}
-      SENHA_RDS: ${DB_PASSWORD}
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
-      MP_ACCESS_TOKEN: ${MP_ACCESS_TOKEN}
-      MP_WEBHOOK_SECRET: ${MP_WEBHOOK_SECRET:-}
-      GOOGLE_PLACES_API_KEY: ${GOOGLE_PLACES_API_KEY:-}
-      GOOGLE_PLACES_PLACE_ID: ${GOOGLE_PLACES_PLACE_ID:-}
-      APP_BASE_URL: ${APP_BASE_URL}
+    env_file:
+      - .env
+      - /run/commerce.env
 
-      # The AWS SDK's default credential chain reads exactly these two names.
-      # This used to pass AWS_SECRET_KEY, which the chain ignores, so S3 fell back
-      # to unauthenticated calls.
-      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-      EMAIL_ADMIN: ${EMAIL_ADMIN}
-      PASSWORD_ADMIN: ${PASSWORD_ADMIN}
-      # Demo/resume seeding: set to "true" on a fresh DB to populate mocks.
-      APP_SEED_DEMO_DATA: ${APP_SEED_DEMO_DATA:-false}
-      # Demo checkout: skip Mercado Pago and simulate an approved payment
-      PAYMENTS_DEMO_MODE: ${PAYMENTS_DEMO_MODE:-false}
     depends_on:
       postgres:
         condition: service_healthy
