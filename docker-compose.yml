@@ -25,6 +25,11 @@ services:
     image: ghcr.io/marcussant0s/cloudecommerce-backend:latest
     container_name: commerce-api
     restart: always
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://commerce-db.ctw2eekcmdo0.sa-east-1.rds.amazonaws.com:5432/commerce?sslmode=require
+      SPRING_DATASOURCE_USERNAME: commerce
+      
     env_file:
       - .env
       - /run/commerce.env
