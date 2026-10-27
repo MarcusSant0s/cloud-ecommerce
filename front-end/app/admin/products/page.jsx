@@ -79,6 +79,11 @@ export default function AdminProducts() {
   const [imagesLoading, setImagesLoading] = useState(false);
 
   const [confirmId, setConfirmId] = useState(null);
+  // Bulk delete: ids ticked on the current page. Cleared whenever the page/filter changes,
+  // so the selection always matches the rows on screen.
+  const [selected, setSelected] = useState(() => new Set());
+  const [bulkConfirm, setBulkConfirm] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const [errors, setErrors] = useState(EMPTY_ERRORS);
   const [shaking, setShaking] = useState({});
@@ -156,6 +161,8 @@ export default function AdminProducts() {
 
 
   useEffect(() => {
+    setSelected(new Set());
+    setBulkConfirm(false);
     fetchProducts(page, search, filterCategory);
   }, [page, search, filterCategory, fetchProducts]);
 
@@ -310,6 +317,43 @@ export default function AdminProducts() {
     }
   }
 
+  function toggleSelected(id) {
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    setSelected(prev =>
+      prev.size === products.length ? new Set() : new Set(products.map(p => p.id))
+    );
+  }
+
+  // No bulk endpoint on the API, so fire the single DELETEs in parallel and report
+  // partial failures instead of aborting on the first one.
+  async function handleBulkDelete() {
+    const ids = [...selected];
+    setBulkDeleting(true);
+    const results = await Promise.allSettled(ids.map(id => api.delete(`/product/${id}`)));
+    const failed = ids.filter((_, i) => results[i].status === "rejected");
+    const ok = ids.length - failed.length;
+    if (ok > 0) toast.success(`${ok} produto${ok > 1 ? "s" : ""} excluído${ok > 1 ? "s" : ""}.`);
+    if (failed.length > 0) toast.error(`Falha ao excluir ${failed.length} produto${failed.length > 1 ? "s" : ""}.`);
+    setSelected(new Set(failed));
+    setBulkConfirm(false);
+    setBulkDeleting(false);
+    setConfirmId(null);
+    // If the whole page was wiped, step back so we don't land on an empty page.
+    if (ok > 0 && ok === products.length && page > 0) {
+      setPage(p => p - 1);
+    } else {
+      fetchProducts(page, search, filterCategory);
+    }
+    if (ok > 0) router.refresh();
+  }
+
   async function fetchImages(productId) {
     setImagesLoading(true);
     try {
@@ -440,6 +484,36 @@ export default function AdminProducts() {
         </select>
       </div>
 
+      {selected.size > 0 && (
+        <div className="flex flex-wrap items-center gap-3 mb-3 rounded-lg border bg-muted/40 px-4 py-2.5 text-sm">
+          {bulkConfirm ? (
+            <>
+              <span className="text-destructive font-medium">
+                Excluir {selected.size} produto{selected.size > 1 ? "s" : ""}? Esta ação não pode ser desfeita.
+              </span>
+              <Button size="sm" variant="destructive" disabled={bulkDeleting} onClick={handleBulkDelete} className="gap-2">
+                {bulkDeleting && <Loader2 size={14} className="animate-spin" />} Confirmar
+              </Button>
+              <Button size="sm" variant="ghost" disabled={bulkDeleting} onClick={() => setBulkConfirm(false)}>
+                Cancelar
+              </Button>
+            </>
+          ) : (
+            <>
+              <span className="font-medium">
+                {selected.size} selecionado{selected.size > 1 ? "s" : ""}
+              </span>
+              <Button size="sm" variant="destructive" onClick={() => setBulkConfirm(true)} className="gap-2">
+                <Trash2 size={14} /> Excluir selecionados
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>
+                Limpar seleção
+              </Button>
+            </>
+          )}
+        </div>
+      )}
+
       {loading ? (
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
@@ -454,6 +528,16 @@ export default function AdminProducts() {
           <table className="w-full min-w-[560px] text-sm">
             <thead className="bg-muted/50 text-muted-foreground">
               <tr>
+                <th className="w-10 pl-4 py-3">
+                  <input
+                    type="checkbox"
+                    aria-label="Selecionar todos"
+                    checked={selected.size > 0 && selected.size === products.length}
+                    ref={el => { if (el) el.indeterminate = selected.size > 0 && selected.size < products.length; }}
+                    onChange={toggleSelectAll}
+                    className="h-4 w-4 cursor-pointer accent-primary align-middle"
+                  />
+                </th>
                 <th className="text-left px-4 py-3 font-medium">Produto</th>
                 <th className="text-left px-4 py-3 font-medium">Preço</th>
                 <th className="text-left px-4 py-3 font-medium">Estoque</th>
@@ -463,7 +547,16 @@ export default function AdminProducts() {
             <tbody className="divide-y">
               {products.map(product => (
                 <Fragment key={product.id}>
-                  <tr className="bg-background hover:bg-muted/30 transition-colors">
+                  <tr className={`${selected.has(product.id) ? "bg-muted/40" : "bg-background"} hover:bg-muted/30 transition-colors`}>
+                    <td className="w-10 pl-4 py-3">
+                      <input
+                        type="checkbox"
+                        aria-label={`Selecionar ${product.name}`}
+                        checked={selected.has(product.id)}
+                        onChange={() => toggleSelected(product.id)}
+                        className="h-4 w-4 cursor-pointer accent-primary align-middle"
+                      />
+                    </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         {product.mainImageUrl ? (
