@@ -55,6 +55,10 @@ public class DataSeeder implements CommandLineRunner {
         this.passwordEncoder = passwordEncoder;
     }
 
+    // The guard only looks at products, and the admin panel can delete every product
+    // while leaving categories, collections and users behind. Those three have unique
+    // names/e-mails, so they are reused when present: inserting them again would throw,
+    // and an exception here stops the application from starting.
     @Override
     public void run(String... args) {
         if (productRepository.count() > 0) return;
@@ -63,13 +67,15 @@ public class DataSeeder implements CommandLineRunner {
         List<Product> products = seedProducts(categories);
         seedCollections(products);
         List<User> users = seedUsers();
-        seedOrders(users, products);
+        // Orders have no natural key, so re-running over a database that already has
+        // some would duplicate them.
+        if (orderRepository.count() == 0) seedOrders(users, products);
     }
 
     // ── seeding ──────────────────────────────────────────────────────────────
 
     private List<Category> seedCategories() {
-        return categoryRepository.saveAll(List.of(
+        return List.of(
                 category("Eletrônicos",  "categories/eletronicos.jpg",
                         "https://images.unsplash.com/photo-1468495244123-6c6c332eeece?w=400"),
                 category("Roupas",       "categories/roupas.jpg",
@@ -80,7 +86,7 @@ public class DataSeeder implements CommandLineRunner {
                         "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=400"),
                 category("Casa e Jardim","categories/casa.jpg",
                         "https://images.unsplash.com/photo-1484101403633-562f891dc89a?w=400")
-        ));
+        );
     }
 
     private List<Product> seedProducts(List<Category> cats) {
@@ -200,12 +206,12 @@ public class DataSeeder implements CommandLineRunner {
     // Product owns the product_collection join table, so the collections are attached
     // to the already-persisted products and re-saved rather than set from this side.
     private void seedCollections(List<Product> products) {
-        List<ProductCollection> saved = collectionRepository.saveAll(List.of(
+        List<ProductCollection> saved = List.of(
                 collection("Coleção Verão",   "collections/verao.jpg",
                         "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400"),
                 collection("Coleção Inverno", "collections/inverno.jpg",
                         "https://images.unsplash.com/photo-1483664852095-d6cc6870702d?w=400")
-        ));
+        );
 
         ProductCollection verao   = saved.get(0);
         ProductCollection inverno = saved.get(1);
@@ -227,18 +233,17 @@ public class DataSeeder implements CommandLineRunner {
 
     private List<User> seedUsers() {
         User ana      = user("Ana",      "Lima",     "ana.lima@email.com",      "senha123",
-                address("Rua das Flores",         "São Paulo",        "01310-100", "45")
-        );
+                "Rua das Flores",         "São Paulo",        "01310-100", "45");
         User carlos   = user("Carlos",   "Mendes",   "carlos.mendes@email.com", "senha123",
-                address("Avenida Atlântica",       "Rio de Janeiro",   "22070-000", "1702"));
+                "Avenida Atlântica",       "Rio de Janeiro",   "22070-000", "1702");
         User fernanda = user("Fernanda", "Costa",    "fernanda.costa@email.com","senha123",
-                address("Rua XV de Novembro",      "Curitiba",         "80020-310", "200"));
+                "Rua XV de Novembro",      "Curitiba",         "80020-310", "200");
         User rafael   = user("Rafael",   "Souza",    "rafael.souza@email.com",  "senha123",
-                address("Rua da Bahia",            "Belo Horizonte",   "30160-010", "12"));
+                "Rua da Bahia",            "Belo Horizonte",   "30160-010", "12");
         User julia    = user("Júlia",    "Oliveira", "julia.oliveira@email.com","senha123",
-                address("Avenida Paulista",        "São Paulo",        "01310-000", "900"));
+                "Avenida Paulista",        "São Paulo",        "01310-000", "900");
 
-        return userRepository.saveAll(List.of(ana, carlos, fernanda, rafael, julia));
+        return List.of(ana, carlos, fernanda, rafael, julia);
     }
 
     private void seedOrders(List<User> users, List<Product> products) {
@@ -319,19 +324,23 @@ public class DataSeeder implements CommandLineRunner {
     // ── builders ─────────────────────────────────────────────────────────────
 
     private Category category(String name, String s3key, String url) {
-        Category c = new Category();
-        c.setName(name);
-        c.setS3key(s3key);
-        c.setUrl(url);
-        return c;
+        return categoryRepository.findByName(name).orElseGet(() -> {
+            Category c = new Category();
+            c.setName(name);
+            c.setS3key(s3key);
+            c.setUrl(url);
+            return categoryRepository.save(c);
+        });
     }
 
     private ProductCollection collection(String name, String s3key, String url) {
-        ProductCollection c = new ProductCollection();
-        c.setName(name);
-        c.setS3key(s3key);
-        c.setUrl(url);
-        return c;
+        return collectionRepository.findByName(name).orElseGet(() -> {
+            ProductCollection c = new ProductCollection();
+            c.setName(name);
+            c.setS3key(s3key);
+            c.setUrl(url);
+            return collectionRepository.save(c);
+        });
     }
 
     private Product product(String name, String description, int qty,
@@ -369,12 +378,14 @@ public class DataSeeder implements CommandLineRunner {
         return userAdressRepository.save(a);
     }
 
-    private User user(String firstName, String lastName, String email,
-                      String rawPassword, UserAdress adress) {
-        User u = new User(firstName, lastName, email, passwordEncoder.encode(rawPassword));
-        u.setRole(Role.USER);
-        u.setUserAdress(adress);
-        return u;
+    private User user(String firstName, String lastName, String email, String rawPassword,
+                      String street, String city, String cep, String number) {
+        return userRepository.findByEmail(email).orElseGet(() -> {
+            User u = new User(firstName, lastName, email, passwordEncoder.encode(rawPassword));
+            u.setRole(Role.USER);
+            u.setUserAdress(address(street, city, cep, number));
+            return userRepository.save(u);
+        });
     }
 
     private OrderItem orderItem(Product p, int qty) {

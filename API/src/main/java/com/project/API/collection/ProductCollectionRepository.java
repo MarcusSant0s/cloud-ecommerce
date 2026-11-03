@@ -9,6 +9,7 @@ import java.util.Optional;
 
 public interface ProductCollectionRepository extends JpaRepository<ProductCollection, Long> {
     Boolean existsByName(String name);
+    Optional<ProductCollection> findByName(String name);
     Boolean existsByNameAndIdNot(String name, Long id);
     List<ResponseProductCollectionDTO> findAllBy();
     Optional<ResponseProductCollectionDTO> findProjectedById(Long id);
