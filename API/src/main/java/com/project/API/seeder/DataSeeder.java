@@ -67,130 +67,81 @@ public class DataSeeder implements CommandLineRunner {
         List<Product> products = seedProducts(categories);
         seedCollections(products);
         List<User> users = seedUsers();
-        // Orders have no natural key, so re-running over a database that already has
-        // some would duplicate them.
-        if (orderRepository.count() == 0) seedOrders(users, products);
+        // Orders have no natural key, so seeding again for users who already have some
+        // would duplicate them. Only the demo users count: an unrelated order elsewhere
+        // in the database is no reason to leave the demo accounts without history.
+        boolean demoOrdersExist = users.stream()
+                .anyMatch(u -> orderRepository.countByUserId(u.getId()) > 0);
+        if (!demoOrdersExist) seedOrders(users, products);
     }
 
     // ── seeding ──────────────────────────────────────────────────────────────
 
     private List<Category> seedCategories() {
         return List.of(
-                category("Eletrônicos",  "categories/eletronicos.jpg",
-                        "https://images.unsplash.com/photo-1468495244123-6c6c332eeece?w=400"),
-                category("Roupas",       "categories/roupas.jpg",
-                        "https://images.unsplash.com/photo-1445205170230-053b83016050?w=400"),
-                category("Calçados",     "categories/calcados.jpg",
-                        "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400"),
-                category("Esportes",     "categories/esportes.jpg",
-                        "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=400"),
-                category("Casa e Jardim","categories/casa.jpg",
-                        "https://images.unsplash.com/photo-1484101403633-562f891dc89a?w=400")
+                category("Brincos", "categories/brincos.jpg",
+                        "https://images.unsplash.com/photo-1617038220319-276d3cfab638?w=400"),
+                category("Colares", "categories/colares.jpg",
+                        "https://images.unsplash.com/photo-1635767798638-3e25273a8236?w=400"),
+                category("Anéis", "categories/aneis.jpg",
+                        "https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=400"),
+                category("Pulseiras", "categories/pulseiras.jpg",
+                        "https://images.unsplash.com/photo-1602173574767-37ac01994b2a?w=400")
         );
     }
 
     private List<Product> seedProducts(List<Category> cats) {
-        Category eletronicos = cats.get(0);
-        Category roupas      = cats.get(1);
-        Category calcados    = cats.get(2);
-        Category esportes    = cats.get(3);
-        Category casa        = cats.get(4);
+        Category brincos   = cats.get(0);
+        Category colares   = cats.get(1);
+        Category aneis     = cats.get(2);
+        Category pulseiras = cats.get(3);
 
-        // Build products — images added to the `images` set (cascade ALL) but
-        // mainImage is NOT set here because it is a non-cascaded @OneToOne.
-        // Setting a transient ProductImage there would throw
-        // TransientPropertyValueException on flush.
-        Product notebook = product(
-                "Notebook Acer Aspire 5",
-                "Notebook Intel Core i5 12ª geração, 8GB RAM DDR4, SSD 512GB NVMe, tela Full HD 15.6\" IPS. Ideal para trabalho, estudos e entretenimento.",
-                15, new BigDecimal("3199.90"), new BigDecimal("0.10"),
-                eletronicos);
-        addImages(notebook,
-                img("products/notebook-1.jpg", "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=800", true),
-                img("products/notebook-2.jpg", "https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=800", false));
-
-        Product smartphone = product(
-                "Smartphone Samsung Galaxy A55",
-                "Celular 5G, tela Super AMOLED 6.6\", câmera tripla 50MP+12MP+5MP, bateria 5000mAh, 128GB/8GB RAM.",
-                42, new BigDecimal("1899.99"), new BigDecimal("0.08"),
-                eletronicos);
-        addImages(smartphone,
-                img("products/smartphone-1.jpg", "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800", true),
-                img("products/smartphone-2.jpg", "https://images.unsplash.com/photo-1567581935884-3349723552ca?w=800", false));
-
-        Product fone = product(
-                "Fone Sony WH-1000XM5",
-                "Headphone over-ear com cancelamento de ruído, bateria de 30h, Bluetooth 5.2 e design dobrável.",
-                30, new BigDecimal("1499.00"), new BigDecimal("0.15"),
-                eletronicos);
-        addImages(fone,
-                img("products/fone-1.jpg", "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800", true));
-
-        Product camiseta = product(
-                "Camiseta Polo Ralph Lauren Pima",
-                "Polo masculina em algodão Pima premium, corte slim, bordado icônico do cavaleiro. Perfeita para casuais e semiformais.",
-                80, new BigDecimal("349.90"), null,
-                roupas);
-        addImages(camiseta,
-                img("products/camiseta-1.jpg", "https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=800", true));
-
-        Product jaqueta = product(
-                "Jaqueta Corta-Vento Nike Windrunner",
-                "Jaqueta leve em ripstop com capuz dobrável, bolso canguru com zíper. Ideal para corridas ao ar livre.",
-                25, new BigDecimal("589.00"), new BigDecimal("0.12"),
-                roupas, esportes);
-        addImages(jaqueta,
-                img("products/jaqueta-1.jpg", "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800", true),
-                img("products/jaqueta-2.jpg", "https://images.unsplash.com/photo-1544923246-77307dd654cb?w=800", false));
-
-        Product tenis = product(
-                "Tênis Nike Air Max 270",
-                "Tênis com maior unidade Air Max do calcanhar, cabedal em mesh respirável e sola em borracha com entressola React.",
-                60, new BigDecimal("799.99"), new BigDecimal("0.05"),
-                calcados, esportes);
-        addImages(tenis,
-                img("products/tenis-1.jpg", "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800", true),
-                img("products/tenis-2.jpg", "https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=800", false));
-
-        Product sandalia = product(
-                "Sandália Havaianas Top",
-                "Sandália feminina com solado anatômico em borracha natural e palmilha texturizada antiderrapante.",
-                200, new BigDecimal("1.00"), null,
-                calcados);
-        addImages(sandalia,
-                img("products/sandalia-1.jpg", "https://images.unsplash.com/photo-1603487742131-4160ec999306?w=800", true));
-
-        Product bicicleta = product(
-                "Bicicleta Trek FX 3 Disc",
-                "Bicicleta híbrida, quadro alumínio Alpha Gold, garfo carbono, Shimano Deore 24v, freios disco hidráulicos.",
-                8, new BigDecimal("4299.00"), new BigDecimal("0.07"),
-                esportes);
-        addImages(bicicleta,
-                img("products/bicicleta-1.jpg", "https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=800", true));
-
-        Product tapete = product(
-                "Tapete Persa Artesanal 2x3m",
-                "Tapete artesanal em lã com 150.000 nós/m², padrões orientais, 200×300cm. Cores vibrantes e duráveis.",
-                12, new BigDecimal("2150.00"), new BigDecimal("0.20"),
-                casa);
-        addImages(tapete,
-                img("products/tapete-1.jpg", "https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=800", true));
-
-        Product liquidificador = product(
-                "Liquidificador Britânia Turbo 1200W",
-                "Motor 1200W, 12 velocidades + pulsar, copo acrílico 2L, lâminas inox, base antiderrapante.",
-                55, new BigDecimal("189.90"), null,
-                casa);
-        addImages(liquidificador,
-                img("products/liquidificador-1.jpg", "https://images.unsplash.com/photo-1570197788417-0e82375c9371?w=800", true));
-
-        // Pass 1: persist products — images cascade-saved, mainImage still null
+        // Pass 1: persist products — images cascade-saved, mainImage still null.
+        // mainImage is a non-cascaded @OneToOne, so setting a transient ProductImage
+        // here would throw TransientPropertyValueException on flush.
         List<Product> saved = productRepository.saveAll(List.of(
-                notebook, smartphone, fone,
-                camiseta, jaqueta,
-                tenis, sandalia,
-                bicicleta,
-                tapete, liquidificador
+                jewel("Brinco Argola Trançada",
+                        "Argola trançada com banho de ouro 18k e fecho clique. Leve, com presença na medida para o dia inteiro.",
+                        24, "129.90", null, brincos, "argola-trancada", "1617038220319-276d3cfab638"),
+                jewel("Brinco Gota Azul Cristal",
+                        "Brinco em prata 925 com cristal azul em lapidação gota e contorno cravejado de zircônias. Para ocasiões especiais.",
+                        12, "189.90", "0.10", brincos, "gota-azul", "1535632066927-ab7c9ab60908"),
+                jewel("Brinco Coração Azul",
+                        "Coração em cristal azul com gancho em banho de ouro 18k. Delicado e leve na orelha.",
+                        30, "89.90", null, brincos, "coracao-azul", "1630019852942-f89202989a59"),
+                jewel("Colar Pérolas Clássico",
+                        "Fio de pérolas sintéticas em graduação uniforme, com fecho em prata 925. Vem em caixa para presente.",
+                        10, "249.90", null, colares, "perolas-classico", "1515562141207-7a88fb7ce338"),
+                jewel("Colar Coração Cravejado",
+                        "Pingente de coração vazado com zircônias em corrente de prata 925, comprimento de 45 cm.",
+                        18, "199.90", null, colares, "coracao-cravejado", "1588444837495-c6cfeb53f32d"),
+                jewel("Colar Medalha em Camadas",
+                        "Três correntes em banho de ouro 18k com medalha texturizada. Já vem montado, sem risco de embaraçar.",
+                        16, "229.90", "0.10", colares, "medalha-camadas", "1635767798638-3e25273a8236"),
+                jewel("Colar Corrente de Elos",
+                        "Corrente de elos médios em banho de ouro 18k, comprimento de 42 cm. Sozinha ou com pingente.",
+                        22, "179.90", null, colares, "corrente-elos", "1633810542706-90e5ff7557be"),
+                jewel("Colar Ponto de Luz",
+                        "Corrente fina em banho de ouro 18k com pingente de zircônia em gota. Um clássico para usar todo dia.",
+                        28, "139.90", null, colares, "ponto-de-luz", "1611652022419-a9419f74343d"),
+                jewel("Anel Solitário Halo",
+                        "Zircônia central com halo cravejado e aro em prata 925. Disponível do aro 14 ao 22.",
+                        14, "159.90", null, aneis, "solitario-halo", "1605100804763-247f67b3557e"),
+                jewel("Anel Pedra Rosa",
+                        "Cristal rosa em lapidação retangular, contorno de zircônias e banho de ouro rosé 18k.",
+                        9, "179.90", "0.15", aneis, "pedra-rosa", "1603561591411-07134e71a2a9"),
+                jewel("Anel Trio Empilhável",
+                        "Conjunto de três aros em banho de ouro 18k, com detalhes cravejados. Use juntos ou separados.",
+                        20, "139.90", null, aneis, "trio-empilhavel", "1543294001-f7cd5d7fb516"),
+                jewel("Pulseira Elos Grossos",
+                        "Pulseira de elos grossos em banho de ouro 18k, 18 cm com extensor. Marcante sem pesar no pulso.",
+                        19, "169.90", null, pulseiras, "elos-grossos", "1602173574767-37ac01994b2a"),
+                jewel("Pulseira Riviera Zircônia",
+                        "Riviera em prata 925 com zircônias entrelaçadas. Brilho de festa com fecho de segurança.",
+                        11, "219.90", "0.10", pulseiras, "riviera-zirconia", "1573408301185-9146fe634ad0"),
+                jewel("Pulseira Arabesco Rosé",
+                        "Bracelete articulado em banho de ouro rosé 18k, com desenho arabesco cravejado.",
+                        13, "149.90", null, pulseiras, "arabesco-rose", "1611591437281-460bfbe1220a")
         ));
 
         // Pass 2: now images have IDs — wire mainImage and save again
@@ -203,32 +154,27 @@ public class DataSeeder implements CommandLineRunner {
         return productRepository.saveAll(saved);
     }
 
+    private Product jewel(String name, String description, int qty, String price, String discount,
+                          Category category, String imageKey, String unsplashId) {
+        Product p = product(name, description, qty, new BigDecimal(price),
+                discount == null ? null : new BigDecimal(discount), category);
+        addImages(p, img("products/" + imageKey + ".jpg",
+                "https://images.unsplash.com/photo-" + unsplashId + "?w=800", true));
+        return p;
+    }
+
     // Product owns the product_collection join table, so the collections are attached
     // to the already-persisted products and re-saved rather than set from this side.
     private void seedCollections(List<Product> products) {
-        List<ProductCollection> saved = List.of(
-                collection("Coleção Verão",   "collections/verao.jpg",
-                        "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400"),
-                collection("Coleção Inverno", "collections/inverno.jpg",
-                        "https://images.unsplash.com/photo-1483664852095-d6cc6870702d?w=400")
-        );
+        ProductCollection ouro  = collection("Banho de Ouro 18k", "collections/ouro-18k.jpg",
+                "https://images.unsplash.com/photo-1620656798579-1984d9e87df7?w=400");
+        ProductCollection prata = collection("Prata 925", "collections/prata-925.jpg",
+                "https://images.unsplash.com/photo-1589128777073-263566ae5e4d?w=400");
 
-        ProductCollection verao   = saved.get(0);
-        ProductCollection inverno = saved.get(1);
+        for (int i : List.of(0, 2, 5, 6, 7, 9, 10, 11, 13)) products.get(i).AddCollection(ouro);
+        for (int i : List.of(1, 3, 4, 8, 12)) products.get(i).AddCollection(prata);
 
-        Product camiseta  = products.get(3);
-        Product jaqueta   = products.get(4);
-        Product tenis     = products.get(5);
-        Product sandalia  = products.get(6);
-        Product bicicleta = products.get(7);
-
-        camiseta.AddCollection(verao);
-        sandalia.AddCollection(verao);
-        tenis.AddCollection(verao);
-        bicicleta.AddCollection(verao);
-        jaqueta.AddCollection(inverno);
-
-        productRepository.saveAll(List.of(camiseta, jaqueta, tenis, sandalia, bicicleta));
+        productRepository.saveAll(products);
     }
 
     private List<User> seedUsers() {
@@ -252,14 +198,14 @@ public class DataSeeder implements CommandLineRunner {
         User fernanda = users.get(2);
         User rafael   = users.get(3);
 
-        Product notebook      = products.get(0);
-        Product smartphone    = products.get(1);
-        Product fone          = products.get(2);
-        Product tenis         = products.get(5);
-        Product tapete        = products.get(8);
-        Product liquidificador= products.get(9);
+        Product argola    = products.get(0);
+        Product coracao   = products.get(2);
+        Product perolas   = products.get(3);
+        Product medalha   = products.get(5);
+        Product solitario = products.get(8);
+        Product riviera   = products.get(12);
 
-        // Ana — entregue: notebook + fone
+        // Ana — entregue: colar de pérolas + brinco argola
         Order o1 = new Order();
         o1.setUser(ana);
         o1.setStatus(OrderStatus.DELIVERED);
@@ -270,11 +216,11 @@ public class DataSeeder implements CommandLineRunner {
         o1.setMercadoPagoPreferenceId("pref-ana-001");
         o1.setStockReserved(true);
         o1.setMercadoPagoPaymentId("pay-ana-001");
-        o1.addItem(orderItem(notebook, 1));
-        o1.addItem(orderItem(fone, 1));
-        o1.setTotal(priceOf(notebook).add(priceOf(fone)));
+        o1.addItem(orderItem(perolas, 1));
+        o1.addItem(orderItem(argola, 1));
+        o1.setTotal(priceOf(perolas).add(priceOf(argola)));
 
-        // Carlos — enviado: tênis (×2) + smartphone
+        // Carlos — enviado: anel solitário (×2) + pulseira riviera
         Order o2 = new Order();
         o2.setUser(carlos);
         o2.setStatus(OrderStatus.SHIPPED);
@@ -285,28 +231,28 @@ public class DataSeeder implements CommandLineRunner {
         o2.setMercadoPagoPreferenceId("pref-carlos-001");
         o2.setStockReserved(true);
         o2.setMercadoPagoPaymentId("pay-carlos-001");
-        o2.addItem(orderItem(tenis, 2));
-        o2.addItem(orderItem(smartphone, 1));
-        o2.setTotal(priceOf(tenis).multiply(new BigDecimal("2")).add(priceOf(smartphone)));
+        o2.addItem(orderItem(solitario, 2));
+        o2.addItem(orderItem(riviera, 1));
+        o2.setTotal(priceOf(solitario).multiply(new BigDecimal("2")).add(priceOf(riviera)));
 
-        // Carlos — pendente: tapete
+        // Carlos — pendente: colar medalha
         Order o3 = new Order();
         o3.setUser(carlos);
         o3.setStatus(OrderStatus.PENDING);
         o3.setCreatedAt(LocalDateTime.now().minusHours(3));
         o3.setMercadoPagoPreferenceId("pref-carlos-002");
-        o3.addItem(orderItem(tapete, 1));
-        o3.setTotal(priceOf(tapete));
+        o3.addItem(orderItem(medalha, 1));
+        o3.setTotal(priceOf(medalha));
 
-        // Fernanda — cancelado: liquidificador (×3)
+        // Fernanda — cancelado: brinco coração (×3)
         Order o4 = new Order();
         o4.setUser(fernanda);
         o4.setStatus(OrderStatus.CANCELLED);
         o4.setCreatedAt(LocalDateTime.now().minusDays(20));
-        o4.addItem(orderItem(liquidificador, 3));
-        o4.setTotal(priceOf(liquidificador).multiply(new BigDecimal("3")));
+        o4.addItem(orderItem(coracao, 3));
+        o4.setTotal(priceOf(coracao).multiply(new BigDecimal("3")));
 
-        // Rafael — pago e ainda não enviado (passa do prazo de envio): fone
+        // Rafael — pago e ainda não enviado (passa do prazo de envio): pulseira riviera
         Order o5 = new Order();
         o5.setUser(rafael);
         o5.setStatus(OrderStatus.PAID);
@@ -315,8 +261,8 @@ public class DataSeeder implements CommandLineRunner {
         o5.setMercadoPagoPreferenceId("pref-rafael-001");
         o5.setStockReserved(true);
         o5.setMercadoPagoPaymentId("pay-rafael-001");
-        o5.addItem(orderItem(fone, 1));
-        o5.setTotal(priceOf(fone));
+        o5.addItem(orderItem(riviera, 1));
+        o5.setTotal(priceOf(riviera));
 
         orderRepository.saveAll(List.of(o1, o2, o3, o4, o5));
     }
