@@ -101,12 +101,12 @@ export default function SignUpPageClient() {
       {/* Left — image (hidden on mobile) */}
       <div className="relative hidden md:block">
         <Image
-          alt="Imagem de fundo do cadastro"
+          alt="Mãos usando anéis e pulseira dourados sobre fundo rosé"
           className="object-cover"
           fill
           priority
           sizes="(max-width: 768px) 0vw, 50vw"
-          src="https://images.unsplash.com/photo-1719811059181-09032aef07b8?q=80&w=1200&auto=format&fit=crop"
+          src="https://images.unsplash.com/photo-1596944924616-7b38e7cfac36?q=80&w=1200&auto=format&fit=crop"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
       </div>
