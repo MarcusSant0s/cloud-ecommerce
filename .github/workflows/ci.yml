@@ -107,7 +107,6 @@ jobs:
           JWT_SECRET: a-ci-only-signing-key-long-enough-for-hs256-abcdef
           EMAIL_ADMIN: admin@ci.example
           PASSWORD_ADMIN: ci-password
-          GOOGLE_PLACES_KEY: ci-places-key
         run: |
           java -jar ./*.jar --spring.profiles.active=prod --server.port=8080 > app.log 2>&1 &
           echo $! > app.pid
@@ -230,58 +229,100 @@ jobs:
     needs: build-and-push
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
+    # id-token: write lets this job request the OIDC token that AWS exchanges
+    # for temporary credentials. No AWS key and no SSH key are stored in GitHub.
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID }}
 
     steps:
-      - name: SSH and redeploy
-        uses: appleboy/ssh-action@v1
+      - name: Assume the AWS deploy role (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            set -e
-            cd ~/cloud-ecommerce
-            git pull origin main
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-            # /run is tmpfs: /run/commerce.env disappears on every reboot, so it
-            # is regenerated from SSM on each deploy. sudo because the script
-            # also chowns the file to the SSH user.
-            sudo /opt/app/load-secrets.sh
+      - name: Write the deploy script
+        run: |
+          cat > deploy.sh <<'EOF'
+          #!/bin/bash
+          # Runs on the EC2 as root (SSM Run Command). Git and Docker Compose run
+          # as ec2-user so file ownership and any registry login stay as before.
+          set -euo pipefail
+          as_user() { sudo -u ec2-user -H "$@"; }
 
-            # Free disk BEFORE pulling. Disk usage peaks during the pull, while
-            # the old images are still on disk, and an 8 GB root volume ran out
-            # of space there ("no space left on device"). Running containers
-            # keep their images; only stopped containers and unused images go.
-            docker container prune -f
-            docker image prune -af
+          cd /home/ec2-user/cloud-ecommerce
+          as_user git pull origin main
 
-            docker compose -f docker-compose.yml pull
-            docker compose -f docker-compose.yml up -d
+          # /run is tmpfs: /run/commerce.env disappears on every reboot, so it
+          # is regenerated from SSM on each deploy.
+          /opt/app/load-secrets.sh
 
-            # Don't report a green deploy until the API actually answers. Compose
-            # returns as soon as the containers are created, which is well before
-            # Flyway and the JPA bootstrap have finished.
-            echo "Waiting for the API to report healthy..."
-            status=starting
-            for i in $(seq 1 30); do
-              status=$(docker inspect -f '{{.State.Health.Status}}' commerce-api 2>/dev/null || echo starting)
-              echo "  attempt $i: $status"
-              [ "$status" = "healthy" ] && break
-              sleep 10
-            done
+          # Free disk BEFORE pulling. Disk usage peaks during the pull, while
+          # the old images are still on disk. Running containers keep their
+          # images; only stopped containers and unused images go.
+          docker container prune -f
+          docker image prune -af
 
-            if [ "$status" != "healthy" ]; then
-              echo "Deploy failed: commerce-api is '$status' after 5 minutes"
-              docker compose -f docker-compose.yml logs --tail=120 backend
-              exit 1
-            fi
+          as_user docker compose -f docker-compose.yml pull
+          as_user docker compose -f docker-compose.yml up -d
 
-            # nginx resolves commerce-web/commerce-api once, at startup. Compose
-            # recreates those two with new images (and new IPs) but leaves nginx
-            # running because its own config didn't change, so it keeps proxying
-            # to the dead IPs: 502 Bad Gateway. Reload so it re-resolves them.
-            docker compose -f docker-compose.yml exec -T nginx nginx -s reload
+          # Don't report a green deploy until the API actually answers. Compose
+          # returns as soon as the containers are created, which is well before
+          # Flyway and the JPA bootstrap have finished.
+          echo "Waiting for the API to report healthy..."
+          status=starting
+          for i in $(seq 1 30); do
+            status=$(docker inspect -f '{{.State.Health.Status}}' commerce-api 2>/dev/null || echo starting)
+            echo "  attempt $i: $status"
+            [ "$status" = "healthy" ] && break
+            sleep 10
+          done
 
-            echo "Deploy healthy."
-            # Drop whatever the new deploy left unused.
-            docker image prune -f
+          if [ "$status" != "healthy" ]; then
+            echo "Deploy failed: commerce-api is '$status' after 5 minutes"
+            as_user docker compose -f docker-compose.yml logs --tail=120 backend
+            exit 1
+          fi
+
+          echo "Deploy healthy."
+          # Drop whatever the new deploy left unused.
+          docker image prune -f
+          EOF
+
+      - name: Run it on the EC2 through SSM
+        run: |
+          # jq -Rs turns the whole file into one JSON string, so the script
+          # needs no quoting or escaping inside the command line.
+          CMD_ID=$(aws ssm send-command \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name AWS-RunShellScript \
+            --comment "deploy ${GITHUB_SHA}" \
+            --parameters "$(jq -Rs '{commands: [.], executionTimeout: ["900"]}' deploy.sh)" \
+            --query Command.CommandId --output text)
+          echo "SSM command: $CMD_ID"
+
+          # `aws ssm wait` gives up after ~100 s and a deploy takes longer, so
+          # poll by hand. The invocation does not exist for a moment after
+          # send-command, hence the fallback to Pending.
+          STATUS=Pending
+          for i in $(seq 1 120); do
+            STATUS=$(aws ssm get-command-invocation \
+              --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" \
+              --query Status --output text 2>/dev/null || echo Pending)
+            case "$STATUS" in
+              Pending|InProgress|Delayed) sleep 10 ;;
+              *) break ;;
+            esac
+          done
+
+          aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" \
+            --query '{out: StandardOutputContent, err: StandardErrorContent}' --output json \
+            | jq -r '.out, .err'
+
+          if [ "$STATUS" != "Success" ]; then
+            echo "::error::Deploy finished with SSM status: $STATUS"
+            exit 1
+          fi
