@@ -29,6 +29,7 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   /* -------------------------------------------------------------------------- */
   /* Data Fetching                               */
@@ -55,12 +56,16 @@ export default function ProductDetailPage() {
   /* Calculations                              */
   /* -------------------------------------------------------------------------- */
 
-  // Mapeando a imagem principal do array de imagens da sua API
-  const mainImage = useMemo(() => {
-    if (!product?.images) return null;
-    const main = product.images.find((img) => img.main) || product.images[0];
-    return main?.url;
+  // Main image first, then the rest in a stable order (the API returns a Set).
+  const images = useMemo(() => {
+    if (!product?.images?.length) return [];
+    return [...product.images].sort(
+      (a, b) => Number(!!b.main) - Number(!!a.main) || (a.id ?? 0) - (b.id ?? 0)
+    );
   }, [product]);
+
+  const mainImage = images[0]?.url ?? null;
+  const displayedImage = selectedImage ?? mainImage;
 
   // priceDiscount is a fraction (e.g. 0.10 = 10% off), not an absolute price.
   // finalPrice is the discounted price (null when there's no discount).
@@ -130,10 +135,11 @@ export default function ProductDetailPage() {
 
       <div className="mt-8 grid grid-cols-1 gap-10 md:grid-cols-2 md:gap-14">
         {/* Image Section */}
+        <div className="flex flex-col gap-3">
         <div className="relative aspect-[4/5] overflow-hidden rounded-sm border border-border/60 bg-muted">
-          {mainImage ? (
+          {displayedImage ? (
             <Image
-              src={mainImage}
+              src={displayedImage}
               alt={product.name}
               fill
               sizes="(max-width: 768px) 100vw, 50vw"
@@ -151,6 +157,29 @@ export default function ProductDetailPage() {
               -{discountPercentage}%
             </span>
           )}
+        </div>
+
+        {images.length > 1 && (
+          <div className="grid grid-cols-5 gap-2 sm:grid-cols-6">
+            {images.map((img, idx) => {
+              const active = img.url === displayedImage;
+              return (
+                <button
+                  key={img.id ?? img.url}
+                  type="button"
+                  onClick={() => setSelectedImage(img.url)}
+                  aria-label={`Ver imagem ${idx + 1}`}
+                  aria-pressed={active}
+                  className={`relative aspect-square overflow-hidden rounded-sm border bg-muted transition ${
+                    active ? "border-foreground" : "border-border/60 opacity-70 hover:opacity-100"
+                  }`}
+                >
+                  <Image src={img.url} alt={`${product.name} ${idx + 1}`} fill sizes="96px" className="object-cover" />
+                </button>
+              );
+            })}
+          </div>
+        )}
         </div>
 
         {/* Info Section */}
